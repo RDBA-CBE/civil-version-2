@@ -28,7 +28,7 @@
     "antd": "^5.12.1",
     "axios": "^1.6.2",
     "ckeditor4-react": "^5.0.0",
-    "dayjs": "^1.11.10",
+    "dayjs": "^1.11.13",
     "draft-js": "^0.11.7",
     "draftjs-to-html": "^0.9.1",
     "eslint": "8.32.0",

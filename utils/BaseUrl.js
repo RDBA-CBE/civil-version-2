@@ -1,1 +1,1 @@
-export const BaseURL = 'https://xvt7fwb7-8000.inc1.devtunnels.ms/';
+export const BaseURL = 'http://app.covaicivillab.com/';
