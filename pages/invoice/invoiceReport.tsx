@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/router';
-import { Space, Form, Button, message } from 'antd';
+import { Space, Form, Button, message, Modal, Select } from 'antd';
 import 'react-quill/dist/quill.snow.css';
 import { baseUrl } from '@/utils/function.util';
 
@@ -22,6 +22,7 @@ const InvoiceReport = () => {
         is_authorised_signatory: false,
     });
     const [selectedId, setSelectedId] = useState<any>(1);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
         editorRef.current = {
@@ -148,10 +149,12 @@ const InvoiceReport = () => {
 
     // Print
     const handlePrint1 = () => {
-        var id: any = invoiceReport.invoice_test.id;
-        var url = `/invoice/print1?id=${id}`;
+        // var id: any = invoiceReport.invoice_test.id;
+        // var url = `/invoice/print1?id=${id}`;
 
-        window.open(url, '_blank');
+        // window.open(url, '_blank');
+
+        showModal();
     };
 
     // Print
@@ -165,6 +168,44 @@ const InvoiceReport = () => {
             [e.target.name]: e.target.value,
         });
     };
+
+    // Model
+    const showModal = () => {
+        setIsModalOpen(true);
+    };
+
+    const handleOk = () => {
+        setIsModalOpen(false);
+    };
+
+    const handleCancel = () => {
+        setIsModalOpen(false);
+    };
+
+    const onClose = () => {
+        setIsModalOpen(false);
+        form.resetFields();
+    };
+
+    const onFinish1 = (values: any) => {
+        console.log('✌️values --->', values);
+
+        if (values?.signature == 'with-signature') {
+            setIsModalOpen(false);
+            var id: any = invoiceReport.invoice_test.id;
+            var url = `/invoice/print1?id=${id}`;
+
+            window.open(url, '_blank');
+        } else if (values?.signature == 'without-signature') {
+            setIsModalOpen(false);
+            var id: any = invoiceReport.invoice_test.id;
+            var url = `/invoice/print2?id=${id}`;
+
+            window.open(url, '_blank');
+        }
+    };
+
+    const onFinishFailed1 = (errorInfo: any) => {};
 
     console.log('is_authorised_signatory', formData.is_authorised_signatory);
     return (
@@ -271,6 +312,30 @@ const InvoiceReport = () => {
                         </Form.Item>
                     </Form>
                 </div>
+
+                <Modal title="Select Signature Option" open={isModalOpen} onOk={handleOk} onCancel={handleCancel} footer={false}>
+                    <Form name="basic-1" layout="vertical" form={form} initialValues={{ remember: true }} onFinish={onFinish1} onFinishFailed={onFinishFailed1} autoComplete="off">
+                        <Form.Item label="Signature" name="signature" required={true} rules={[{ required: true, message: 'Please Select Signature Option!' }]}>
+                            <Select>
+                                <Select.Option value="with-signature">With Signature</Select.Option>
+                                <Select.Option value="without-signature">Without Signature</Select.Option>
+                            </Select>
+                        </Form.Item>
+
+                        <Form.Item>
+                            <div className="form-btn-main">
+                                <Space>
+                                    <Button danger htmlType="submit" onClick={() => onClose()}>
+                                        Cancel
+                                    </Button>
+                                    <Button type="primary" htmlType="submit">
+                                        Submit
+                                    </Button>
+                                </Space>
+                            </div>
+                        </Form.Item>
+                    </Form>
+                </Modal>
             </div>
         </>
     );
