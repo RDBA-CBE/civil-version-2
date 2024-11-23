@@ -149,12 +149,14 @@ const InvoiceReport = () => {
 
     // Print
     const handlePrint1 = () => {
-        // var id: any = invoiceReport.invoice_test.id;
-        // var url = `/invoice/print1?id=${id}`;
+        if (formData.is_authorised_signatory == true) {
+            var id: any = invoiceReport.invoice_test.id;
+            var url = `/invoice/print1?id=${id}`;
 
-        // window.open(url, '_blank');
-
-        showModal();
+            window.open(url, '_blank');
+        } else {
+            showModal();
+        }
     };
 
     // Print
