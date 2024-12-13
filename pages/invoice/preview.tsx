@@ -9,20 +9,22 @@ const Preview = () => {
     const [printData, setPrintData] = useState<any>([]);
 
     useEffect(() => {
-        axios
-            .get(`${baseUrl}/print_invoice/${id}/`, {
-                headers: {
-                    Authorization: `Token ${localStorage.getItem('token')}`,
-                },
-            })
-            .then((res) => {
-                setPrintData(res?.data);
-            })
-            .catch((error: any) => {
-                if (error?.response?.status === 401) {
-                    router.push('/');
-                }
-            });
+        if (id) {
+            axios
+                .get(`${baseUrl}/print_invoice/${id}/`, {
+                    headers: {
+                        Authorization: `Token ${localStorage.getItem('token')}`,
+                    },
+                })
+                .then((res) => {
+                    setPrintData(res?.data);
+                })
+                .catch((error: any) => {
+                    if (error?.response?.status === 401) {
+                        router.push('/');
+                    }
+                });
+        }
     }, [id]);
 
     const TestTotal: any = printData?.invoice_tests?.reduce((accumulator: any, currentValue: any) => accumulator + parseFloat(currentValue.total || 0), 0);
@@ -94,7 +96,8 @@ const Preview = () => {
                                         <br></br>
                                         411/4, Vijayalakshmi Nagar,<br></br>
                                         Neelikonampalayam Po, Coimbatore - 6410333.<br></br>
-                                        <b>GSTIN : 33AALCC7761L1Z7</b><br/>
+                                        <b>GSTIN : 33AALCC7761L1Z7</b>
+                                        <br />
                                         <b>CIN : U71200TZ2024PTC031215 </b>
                                     </div>
                                 </div>
@@ -197,7 +200,7 @@ const Preview = () => {
                                     <tr style={{ border: 'none' }}>
                                         <>
                                             <td>
-                                            <b>Account Number:</b> 923020070722530{' '}
+                                                <b>Account Number:</b> 923020070722530{' '}
                                             </td>
 
                                             <td style={{ textAlign: 'right' }}>Before Tax</td>
@@ -209,7 +212,7 @@ const Preview = () => {
 
                                     <tr style={{ border: 'none' }}>
                                         <td>
-                                        <b>Bank Name & Branch:</b> Axis Bank, Vadavalli, Coimbatore.
+                                            <b>Bank Name & Branch:</b> Axis Bank, Vadavalli, Coimbatore.
                                         </td>
 
                                         <td style={{ textAlign: 'right' }}>{Discount()}</td>
@@ -218,11 +221,11 @@ const Preview = () => {
 
                                     <tr style={{ border: 'none' }}>
                                         <td>
-                                        <b>IFSC Code:</b> UTIB0003080
+                                            <b>IFSC Code:</b> UTIB0003080
                                         </td>
                                         <td style={{ textAlign: 'right' }}>Total</td>
                                         <td style={{ textAlign: 'right', fontWeight: 'bold' }}>
-                                           {parseInt(After_Tax)} <input type="hidden" id="amt" name="amt"  />
+                                            {parseInt(After_Tax)} <input type="hidden" id="amt" name="amt" />
                                         </td>
                                     </tr>
 
@@ -259,7 +262,8 @@ const Preview = () => {
                                 <div className="sign-footer mt-0 grid-cols-9 space-y-1 text-right text-right text-sm text-white-dark">
                                     <img src="/assets/images/sign.png" alt="img" style={{ marginLeft: 'auto' }} />
                                     <br />
-                                    Authorised Signatory,<br/> Covai Civil Lab Private Limited.
+                                    Authorised Signatory,
+                                    <br /> Covai Civil Lab Private Limited.
                                     {/* Covai Civil Lab Private Limited <br /> R.TIRUMALAI (TECHNICAL DIRECTOR) */}
                                     {/* <img src="/assets/images/logo_3.jpg" alt="img" style={{ marginLeft: "auto" }} /> */}
                                     <div className="sign-footer mt-0 space-y-1 text-right text-sm text-white-dark">

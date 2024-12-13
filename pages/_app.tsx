@@ -25,26 +25,26 @@ const App = ({ Component, pageProps }: AppPropsWithLayout) => {
 
     const getLayout = Component.getLayout ?? ((page) => <DefaultLayout>{page}</DefaultLayout>);
 
-    const pwh = ['/invoice/preview', '/invoice/print1', '/invoice/print', '/invoice/viewtestreport', '/invoice/viewinvoicereport'];
+    const pwh = ['/invoice/preview', '/invoice/print1','/invoice/print2', '/invoice/print', '/invoice/viewtestreport', '/invoice/viewinvoicereport'];
 
-    const pagesWithoutLayout = ['preview', 'print', 'print1', 'r', 'u', 'n', 'c'];
+    const pagesWithoutLayout = ['preview', 'print', 'print1', 'print2', 'r', 'u', 'n', 'c'];
 
     if (router.pathname == '/people/employee') {
-        const pagesWithoutLayout = ['preview', 'print', 'print1', 'r', 'u'];
+        const pagesWithoutLayout = ['preview', 'print', 'print1', 'print2', 'r', 'u'];
     } else {
-        const pagesWithoutLayout = ['preview', 'print', 'print1', 'r', 'u', 'n'];
+        const pagesWithoutLayout = ['preview', 'print', 'print1', 'print2', 'r', 'u', 'n'];
     }
 
     if (router.pathname == '/invoice/edit') {
-        const pagesWithoutLayout = ['preview', 'print', 'print1', 'r', 'u', 'c'];
+        const pagesWithoutLayout = ['preview', 'print', 'print1',  'print2', 'r', 'u', 'c'];
     } else {
-        const pagesWithoutLayout = ['preview', 'print', 'print1', 'r', 'u', 'n'];
+        const pagesWithoutLayout = ['preview', 'print', 'print1', 'print2', 'r', 'u', 'n'];
     }
 
     if (router.pathname == '/invoice/preview') {
-        const pagesWithoutLayout = ['preview', 'print', 'print1', 'r', 'u', 'c', 'n'];
+        const pagesWithoutLayout = ['preview', 'print', 'print1', 'print2', 'r', 'u', 'c', 'n'];
     } else {
-        const pagesWithoutLayout = ['preview', 'print', 'print1', 'r', 'u', 'n'];
+        const pagesWithoutLayout = ['preview', 'print', 'print1', 'print2', 'r', 'u', 'n'];
     }
 
     const currentPageName = (Component.displayName || Component.name)?.toLowerCase();

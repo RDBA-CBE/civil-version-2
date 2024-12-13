@@ -7,6 +7,8 @@ import * as FileSaver from 'file-saver';
 import dayjs from 'dayjs';
 import router from 'next/router';
 import { baseUrl } from '@/utils/function.util';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 
 const ExpenseFileReport = () => {
     const [form] = Form.useForm();
@@ -152,38 +154,50 @@ const ExpenseFileReport = () => {
 
     // download 
     const handleDownloadAll = () => {
-        // Recursive function to download files one by one
-        const downloadFile = (index:any) => {
-          // Check if there are still files to download
-          if (index < dataSource.length) {
-            // Get the current file object
-            const item:any = dataSource[index];
-      
-            // Log the file name for debugging purposes
-            console.log('Downloading file:', item.name);
-      
-            // Create a temporary anchor element to trigger the download
-            const link = document.createElement('a');
-            link.href = item.file;
-            link.download = item.name;
-      
-            // Append the anchor element to the body to trigger the download
-            document.body.appendChild(link);
-            link.click();
-      
-            // Remove the anchor element from the body
-            document.body.removeChild(link);
-      
-            // Recursively call the downloadFile function to download the next file
-            setTimeout(() => {
-              downloadFile(index + 1);
-            }, 1000); // Adjust the delay time as needed
-          }
-        };
-      
-        // Start downloading the files from the first index
-        downloadFile(0);
-      };
+        console.log("dataSource", dataSource);
+    
+        // Create a new jsPDF instance
+        const doc: any = new jsPDF();
+    
+        // Adding a title to the PDF
+        doc.text('Expense File Report', 14, 16);
+    
+        // Define the column headers
+        const headers = ['ID', 'Expense User', 'Expense Amount', 'Expense Date', 'File'];
+    
+        // Map the data into the table format
+        const tableData = dataSource.map((item: any) => [
+            item.id, // ID
+            item.expense_user, // Expense User
+            item.expense_amount, // Expense Amount
+            dayjs(item.expense_date).format('DD-MM-YYYY'), // Expense Date (formatted)
+            {
+                content: item.file, // URL to the file
+                link: item.file, // URL should be a clickable link in the PDF
+            }
+        ]);
+    
+        // Use the autoTable plugin to generate the table in the PDF
+        doc.autoTable({
+            head: [headers], // Table header
+            body: tableData, // Table rows
+            startY: 20, // Starting Y position for the table
+            margin: { horizontal: 10 },
+            theme: 'striped',
+            columnStyles: {
+                0: { cellWidth: 20 },  // Column 1 (ID) - small width
+                1: { cellWidth: 50 },  // Column 2 (Expense User) - wider
+                2: { cellWidth: 40 },  // Column 3 (Expense Amount) - medium width
+                3: { cellWidth: 30 },  // Column 4 (Expense Date) - medium width
+                4: { cellWidth: 100 },  // Column 5 (File) - wide width for the link column
+            },
+        });
+    
+        // Save the PDF with the name "Expense_File_Report.pdf"
+        doc.save('Expense_File_Report.pdf');
+    };
+
+
     return (
         <>
             <div className="panel">

@@ -81,7 +81,9 @@ const Edit = () => {
 
     // Get Single Product
     useEffect(() => {
-        getInvoiceTestData();
+        if (id) {
+            getInvoiceTestData();
+        }
     }, [id]);
 
     const tableTogle = () => {
@@ -811,13 +813,13 @@ const Edit = () => {
             onOk: () => {
                 invoiceFormSubmit1();
                 axios
-                    .delete(`${baseUrl}/delete_invoice_test/${id}`, {
+                    .delete(`${baseUrl}/delete_invoice_test/${id}/`, {
                         headers: {
                             Authorization: `Token ${Token}`,
                         },
                     })
                     .then((res) => {
-                        getInvoiceTestData2("update");
+                        getInvoiceTestData2('update');
                     })
                     .catch((error) => {
                         if (error?.response?.status === 401) {
@@ -839,7 +841,7 @@ const Edit = () => {
                 },
             })
             .then((res: any) => {
-                getInvoiceTestData2("update");
+                getInvoiceTestData2('update');
                 setOpen(false);
             })
             .catch((error: any) => {
@@ -977,7 +979,7 @@ const Edit = () => {
                 })
                 .then((res: any) => {
                     setPaymentModalOpen(false);
-                    getInvoiceTestData2("update");
+                    getInvoiceTestData2('update');
                     messageApi.open({
                         type: 'success',
                         content: 'Payment Successfully Updated',
@@ -1140,7 +1142,7 @@ const Edit = () => {
                 // Update balance and fetch updated invoice data
                 const InitialBalance: any = afterTax - totalAmount;
                 setBalance(parseInt(InitialBalance, 10));
-                getInvoiceTestData2("update");
+                getInvoiceTestData2('update');
             })
             .catch((error: any) => {
                 if (error?.response?.status === 401) {
@@ -1162,13 +1164,13 @@ const Edit = () => {
             okType: 'danger',
             onOk: () => {
                 axios
-                    .delete(`${baseUrl}/delete_payment/${id}`, {
+                    .delete(`${baseUrl}/delete_payment/${id}/`, {
                         headers: {
                             Authorization: `Token ${Token}`,
                         },
                     })
                     .then((res) => {
-                        getInvoiceTestData2("");
+                        getInvoiceTestData2('');
                     })
                     .catch((error) => {
                         if (error?.response?.status === 401) {
