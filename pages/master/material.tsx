@@ -7,7 +7,7 @@ import axios from 'axios';
 import 'react-quill/dist/quill.snow.css';
 import moment from 'moment';
 import router from 'next/router';
-import { baseUrl } from '@/utils/function.util';
+import { baseUrl, Failure } from '@/utils/function.util';
 
 const Material = () => {
     const editorRef: any = useRef();
@@ -66,7 +66,7 @@ const Material = () => {
             .catch((error: any) => {
                 if (error.response.status === 401) {
                     router.push('/');
-                } 
+                }
                 setLoading(false);
             });
     };
@@ -86,7 +86,7 @@ const Material = () => {
             .catch((error: any) => {
                 if (error.response.status === 401) {
                     router.push('/');
-                } 
+                }
             });
     };
 
@@ -224,11 +224,12 @@ const Material = () => {
 
     // form submit
     const onFinish = (values: any) => {
-
         const Token = localStorage.getItem('token');
 
+        console.log('editor', editor);
+
         const body = {
-            template: editor,
+            template: editor == null ? '' : editor,
             material_name: values.material_name,
             letter_pad_logo: values.letter_pad_logo,
             print_format: values.print_format,
@@ -243,11 +244,12 @@ const Material = () => {
                 })
                 .then((res: any) => {
                     getMaterial();
+                    onClose();
                 })
                 .catch((error: any) => {
                     if (error.response.status === 401) {
                         router.push('/');
-                    } 
+                    }
                 });
         } else {
             axios
@@ -258,20 +260,25 @@ const Material = () => {
                 })
                 .then((res: any) => {
                     getMaterial();
+                    onClose();
+                    form.resetFields();
                 })
                 .catch((error) => {
+                    console.log('✌️error --->', error);
                     if (error.response.status === 401) {
                         router.push('/');
                     }
+                    if (error?.response?.data?.template) {
+                        Failure(`Template : ${error?.response?.data?.template[0]}`);
+                    }
+                    if (error?.response?.data?.material_name) {
+                        Failure(` ${error?.response?.data?.material_name[0]}`);
+                    }
                 });
-
-            form.resetFields();
         }
-        onClose();
     };
 
-    const onFinishFailed = (errorInfo: any) => {
-    };
+    const onFinishFailed = (errorInfo: any) => {};
 
     type FieldType = {
         material_name?: string;
@@ -343,12 +350,16 @@ const Material = () => {
                     </div>
                 </div>
                 <div className="table-responsive">
-                    <Table dataSource={filterData} columns={columns} scroll={scrollConfig} 
-                    loading={{
-                        spinning: loading, // This enables the loading spinner
-                        indicator: <Spin size="large"/>,
-                        tip: 'Loading data...', // Custom text to show while loading
-                    }}/>
+                    <Table
+                        dataSource={filterData}
+                        columns={columns}
+                        scroll={scrollConfig}
+                        loading={{
+                            spinning: loading, // This enables the loading spinner
+                            indicator: <Spin size="large" />,
+                            tip: 'Loading data...', // Custom text to show while loading
+                        }}
+                    />
                 </div>
 
                 <Drawer title={DrawerTitle} placement="right" width={600} onClose={onClose} open={open}>
