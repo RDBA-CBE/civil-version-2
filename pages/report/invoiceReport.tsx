@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Space, Form, Select, DatePicker, Spin } from 'antd';
+import { Table, Button, Space, Form, Select, DatePicker, Spin, InputNumber } from 'antd';
 import { Input } from 'antd';
 import axios from 'axios';
 import ExcelJS from 'exceljs';
@@ -15,6 +15,7 @@ const InvoiceReport = () => {
     const [dataSource, setDataSource] = useState([]);
     const [saleFormData, setSaleFormData] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [formFields, setFormFields] = useState<any>([]);
 
     // get GetExpenseReport datas
     useEffect(() => {
@@ -40,6 +41,23 @@ const InvoiceReport = () => {
             });
     };
 
+    useEffect(() => {
+        axios
+            .get(`${baseUrl}/create_invoice/`, {
+                headers: {
+                    Authorization: `Token ${localStorage.getItem('token')}`,
+                },
+            })
+            .then((res) => {
+                setFormFields(res.data);
+            })
+            .catch((error: any) => {
+                if (error.response.status === 401) {
+                    router.push('/');
+                }
+            });
+    }, []);
+
     // Table Headers
     const columns = [
         {
@@ -47,14 +65,6 @@ const InvoiceReport = () => {
             dataIndex: 'customer',
             key: 'customer',
             className: 'singleLineCell',
-            // render: (text:any, record:any) => {
-            //     // console.log("record",record)
-
-            //     return  
-            //     dataIndex:{record.invoice.customer} 
-            //     ;}
-                     
-                        
                     
         },
         {
@@ -192,7 +202,9 @@ const InvoiceReport = () => {
             // expense_user: '',
             from_date: '',
             to_date: '',
-            invoice_no:""
+            invoice_no:"",
+            project_name:"",
+            customer:""
             // expense_category: '',
         };
 
@@ -203,11 +215,7 @@ const InvoiceReport = () => {
             },
             params: {...body}
         })
-            // .post(`${baseUrl}/invoice-reports/`, body, {
-            //     headers: {
-            //         Authorization: `Token ${Token}`,
-            //     },
-            // })
+            
             .then((res: any) => {
                 console.log('✌️res --->', res);
                 const data = res?.data.map((item:any)=>{return item.invoice})
@@ -229,17 +237,18 @@ const InvoiceReport = () => {
 
     console.log("data",dataSource);
     
-
+   
     // form submit
     const onFinish = (values: any) => {
         const Token = localStorage.getItem('token');
 
         const body = {
-            // expense_user: values.expense_user ? values.expense_user : '',
+           
             from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
             to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
             invoice_no:values?.invoice_no ? values?.invoice_no : '',
-            // expense_category: values.expense_category ? values.expense_category : '',
+            project_name:values?.project_name?values?.project_name:"",
+            customer:values?.customer?values?.customer:""
         };
 
         axios
@@ -346,6 +355,23 @@ const InvoiceReport = () => {
                                 <Input />
                             </Form.Item> */}
                             <Space>
+                            <Form.Item label="Invoice No" name="invoice_no" style={{ width: '200px' }}>
+                                <InputNumber style={{ width: '100%' }} />
+                            </Form.Item>
+
+                            <Form.Item label="Customer" name="customer" style={{ width: '250px' }}>
+                                <Select showSearch filterOption={(input: any, option: any) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}>
+                                    {formFields?.customer?.map((value: any) => (
+                                        <Select.Option key={value.id} value={value.id}>
+                                            {value.customer_name}
+                                        </Select.Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+
+                            <Form.Item label="Project Name" name="project_name" style={{ width: '200px' }}>
+                                <Input />
+                            </Form.Item>
                                 <Form.Item label="From Date" name="from_date" style={{ width: '250px' }}>
                                     <DatePicker style={{ width: '100%' }} />
                                 </Form.Item>
@@ -353,6 +379,7 @@ const InvoiceReport = () => {
                                 <Form.Item label="To Date" name="to_date" style={{ width: '250px' }}>
                                     <DatePicker style={{ width: '100%' }} />
                                 </Form.Item>
+                                
                             </Space>
 
                             {/* <Form.Item label="Expense Category" name="expense_category" style={{ width: '300px' }}>
@@ -377,7 +404,7 @@ const InvoiceReport = () => {
                 </div>
                 <div className="tax-heading-main">
                     <div>
-                        <h1 className="text-lg font-semibold dark:text-white-light">Invoice File Report</h1>
+                        <h1 className="text-lg font-semibold dark:text-white-light">Invoice Report</h1>
                     </div>
                     <div>
                         <Space>

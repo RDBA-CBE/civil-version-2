@@ -7,7 +7,7 @@ import router from 'next/router';
 import dayjs from 'dayjs';
 import { baseUrl } from '@/utils/function.util';
 
-const PendingPayment = () => {
+const PendingPaymentReport = () => {
     const { Search } = Input;
     const [form] = Form.useForm();
 
@@ -251,7 +251,7 @@ const PendingPayment = () => {
                 </div>
                 <div className="tax-heading-main">
                     <div>
-                        <h1 className="text-lg font-semibold dark:text-white-light">Pending Payment</h1>
+                        <h1 className="text-lg font-semibold dark:text-white-light">Pending Payment Report</h1>
                     </div>
                     <div>
                         <Space>
@@ -279,4 +279,4 @@ const PendingPayment = () => {
     );
 };
 
-export default PendingPayment;
+export default PendingPaymentReport;
