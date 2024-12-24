@@ -2,7 +2,7 @@ import axios from 'axios';
 
 export const instance = () => {
   const data = axios.create({
-    baseURL: 'http://app.covaicivillab.com/',
+    baseURL: 'https://63fkxqqj-8000.inc1.devtunnels.ms/',
   });
 
   data.interceptors.request.use(async function (config) {
