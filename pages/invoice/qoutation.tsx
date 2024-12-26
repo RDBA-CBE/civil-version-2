@@ -259,8 +259,8 @@ const Quotations = () => {
         setLoading(true);
         const body = {
             // project_name: '',
-            from_date: '',
-            to_date: '',
+            start_date: '',
+            end_date: '',
             customer: '',
             completed: '',
         };
@@ -313,10 +313,10 @@ const Quotations = () => {
 
         const body = {
             // project_name: values.project_name ? values.project_name : '',
-            from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
-            to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
+            start_date: values?.start_date ? dayjs(values?.start_date).format('YYYY-MM-DD') : '',
+            end_date: values?.end_date ? dayjs(values?.end_date).format('YYYY-MM-DD') : '',
             customer: values.customer ? values.customer : '',
-            completed: values.completed ? values.completed : '',
+            completed: values.completed == 'Yes' ? true : false,
         };
 
         console.log('✌️body --->', body);
@@ -364,11 +364,11 @@ const Quotations = () => {
                                 </Select>
                             </Form.Item>
 
-                            <Form.Item label="From Date" name="from_date" style={{ width: '200px' }}>
+                            <Form.Item label="From Date" name="start_date" style={{ width: '200px' }}>
                                 <DatePicker style={{ width: '100%' }} />
                             </Form.Item>
 
-                            <Form.Item label="To Date" name="to_date" style={{ width: '200px' }}>
+                            <Form.Item label="To Date" name="end_date" style={{ width: '200px' }}>
                                 <DatePicker style={{ width: '100%' }} />
                             </Form.Item>
 

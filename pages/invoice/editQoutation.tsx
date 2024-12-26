@@ -565,7 +565,7 @@ const Edit = () => {
                 getInvoiceTestData2('update');
                 // messageApi.open({
                 //     type: 'success',
-                //     content: 'Invoice Successfully Updated',
+                //     content: 'Quotation Successfully Updated',
                 // });
             })
             .catch((error) => {
@@ -613,7 +613,7 @@ const Edit = () => {
                 getInvoiceTestData2('update');
                 messageApi.open({
                     type: 'success',
-                    content: 'Invoice Successfully Updated',
+                    content: 'Quotation Successfully Updated',
                 });
             })
             .catch((error) => {
@@ -622,7 +622,7 @@ const Edit = () => {
                 } else {
                     messageApi.open({
                         type: 'error',
-                        content: 'Invoice Updated Failed',
+                        content: 'Quotation Updated Failed',
                     });
                 }
             });
