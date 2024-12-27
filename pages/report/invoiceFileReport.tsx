@@ -253,18 +253,16 @@ const InvoiceFileReport = () => {
             doc.text('Invoice File Report', 14, 16);
         
             // Define the column headers
-            const headers = ['ID', 'Invoice User', 'Invoice Amount', 'Invoice Date', 'File'];
+            const headers = ['Invoice No', 'Project Name', 'Customer', 'Invoice Amount', 'Invoice Date', 'File'];
         
             // Map the data into the table format
             const tableData = dataSource.map((item: any) => [
-                item.id, // ID
-                item.invoice_user, // Invoice User
+                item.invoice_no, // ID
+                item.project_name, // Expense User
+                item.invoice_customer, // Invoice User
                 item.invoice_amount, // Invoice Amount
                 dayjs(item.invoice_date).format('DD-MM-YYYY'), // Invoice Date (formatted)
-                {
-                    content: item.file, // URL to the file
-                    link: item.file, // URL should be a clickable link in the PDF
-                }
+                item.file, // File URL
             ]);
         
             // Use the autoTable plugin to generate the table in the PDF
@@ -276,10 +274,24 @@ const InvoiceFileReport = () => {
                 theme: 'striped',
                 columnStyles: {
                     0: { cellWidth: 20 },  // Column 1 (ID) - small width
-                    1: { cellWidth: 50 },  // Column 2 (Expense User) - wider
-                    2: { cellWidth: 40 },  // Column 3 (Expense Amount) - medium width
-                    3: { cellWidth: 30 },  // Column 4 (Expense Date) - medium width
-                    4: { cellWidth: 100 },  // Column 5 (File) - wide width for the link column
+                    1: { cellWidth: 30 },  // Column 2 (Expense User) - wider
+                    2: { cellWidth: 50 },  // Column 2 (Expense User) - wider
+                    3: { cellWidth: 40 },  // Column 3 (Expense Amount) - medium width
+                    4: { cellWidth: 30 },  // Column 4 (Expense Date) - medium width
+                    5: { cellWidth: 150 },  // Column 5 (File) - wide width for the link column
+                },
+                didDrawCell: (data: any) => {
+                    // Check if the current cell is in the "File" column (index 4)
+                    if (data.column.index === 5) {
+                        const fileUrl = data.cell.raw;  // The file URL that should be clickable
+        
+                        if (fileUrl) {
+                            // Positioning and drawing the clickable link
+                            doc.setTextColor(0, 0, 255);  // Optional: Make the link text blue
+                            // doc.text('View File', data.cell.x + 2, data.cell.y + 5);  // Position text within the cell
+                            doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url: fileUrl });  // Make the entire cell a clickable link
+                        }
+                    }
                 },
             });
         
