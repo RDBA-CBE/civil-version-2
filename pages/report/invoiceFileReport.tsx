@@ -61,18 +61,25 @@ const InvoiceFileReport = () => {
     // Table Headers
     const columns = [
         {
-            title: 'Customer Name',
-            dataIndex: 'invoice_customer',
-            key: 'invoice_customer',
-            className: 'singleLineCell',
-        },
-        {
             title: 'Invoice No',
             dataIndex: 'invoice_no',
             key: 'invoice_no',
             className: 'singleLineCell',
             width: 150,
         },
+        {
+            title: 'Customer Name',
+            dataIndex: 'invoice_customer',
+            key: 'invoice_customer',
+            className: 'singleLineCell',
+        },
+        {
+            title: 'Project Name',
+            dataIndex: 'project_name',
+            key: 'project_name',
+            className: 'singleLineCell',
+        },
+
         {
             title: 'Invoice Amount',
             dataIndex: 'invoice_amount',
@@ -243,63 +250,61 @@ const InvoiceFileReport = () => {
     //     downloadFile(0);
     // };
 
-     const handleDownloadAll = () => {
-            console.log("dataSource", dataSource);
-        
-            // Create a new jsPDF instance
-            const doc: any = new jsPDF();
-        
-            // Adding a title to the PDF
-            doc.text('Invoice File Report', 14, 16);
-        
-            // Define the column headers
-            const headers = ['Invoice No', 'Project Name', 'Customer', 'Invoice Amount', 'Invoice Date', 'File'];
-        
-            // Map the data into the table format
-            const tableData = dataSource.map((item: any) => [
-                item.invoice_no, // ID
-                item.project_name, // Expense User
-                item.invoice_customer, // Invoice User
-                item.invoice_amount, // Invoice Amount
-                dayjs(item.invoice_date).format('DD-MM-YYYY'), // Invoice Date (formatted)
-                item.file, // File URL
-            ]);
-        
-            // Use the autoTable plugin to generate the table in the PDF
-            doc.autoTable({
-                head: [headers], // Table header
-                body: tableData, // Table rows
-                startY: 20, // Starting Y position for the table
-                margin: { horizontal: 10 },
-                theme: 'striped',
-                columnStyles: {
-                    0: { cellWidth: 20 },  // Column 1 (ID) - small width
-                    1: { cellWidth: 30 },  // Column 2 (Expense User) - wider
-                    2: { cellWidth: 50 },  // Column 2 (Expense User) - wider
-                    3: { cellWidth: 40 },  // Column 3 (Expense Amount) - medium width
-                    4: { cellWidth: 30 },  // Column 4 (Expense Date) - medium width
-                    5: { cellWidth: 150 },  // Column 5 (File) - wide width for the link column
-                },
-                didDrawCell: (data: any) => {
-                    // Check if the current cell is in the "File" column (index 4)
-                    if (data.column.index === 5) {
-                        const fileUrl = data.cell.raw;  // The file URL that should be clickable
-        
-                        if (fileUrl) {
-                            // Positioning and drawing the clickable link
-                            doc.setTextColor(0, 0, 255);  // Optional: Make the link text blue
-                            // doc.text('View File', data.cell.x + 2, data.cell.y + 5);  // Position text within the cell
-                            doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url: fileUrl });  // Make the entire cell a clickable link
-                        }
-                    }
-                },
-            });
-        
-            // Save the PDF with the name "Expense_File_Report.pdf"
-            doc.save('Invoice_File_Report.pdf');
-        };
-    
+    const handleDownloadAll = () => {
+        console.log('dataSource', dataSource);
 
+        // Create a new jsPDF instance
+        const doc: any = new jsPDF();
+
+        // Adding a title to the PDF
+        doc.text('Invoice File Report', 14, 16);
+
+        // Define the column headers
+        const headers = ['Invoice No', 'Project Name', 'Customer', 'Invoice Amount', 'Invoice Date', 'File'];
+
+        // Map the data into the table format
+        const tableData = dataSource.map((item: any) => [
+            item.invoice_no, // ID
+            item.project_name, // Expense User
+            item.invoice_customer, // Invoice User
+            item.invoice_amount, // Invoice Amount
+            dayjs(item.invoice_date).format('DD-MM-YYYY'), // Invoice Date (formatted)
+            item.file, // File URL
+        ]);
+
+        // Use the autoTable plugin to generate the table in the PDF
+        doc.autoTable({
+            head: [headers], // Table header
+            body: tableData, // Table rows
+            startY: 20, // Starting Y position for the table
+            margin: { horizontal: 10 },
+            theme: 'striped',
+            columnStyles: {
+                0: { cellWidth: 20 }, // Column 1 (ID) - small width
+                1: { cellWidth: 30 }, // Column 2 (Expense User) - wider
+                2: { cellWidth: 50 }, // Column 2 (Expense User) - wider
+                3: { cellWidth: 40 }, // Column 3 (Expense Amount) - medium width
+                4: { cellWidth: 30 }, // Column 4 (Expense Date) - medium width
+                5: { cellWidth: 150 }, // Column 5 (File) - wide width for the link column
+            },
+            didDrawCell: (data: any) => {
+                // Check if the current cell is in the "File" column (index 4)
+                if (data.column.index === 5) {
+                    const fileUrl = data.cell.raw; // The file URL that should be clickable
+
+                    if (fileUrl) {
+                        // Positioning and drawing the clickable link
+                        doc.setTextColor(0, 0, 255); // Optional: Make the link text blue
+                        // doc.text('View File', data.cell.x + 2, data.cell.y + 5);  // Position text within the cell
+                        doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url: fileUrl }); // Make the entire cell a clickable link
+                    }
+                }
+            },
+        });
+
+        // Save the PDF with the name "Expense_File_Report.pdf"
+        doc.save('Invoice_File_Report.pdf');
+    };
 
     return (
         <>
@@ -307,6 +312,10 @@ const InvoiceFileReport = () => {
                 <div>
                     <Form name="basic" layout="vertical" form={form} initialValues={{ remember: true }} onFinish={onFinish} onFinishFailed={onFinishFailed} autoComplete="off">
                         <div className="sale_report_inputs">
+                            <Form.Item label="Invoice No" name="invoice_no" style={{ width: '200px' }}>
+                                <Input />
+                            </Form.Item>
+
                             <Form.Item label="Project Name" name="project_name" style={{ width: '200px' }}>
                                 <Input />
                             </Form.Item>
@@ -327,10 +336,6 @@ const InvoiceFileReport = () => {
 
                             <Form.Item label="To Date" name="to_date" style={{ width: '200px' }}>
                                 <DatePicker style={{ width: '100%' }} />
-                            </Form.Item>
-
-                            <Form.Item label="Invoice No" name="invoice_no" style={{ width: '200px' }}>
-                                <Input />
                             </Form.Item>
 
                             <div style={{ display: 'flex', alignItems: 'end' }}>

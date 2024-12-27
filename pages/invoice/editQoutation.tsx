@@ -522,19 +522,19 @@ const Edit = () => {
             //     return false;
             // }
 
-            // if (invoiceFormData?.invoice_tests?.some((obj: any) => Object.values(obj).includes('No'))) {
-            //     messageApi.open({
-            //         type: 'error',
-            //         content: 'Test Not Completed',
-            //     });
+            if (invoiceFormData?.quotation_items?.some((obj: any) => Object.values(obj).includes('No'))) {
+                messageApi.open({
+                    type: 'error',
+                    content: 'Test Not Completed',
+                });
 
-            //     setFormData({
-            //         ...formData,
-            //         [e.target.name]: 'No',
-            //     });
+                setFormData({
+                    ...formData,
+                    [e.target.name]: 'No',
+                });
 
-            //     return false;
-            // }
+                return false;
+            }
 
             setFormData({
                 ...formData,
@@ -1158,8 +1158,8 @@ const Edit = () => {
                                 </div>
 
                                 <div style={{ marginTop: '50px' }}>
-                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-1" style={{ display: 'flex' }}>
-                                        {/* {
+                                    {/* <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-1" style={{ display: 'flex' }}> */}
+                                    {/* {
                                                                         admin == "false" && formData?.completed == "Yes" ? (
                                                                             <button
                                                                                 type="button"
@@ -1181,27 +1181,27 @@ const Edit = () => {
                                                                         )
                                                                     } */}
 
-                                        <button type="button" className="btn btn-civil w-full gap-2" onClick={invoiceFormSubmit}>
-                                            <IconSave className="shrink-0 ltr:mr-2 rtl:ml-2" />
-                                            Update
-                                        </button>
+                                    <button type="button" className="btn btn-civil w-full gap-2" onClick={invoiceFormSubmit}>
+                                        <IconSave className="shrink-0 ltr:mr-2 rtl:ml-2" />
+                                        Update
+                                    </button>
 
-                                        {/* <button className="btn btn-gray w-full gap-2" onClick={() => handlePreviewClick(id)}>
+                                    {/* <button className="btn btn-gray w-full gap-2" onClick={() => handlePreviewClick(id)}>
                                                     <IconEye className="ltr:mr-2 rtl:ml-2 shrink-0" />
                                                     Preview
                                                 </button> */}
-                                        {/* {geteditData?.invoice?.completed == 'Yes' ? ( */}
-                                        <button className="btn btn-gray w-full gap-2" onClick={() => handlePreviewClick(id)}>
+                                    {/* {geteditData?.invoice?.completed == 'Yes' ? ( */}
+                                    {/* <button className="btn btn-gray w-full gap-2" onClick={() => handlePreviewClick(id)}>
                                             <IconEye className="shrink-0 ltr:mr-2 rtl:ml-2" />
                                             Preview
-                                        </button>
-                                        {/* ) : (
+                                        </button> */}
+                                    {/* ) : (
                                                 <button className="btn btn-gray w-full gap-2" disabled>
                                                     <IconEye className="shrink-0 ltr:mr-2 rtl:ml-2" />
                                                     Preview
                                                 </button>
                                             )} */}
-                                    </div>
+                                    {/* </div> */}
                                 </div>
                             </div>
                         </div>

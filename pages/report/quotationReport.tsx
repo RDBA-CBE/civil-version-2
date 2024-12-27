@@ -11,9 +11,8 @@ import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import IconEye from '@/components/Icon/IconEye';
 import { DownloadOutlined, EyeOutlined } from '@ant-design/icons';
-import html2canvas from 'html2canvas'; 
 
-const InvoiceReport = () => {
+const QuotationReport = () => {
     const [form] = Form.useForm();
     const [dataSource, setDataSource] = useState([]);
     const [saleFormData, setSaleFormData] = useState([]);
@@ -64,9 +63,9 @@ const InvoiceReport = () => {
     // Table Headers
     const columns = [
         {
-            title: 'Invoice No',
-            dataIndex: 'invoice_no',
-            key: 'invoice_no',
+            title: 'Quotation No',
+            dataIndex: 'quotation_number',
+            key: 'quotation_number',
             className: 'singleLineCell',
         },
         {
@@ -76,18 +75,32 @@ const InvoiceReport = () => {
             className: 'singleLineCell',
         },
         {
-            title: 'Project Name',
-            dataIndex: 'project_name',
-            key: 'project_name',
+            title: 'File',
+            dataIndex: 'quotation_file',
+            key: 'quotation_file',
             className: 'singleLineCell',
             width: 150,
+            render: (text: any, record: any) => {
+                console.log('✌️record --->', record?.quotation_file);
+                return (
+                    <>
+                        {record?.quotation_file ? (
+                            <a href={record.quotation_file} target="_blank" rel="noopener noreferrer">
+                                Download
+                            </a>
+                        ) : (
+                            'No File'
+                        )}
+                    </>
+                );
+            },
         },
-        {
-            title: 'Advance',
-            dataIndex: 'advance',
-            key: 'advance',
-            className: 'singleLineCell',
-        },
+        // {
+        //     title: 'Advance',
+        //     dataIndex: 'advance',
+        //     key: 'advance',
+        //     className: 'singleLineCell',
+        // },
         // {
         //     title: 'Discount',
         //     dataIndex: 'discount',
@@ -120,33 +133,12 @@ const InvoiceReport = () => {
             key: 'total_amount',
             className: 'singleLineCell',
         },
-        {
-            title: 'Balance',
-            dataIndex: 'balance',
-            key: 'balance',
-            className: 'singleLineCell',
-        },
-        {
-            title: 'File',
-            dataIndex: 'invoice_file',
-            key: 'invoice_file',
-            className: 'singleLineCell',
-            width: 150,
-            render: (text: any, record: any) => {
-                console.log('✌️record --->', record?.invoice_file);
-                return (
-                    <>
-                        {record?.invoice_file ? (
-                            <a href={record.invoice_file} target="_blank" rel="noopener noreferrer">
-                                Download
-                            </a>
-                        ) : (
-                            'No File'
-                        )}
-                    </>
-                );
-            },
-        },
+        // {
+        //     title: 'Balance',
+        //     dataIndex: 'balance',
+        //     key: 'balance',
+        //     className: 'singleLineCell',
+        // },
         // {
         //     title: 'TDS Amount',
         //     dataIndex: 'tds_amount',
@@ -166,12 +158,13 @@ const InvoiceReport = () => {
         //     key: 'invoice_image',
         //     className: 'singleLineCell',
         // },
-        {
-            title: 'Completed',
-            dataIndex: 'completed',
-            key: 'completed',
-            className: 'singleLineCell',
-        },
+        // {
+        //     title: 'Completed',
+        //     dataIndex: 'completed',
+        //     key: 'completed',
+        //     className: 'singleLineCell',
+        //     render: (text: any, record: any) => record.completed === true ? 'Yes' : 'No',
+        // },
         // {
         //     title: `Actions`,
         //     dataIndex: 'actions',
@@ -213,7 +206,7 @@ const InvoiceReport = () => {
         dataSource.forEach((row) => {
             const rowData: any = [];
             columns.forEach((column) => {
-                if (column.dataIndex === 'invoice_file') {
+                if (column.dataIndex === 'quotation_file') {
                     // Add hyperlink in the specific column
                     rowData.push({
                         text: row[column.dataIndex], // Text displayed for the link
@@ -234,7 +227,7 @@ const InvoiceReport = () => {
             new Blob([blob], {
                 type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             }),
-            'Invoice-File-Report.xlsx'
+            'Quotation-Report.xlsx'
         );
     };
 
@@ -252,7 +245,7 @@ const InvoiceReport = () => {
         };
 
         axios
-            .get(`${baseUrl}/invoice-reports/`, {
+            .get(`${baseUrl}/quotation-reports/`, {
                 headers: {
                     Authorization: `Token ${Token}`,
                 },
@@ -262,7 +255,7 @@ const InvoiceReport = () => {
             .then((res: any) => {
                 console.log('✌️res --->', res);
                 const data = res?.data.map((item: any) => {
-                    return item.invoice;
+                    return item.quotation;
                 });
 
                 // console.log(res?.data.map((item:any)=>{return item.invoice}));
@@ -289,13 +282,13 @@ const InvoiceReport = () => {
         const body = {
             start_date: values?.start_date ? dayjs(values?.start_date).format('YYYY-MM-DD') : '',
             end_date: values?.end_date ? dayjs(values?.end_date).format('YYYY-MM-DD') : '',
-            invoice_number: values?.invoice_no ? values?.invoice_no : '',
-            project_name: values?.project_name ? values?.project_name : '',
+            // invoice_number: values?.invoice_no ? values?.invoice_no : '',
+            // project_name: values?.project_name ? values?.project_name : '',
             customer: values?.customer ? values?.customer : '',
         };
 
         axios
-            .get(`${baseUrl}/invoice-reports/`, {
+            .get(`${baseUrl}/quotation-reports/`, {
                 headers: {
                     Authorization: `Token ${Token}`,
                 },
@@ -303,7 +296,7 @@ const InvoiceReport = () => {
             })
             .then((res: any) => {
                 const data = res?.data?.map((item: any) => {
-                    return item.invoice;
+                    return item.quotation;
                 });
 
                 setDataSource(data);
@@ -335,32 +328,34 @@ const InvoiceReport = () => {
 
         // Define the column headers
         const headers = [
+            'Quotation No',
             'Customer',
-            'Project Name',
-            'Discount',
-            'Advance Amount',
-            'Balance Amount',
+            // 'Project Name',
+            // 'Discount',
+            // 'Advance Amount',
+            // 'Balance Amount',
             'Total Amount',
-            'Tds Amount',
-            'Invoice No',
-            'Place Of Testing',
-            'Completed',
-            'Invoice Tests',
-            'Date',
+            // 'Tds Amount',
+
+            // 'Place Of Testing',
+            // 'Completed',
+            // 'Invoice Tests',
+            // 'Date',
         ];
 
         // Map the data into the table format
         const tableData = dataSource.map((item: any) => {
             console.log(item);
             return [
+                item.quotation_number,
                 item.customer, // ID
-                item.project_name, // Expense User
-                item.discount,
-                item.advance,
-                item.balance,
+                // item.project_name, // Expense User
+                // item.discount,
+                // item.advance,
+                // item.balance,
                 item.total_amount,
-                item.tds_amount,
-                item.invoice_no,
+                // item.tds_amount,
+
                 item.place_of_testing,
                 item.completed,
                 dayjs(item.date).format('DD-MM-YYYY'), // Expense Date (formatted)
@@ -397,32 +392,11 @@ const InvoiceReport = () => {
         });
 
         // Save the PDF with the name "Expense_File_Report.pdf"
-        doc.save('Invoice_Report.pdf');
+        doc.save('Quotation-Report.pdf');
     };
 
     // Function to handle PDF download
-    const handleDownloadPDF = (record: any) => {
-        const doc = new jsPDF();
 
-        // Example: If you want to render HTML content to a PDF (optional, if you have an HTML structure)
-        // You can get an HTML element (e.g., invoice) and use html2canvas to convert it to an image
-        // This can be useful if you want to capture an HTML view of the invoice
-
-        const invoiceElement = document.getElementById('invoice-content'); // This could be your invoice HTML container
-        if (invoiceElement) {
-            html2canvas(invoiceElement).then((canvas) => {
-                const imgData = canvas.toDataURL('image/png');
-                doc.addImage(imgData, 'PNG', 10, 10, 180, 160); // Add image to the PDF (adjust coordinates and size)
-                doc.save(`invoice-${record.id}.pdf`); // Save the generated PDF
-            });
-        } else {
-            // If you don't need HTML content, just generate a simple PDF with data
-            doc.text(`Invoice ID: ${record.id}`, 10, 10);
-            doc.text(`Invoice Number: ${record.quotation_number}`, 10, 20);
-            doc.text(`Total Amount: ${record.total_amount}`, 10, 30);
-            doc.save(`invoice-${record.id}.pdf`);
-        }
-    };
     return (
         <>
             <div className="panel">
@@ -433,9 +407,9 @@ const InvoiceReport = () => {
                                 <Input />
                             </Form.Item> */}
                             {/* <Space> */}
-                            <Form.Item label="Invoice No" name="invoice_no" style={{ width: '200px' }}>
+                            {/* <Form.Item label="Invoice No" name="invoice_no" style={{ width: '200px' }}>
                                 <InputNumber style={{ width: '100%' }} />
-                            </Form.Item>
+                            </Form.Item> */}
 
                             <Form.Item label="Customer" name="customer" style={{ width: '250px' }}>
                                 <Select showSearch filterOption={(input: any, option: any) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}>
@@ -447,9 +421,9 @@ const InvoiceReport = () => {
                                 </Select>
                             </Form.Item>
 
-                            <Form.Item label="Project Name" name="project_name" style={{ width: '200px' }}>
+                            {/* <Form.Item label="Project Name" name="project_name" style={{ width: '200px' }}>
                                 <Input />
-                            </Form.Item>
+                            </Form.Item> */}
                             <Form.Item label="From Date" name="start_date" style={{ width: '250px' }}>
                                 <DatePicker style={{ width: '100%' }} />
                             </Form.Item>
@@ -515,4 +489,4 @@ const InvoiceReport = () => {
     );
 };
 
-export default InvoiceReport;
+export default QuotationReport;
