@@ -58,13 +58,13 @@ const PendingPaymentReport = () => {
             key: 'project_name',
             className: 'singleLineCell',
         },
-        {
-            title: 'Incompleted Test',
-            dataIndex: 'incompleted_test',
-            key: 'incompleted_test',
-            className: 'singleLineCell',
-            width: 150,
-        },
+        // {
+        //     title: 'Incompleted Test',
+        //     dataIndex: 'incompleted_test',
+        //     key: 'incompleted_test',
+        //     className: 'singleLineCell',
+        //     width: 150,
+        // },
         {
             title: 'Advance',
             dataIndex: 'advance',
@@ -128,7 +128,7 @@ const PendingPaymentReport = () => {
             new Blob([blob], {
                 type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             }),
-            'Expense-Report.xlsx'
+            'Pending-payment-Report.xlsx'
         );
     };
 

@@ -324,7 +324,7 @@ const QuotationReport = () => {
         const doc: any = new jsPDF();
 
         // Adding a title to the PDF
-        doc.text('Invoice Report', 14, 16);
+        doc.text('Quotation Report', 14, 16);
 
         // Define the column headers
         const headers = [
@@ -456,7 +456,7 @@ const QuotationReport = () => {
                 </div>
                 <div className="tax-heading-main">
                     <div>
-                        <h1 className="text-lg font-semibold dark:text-white-light">Invoice Report</h1>
+                        <h1 className="text-lg font-semibold dark:text-white-light">Quotation Report</h1>
                     </div>
                     <div>
                         <Space>

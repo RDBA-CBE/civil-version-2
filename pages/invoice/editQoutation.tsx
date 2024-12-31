@@ -879,7 +879,7 @@ const Edit = () => {
                                     <label htmlFor="country" className="mb-0 w-1/3 ltr:mr-2 rtl:ml-2">
                                         Customer Name
                                     </label>
-                                    <select id="country" className="form-select flex-1" name="customer" onChange={handleSelectChange}>
+                                    <select id="country" disabled className="form-select flex-1" name="customer" onChange={handleSelectChange}>
                                         {invoiceFormData?.customer_list?.map((value: any) => (
                                             <option key={value.id} value={value.id}>
                                                 {value?.customer_name}
@@ -892,7 +892,7 @@ const Edit = () => {
                                     <label htmlFor="reciever-address" className="mb-0 w-1/3 ltr:mr-2 rtl:ml-2">
                                         Address
                                     </label>
-                                    <textarea id="reciever-address" name="reciever-address" className="form-input flex-1" value={customerAddress} placeholder="Enter Address" />
+                                    <textarea id="reciever-address" name="reciever-address" disabled className="form-input flex-1" value={customerAddress} placeholder="Enter Address" />
                                 </div>
                                 {/* <div className="mt-4 flex items-center">
                                         <label htmlFor="reciever-email" className="mb-0 w-1/3 ltr:mr-2 rtl:ml-2">

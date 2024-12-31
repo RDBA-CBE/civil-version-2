@@ -183,19 +183,38 @@ const Quotations = () => {
 
     // form submit
     const onFinish = (values: any) => {
+        console.log('✌️values --->', values);
+        const Token = localStorage.getItem('token');
+
+        axios
+            .post(`${baseUrl}/customers/`, values, {
+                headers: { Authorization: `Token ${Token}` },
+            })
+            .then((res) => {
+                console.log('✌️res --->', res);
+                CreateQuotations(res.data.id);
+                // initialData();
+                // window.location.href = `/invoice/editQoutation?id=${res?.data?.id}`;
+                // setOpen(false);
+            })
+            .catch((error) => {
+                if (error.response.status === 401) {
+                    router.push('/');
+                }
+            });
+
+        form.resetFields();
+        onClose();
+    };
+
+    const CreateQuotations = (id: any) => {
         const Token = localStorage.getItem('token');
 
         const body = {
-            customer: values.customer,
-            // project_name: values.project_name,
-            advance: values.advance,
-            balance: values.balance,
-            discount: values.discount,
-            sales_mode: values.sales_mode,
-            tax: values.tax,
-            id: values.id,
+            customer: id,
+            // project_name: values.project_name ? values.project_name : '',
+            // taxes: Object.keys(checkedItems),
         };
-
         axios
             .post(`${baseUrl}/quotations/create/`, body, {
                 headers: {
@@ -213,9 +232,6 @@ const Quotations = () => {
                     router.push('/');
                 }
             });
-
-        form.resetFields();
-        onClose();
     };
 
     const onFinishFailed = (errorInfo: any) => {};
@@ -416,7 +432,7 @@ const Quotations = () => {
 
                 <Drawer title="Create Quotation" placement="right" width={600} onClose={onClose} open={open}>
                     <Form name="basic-form" layout="vertical" initialValues={{ remember: true }} onFinish={onFinish} onFinishFailed={onFinishFailed} autoComplete="off" form={form}>
-                        <Form.Item label="Customer Name" name="customer" required={false} rules={[{ required: true, message: 'Please select Customer Name!' }]}>
+                        {/* <Form.Item label="Customer Name" name="customer" required={false} rules={[{ required: true, message: 'Please select Customer Name!' }]}>
                             <Select
                                 onChange={handleSelectChange}
                                 placeholder="Select a customer"
@@ -436,7 +452,7 @@ const Quotations = () => {
 
                         <Form.Item>
                             <Input.TextArea rows={4} value={customerAddress} />
-                        </Form.Item>
+                        </Form.Item> */}
 
                         {/* <Form.Item label="Project Name" name="project_name" required={false} rules={[{ required: true, message: 'Please input your Project Name!' }]}>
                             <Input />
@@ -460,6 +476,13 @@ const Quotations = () => {
                             </Checkbox.Group>
                         </Form.Item> */}
 
+                        <Form.Item label="Customer Name" name="customer_name" required={true} rules={[{ required: true, message: 'Please select Customer Name!' }]}>
+                            <Input />
+                        </Form.Item>
+
+                        <Form.Item label="Address" name="address1" required={true} rules={[{ required: true, message: 'Please input your Address!' }]}>
+                            <Input.TextArea rows={4} />
+                        </Form.Item>
                         <Form.Item>
                             {/* <Space> */}
                             <div className="form-btn-main">
