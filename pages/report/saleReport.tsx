@@ -221,7 +221,7 @@ const SaleReport = () => {
             width: 100,
         },
         {
-            title: 'File',
+            title1: 'Invoice File',
             dataIndex: 'invoice_file',
             key: 'invoice_file',
             className: 'singleLineCell',
