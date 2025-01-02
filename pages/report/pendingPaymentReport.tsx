@@ -130,8 +130,23 @@ const PendingPaymentReport = () => {
         worksheet.addRow(columns.map((column) => column.title));
 
         // Add data rows
-        dataSource.forEach((row: any) => {
-            worksheet.addRow(columns.map((column: any) => row[column.dataIndex]));
+        // dataSource.forEach((row: any) => {
+        //     worksheet.addRow(columns.map((column: any) => row[column.dataIndex]));
+        // });
+        dataSource.forEach((row) => {
+            const rowData: any = [];
+            columns.forEach((column) => {
+                if (column.dataIndex === 'invoice_file') {
+                    // Add hyperlink in the specific column
+                    rowData.push({
+                        text: row[column.dataIndex], // Text displayed for the link
+                        hyperlink: row[column.dataIndex], // URL for the link
+                    });
+                } else {
+                    rowData.push(row[column.dataIndex]);
+                }
+            });
+            worksheet.addRow(rowData);
         });
 
         // Generate a Blob containing the Excel file
