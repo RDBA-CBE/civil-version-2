@@ -58,13 +58,27 @@ const PendingPaymentReport = () => {
             key: 'project_name',
             className: 'singleLineCell',
         },
-        // {
-        //     title: 'Incompleted Test',
-        //     dataIndex: 'incompleted_test',
-        //     key: 'incompleted_test',
-        //     className: 'singleLineCell',
-        //     width: 150,
-        // },
+        {
+            title: 'File',
+            dataIndex: 'invoice_file',
+            key: 'invoice_file',
+            className: 'singleLineCell',
+            width: 150,
+            render: (text: any, record: any) => {
+                console.log('✌️record --->', record?.invoice_file);
+                return (
+                    <>
+                        {record?.invoice_file ? (
+                            <a href={record.invoice_file} target="_blank" rel="noopener noreferrer">
+                                Download
+                            </a>
+                        ) : (
+                            'No File'
+                        )}
+                    </>
+                );
+            },
+        },
         {
             title: 'Advance',
             dataIndex: 'advance',
