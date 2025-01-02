@@ -423,10 +423,11 @@ const Edit = () => {
 
     // modal
     const showModal = () => {
-        if (formData.completed == 'Yes') {
+        console.log('formData.completed', formData.completed);
+        if (formData.completed == 'true' || formData.completed == true) {
             messageApi.open({
                 type: 'error',
-                content: 'Kindly Change completed status to "NO" and update the invoice, then add the test to invoice.',
+                content: 'Kindly Change completed status to "NO" and update the Quotation, then add the test to Quotation.',
             });
         } else {
             setIsModalOpen(true);
@@ -581,6 +582,16 @@ const Edit = () => {
     };
 
     const invoiceFormSubmit = (e: any) => {
+        e.preventDefault();
+
+        if (formData.completed == 'false' || formData.completed == false) {
+            messageApi.open({
+                type: 'error',
+                content: 'Kindly Change completed status to "YES" and update the Quotation, then Update the Quotation.',
+            });
+            return;
+        }
+
         const Token = localStorage.getItem('token');
 
         const body = {
@@ -694,9 +705,16 @@ const Edit = () => {
 
     // drawer
     const showDrawer = (item: any) => {
-        setEditRecord(item);
-        form.setFieldsValue(item);
-        setOpen(true);
+        if (formData.completed == 'true' || formData.completed == true) {
+            messageApi.open({
+                type: 'error',
+                content: 'Kindly Change completed status to "NO" and update the Quotation, then add the test to Quotation.',
+            });
+        } else {
+            setEditRecord(item);
+            form.setFieldsValue(item);
+            setOpen(true);
+        }
     };
 
     const onClose = () => {
@@ -753,7 +771,7 @@ const Edit = () => {
             .then((res) => {
                 console.log('✌️res --->', res);
                 setIsModalOpen(false);
-
+                invoiceFormSubmit1();
                 getInvoiceTestData2('update');
                 form1.resetFields();
                 Success(res?.data?.message);
@@ -785,6 +803,7 @@ const Edit = () => {
                         },
                     })
                     .then((res) => {
+                        invoiceFormSubmit1();
                         getInvoiceTestData2('update');
                     })
                     .catch((error) => {
@@ -820,6 +839,7 @@ const Edit = () => {
                 },
             })
             .then((res: any) => {
+                invoiceFormSubmit1();
                 getInvoiceTestData2('update');
                 setOpen(false);
             })
