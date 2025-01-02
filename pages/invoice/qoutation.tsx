@@ -332,7 +332,7 @@ const Quotations = () => {
             start_date: values?.start_date ? dayjs(values?.start_date).format('YYYY-MM-DD') : '',
             end_date: values?.end_date ? dayjs(values?.end_date).format('YYYY-MM-DD') : '',
             customer: values.customer ? values.customer : '',
-            completed: values.completed == 'Yes' ? true : false,
+            completed: values.completed == 'Yes' ? true : values.completed == 'No' ? false : '',
         };
 
         console.log('✌️body --->', body);

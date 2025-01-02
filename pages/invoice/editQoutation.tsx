@@ -584,13 +584,13 @@ const Edit = () => {
     const invoiceFormSubmit = (e: any) => {
         e.preventDefault();
 
-        if (formData.completed == 'false' || formData.completed == false) {
-            messageApi.open({
-                type: 'error',
-                content: 'Kindly Change completed status to "YES" and update the Quotation, then Update the Quotation.',
-            });
-            return;
-        }
+        // if (formData.completed == 'false' || formData.completed == false) {
+        //     messageApi.open({
+        //         type: 'error',
+        //         content: 'Kindly Change completed status to "YES" and update the Quotation, then Update the Quotation.',
+        //     });
+        //     return;
+        // }
 
         const Token = localStorage.getItem('token');
 
