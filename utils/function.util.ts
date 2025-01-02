@@ -10,7 +10,7 @@ export const useSetState = (initialState: any) => {
     return [state, newSetState];
 };
 
-export const baseUrl = 'https://63fkxqqj-8000.inc1.devtunnels.ms';
+export const baseUrl = 'http://app.covaicivillab.com';
 
 export const Success = (content: any) => {
     message.open({
