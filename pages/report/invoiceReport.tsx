@@ -434,7 +434,7 @@ const InvoiceReport = () => {
                             </Form.Item> */}
                             {/* <Space> */}
                             <Form.Item label="Invoice No" name="invoice_no" style={{ width: '200px' }}>
-                                <InputNumber style={{ width: '100%' }} />
+                                <Input style={{ width: '100%' }} />
                             </Form.Item>
 
                             <Form.Item label="Customer" name="customer" style={{ width: '250px' }}>
