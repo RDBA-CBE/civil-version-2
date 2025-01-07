@@ -243,7 +243,7 @@ const PendingPaymentReport = () => {
                     <Form name="basic" layout="vertical" form={form} initialValues={{ remember: true }} onFinish={onFinish2} onFinishFailed={onFinishFailed2} autoComplete="off">
                         <div className="sale_report_inputs">
                             <Form.Item label="Invoice No" name="invoice_no" style={{ width: '200px' }}>
-                                <InputNumber style={{ width: '100%' }} />
+                                <Input style={{ width: '100%' }} />
                             </Form.Item>
 
                             <Form.Item label="Customer" name="customer" style={{ width: '250px' }}>
