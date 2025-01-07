@@ -127,6 +127,13 @@ const InvoiceReport = () => {
             className: 'singleLineCell',
         },
         {
+            title: 'Invoice Date',
+            dataIndex: 'date',
+            key: 'date',
+            className: 'singleLineCell',
+             width: 150,
+        },
+        {
             title: 'File',
             dataIndex: 'invoice_file',
             key: 'invoice_file',
