@@ -606,7 +606,7 @@ const Expense = () => {
                 }));
             })
             .catch((error: any) => {
-                if (error.response.status === 401) {
+                if (error.response?.status === 401) {
                     router.push('/');
                 }
             });
