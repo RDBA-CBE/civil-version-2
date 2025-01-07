@@ -11,7 +11,7 @@ import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import IconEye from '@/components/Icon/IconEye';
 import { DownloadOutlined, EyeOutlined } from '@ant-design/icons';
-import html2canvas from 'html2canvas'; 
+import html2canvas from 'html2canvas';
 
 const InvoiceReport = () => {
     const [form] = Form.useForm();
@@ -131,7 +131,7 @@ const InvoiceReport = () => {
             dataIndex: 'date',
             key: 'date',
             className: 'singleLineCell',
-             width: 150,
+            width: 150,
         },
         {
             title: 'File',
@@ -241,7 +241,7 @@ const InvoiceReport = () => {
             new Blob([blob], {
                 type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             }),
-            'Invoice-File-Report.xlsx'
+            'Invoice-Report.xlsx'
         );
     };
 
@@ -334,76 +334,59 @@ const InvoiceReport = () => {
     const handleDownloadAll = () => {
         console.log('dataSource', dataSource);
 
-        // Create a new jsPDF instance
         const doc: any = new jsPDF();
-
-        // Adding a title to the PDF
         doc.text('Invoice Report', 14, 16);
 
-        // Define the column headers
-        const headers = [
-            'Customer',
-            'Project Name',
-            'Discount',
-            'Advance Amount',
-            'Balance Amount',
-            'Total Amount',
-            'Tds Amount',
-            'Invoice No',
-            'Place Of Testing',
-            'Completed',
-            'Invoice Tests',
-            'Date',
-        ];
+        const headers = ['Invoice No', 'Customer', 'Project Name', 'Advance Amount', 'Total Amount', 'Balance Amount', 'Date', 'File', 'Completed'];
 
-        // Map the data into the table format
         const tableData = dataSource.map((item: any) => {
             console.log(item);
             return [
-                item.customer, // ID
-                item.project_name, // Expense User
-                item.discount,
-                item.advance,
-                item.balance,
-                item.total_amount,
-                item.tds_amount,
                 item.invoice_no,
-                item.place_of_testing,
+                item.customer,
+                item.project_name,
+                item.advance,
+                item.total_amount,
+                item.balance,
+                dayjs(item.date).format('DD-MM-YYYY'),
+                item.invoice_file, // This is your "File" column
                 item.completed,
-                dayjs(item.date).format('DD-MM-YYYY'), // Expense Date (formatted)
-                // {
-                //     content: item.file, // URL to the file
-                //     link: item.file, // URL should be a clickable link in the PDF
-                // }
             ];
         });
+
         console.log(tableData);
 
-        // Use the autoTable plugin to generate the table in the PDF
         doc.autoTable({
-            head: [headers], // Table header
-            body: tableData, // Table rows
-            startY: 20, // Starting Y position for the table
-            margin: { horizontal: 10 },
+            head: [headers],
+            body: tableData,
+            startY: 20,
+            margin: { horizontal: 1 },
             theme: 'striped',
-            // columnStyles: {
-            //     0: { cellWidth: 20 },  // Column 1 (ID) - small width
-            //     1: { cellWidth: 20 },  // Column 2 (Expense User) - wider
-            //     2: { cellWidth: 20 },  // Column 3 (Expense Amount) - medium width
-            //     3: { cellWidth: 20 },  // Column 4 (Expense Date) - medium width
-            //     4: { cellWidth: 20 },  // Column 5 (File) - wide width for the link column
-            //     5: { cellWidth: 20 },
-            //     6: { cellWidth: 20 },
-            //     7: { cellWidth: 20 },
-            //     8: { cellWidth: 10 },
-            //     9: { cellWidth: 10 },
-            //     10: { cellWidth: 10 },
-            //     11: { cellWidth: 10 },
+            columnStyles: {
+                0: { cellWidth: 20 }, // Column 1 (ID) - small width
+                1: { cellWidth: 20 }, // Column 2 (Expense User) - wider
+                2: { cellWidth: 20 }, // Column 3 (Expense Amount) - medium width
+                3: { cellWidth: 20 }, // Column 4 (Expense Date) - medium width
+                4: { cellWidth: 20 }, // Column 5 (File) - wide width for the link column
+                5: { cellWidth: 20 }, // Column 5 (File) - wide width for the link column
+                6: { cellWidth: 20 }, // Column 5 (File) - wide width for the link column
+                7: { cellWidth: 40 }, // Column 5 (File) - wide width for the link column
+                8: { cellWidth: 20 }, // Column 5 (File) - wide width for the link column
+            },
+            didDrawCell: (data: any) => {
+                console.log('✌️data --->', data.column);
+                if (data.column.index === 7) {
+                    const fileUrl = data.cell.raw; // The file URL that should be clickable
 
-            // },
+                    if (fileUrl) {
+                        doc.setTextColor(0, 0, 255);
+                        doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url: fileUrl });
+                    }
+                }
+            },
         });
 
-        // Save the PDF with the name "Expense_File_Report.pdf"
+        // Save PDF with a name
         doc.save('Invoice_Report.pdf');
     };
 
