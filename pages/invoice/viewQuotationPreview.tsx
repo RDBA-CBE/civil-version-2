@@ -183,19 +183,19 @@ const QuotationPreview = () => {
                         ))}
 
                         <tr>
-                            <td colSpan="4" style={{ ...styles.tableCell }}>
+                            <td colSpan={4} style={{ ...styles.tableCell }}>
                                 Sub Total
                             </td>
                             <td style={styles.tableCell}>{invoiceReport?.total_amount}</td>
                         </tr>
                         <tr>
-                            <td colSpan="4" style={{ ...styles.tableCell }}>
+                            <td colSpan={4} style={{ ...styles.tableCell }}>
                                 {formatTotal() && <p> {formatTotal()}</p>}
                             </td>
                             <td style={styles.tableCell}>{taxAmount}</td>
                         </tr>
                         <tr>
-                            <td colSpan="4" style={{ ...styles.tableCell, fontWeight: 'bold' }}>
+                            <td colSpan={4} style={{ ...styles.tableCell, fontWeight: 'bold' }}>
                                 Total
                             </td>
                             <td style={styles.tableCell}>{afterTaxAmount}</td>
@@ -217,7 +217,7 @@ const QuotationPreview = () => {
                 <table style={{...styles.table, marginTop: '20px'}}>
                     <tbody>
                         <tr>
-                            <td colSpan="2" style={{ ...styles.tableCell, fontWeight: 'bold' }}>
+                            <td colSpan={2} style={{ ...styles.tableCell, fontWeight: 'bold' }}>
                                 SCOPE OF THE WORK
                             </td>
                         </tr>
