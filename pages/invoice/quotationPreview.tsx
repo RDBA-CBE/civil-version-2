@@ -54,15 +54,11 @@ const QuotationPreview = () => {
     const formatTotal = () => {
         const selectedPercentages = invoiceReport?.tax_list?.filter((item: any) => invoiceReport.tax.includes(item.id));
         if (selectedPercentages?.length > 0) {
-            const percentagesArray = selectedPercentages.map((item: any) => `${parseFloat(item.tax_percentage)}%`);
-            const selectedName = selectedPercentages.map((item: any) => item.tax_name);
-            const nameString = selectedName.join(' + ');
-            const percentagesString = percentagesArray.join(' + ');
-
-            const totalTaxPercentage = selectedPercentages.reduce((acc: number, item: any) => acc + parseFloat(item.tax_percentage), 0);
-            return `${nameString} : ${percentagesString} = ${totalTaxPercentage}%`;
+            const formattedTaxDetails = selectedPercentages.map((item: any) => `${item.tax_name} (${parseFloat(item.tax_percentage)}%)`);
+            return formattedTaxDetails.join('+ ');
         }
     };
+    
 
     // Styles converted into JavaScript object format
     const styles: any = {
@@ -155,7 +151,7 @@ const QuotationPreview = () => {
                 <div style={{ marginTop: '20px' }}>
                     <p>
                         Dear Sir, <br />
-                        <b>Sub: </b>Quotation for Rebound Hammer <br />
+                        <b>Sub: </b>Quotation for Material Testing Services <br />
                         Sending this quote as per our discussion regarding the test at the identified location. Please find the details as below:
                     </p>
                 </div>

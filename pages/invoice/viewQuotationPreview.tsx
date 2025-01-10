@@ -155,7 +155,8 @@ const QuotationPreview = () => {
                 <div style={{ marginTop: '20px' }}>
                     <p>
                         Dear Sir, <br />
-                        <b>Sub: </b>Quotation for Rebound Hammer <br />
+                        <b>Sub: </b>Quotation for Material Testing Services
+                        <br />
                         Sending this quote as per our discussion regarding the test at the identified location. Please find the details as below:
                     </p>
                 </div>
