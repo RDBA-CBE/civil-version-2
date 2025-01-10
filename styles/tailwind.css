@@ -1487,3 +1487,21 @@ border: 1px solid #972e25 !important;
         word-wrap: break-word !important; /* Allow long words to break */
     }
 }
+
+.sign-div{
+    display: flex;
+    justify-content: space-between;
+    /* margin-top: 20px; */
+    width: 100%;
+    /* border: 1px solid black; */
+    flex-wrap: wrap;
+}
+.sign-div-item{
+    /* border: 1px solid black; */
+    margin: 20px 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: left;
+}

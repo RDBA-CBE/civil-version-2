@@ -880,7 +880,7 @@ const Edit = () => {
 
     const handlePreviewClick = (id: any) => {
         var id: any = id;
-        var url = `/invoice/preview?id=${id}`;
+        var url = `/invoice/quotationPreview?id=${id}`;
         window.open(url, '_blank');
     };
 
@@ -1178,7 +1178,7 @@ const Edit = () => {
                                 </div>
 
                                 <div style={{ marginTop: '50px' }}>
-                                    {/* <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-1" style={{ display: 'flex' }}> */}
+                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-1" style={{ display: 'flex' }}>
                                     {/* {
                                                                         admin == "false" && formData?.completed == "Yes" ? (
                                                                             <button
@@ -1200,16 +1200,15 @@ const Edit = () => {
                                                                             </button>
                                                                         )
                                                                     } */}
+                                        <button type="button" className="btn btn-civil  w-full gap-2" onClick={invoiceFormSubmit}>
+                                            <IconSave className="shrink-0 ltr:mr-2 rtl:ml-2" />
+                                            Update
+                                        </button>
 
-                                    <button type="button" className="btn btn-civil w-full gap-2" onClick={invoiceFormSubmit}>
-                                        <IconSave className="shrink-0 ltr:mr-2 rtl:ml-2" />
-                                        Update
-                                    </button>
-
-                                    {/* <button className="btn btn-gray w-full gap-2" onClick={() => handlePreviewClick(id)}>
-                                                    <IconEye className="ltr:mr-2 rtl:ml-2 shrink-0" />
-                                                    Preview
-                                                </button> */}
+                                        <button className="btn btn-graygap-2  w-full" onClick={() => handlePreviewClick(id)}>
+                                            <IconEye className="shrink-0 ltr:mr-2 rtl:ml-2" />
+                                            Preview
+                                        </button>
                                     {/* {geteditData?.invoice?.completed == 'Yes' ? ( */}
                                     {/* <button className="btn btn-gray w-full gap-2" onClick={() => handlePreviewClick(id)}>
                                             <IconEye className="shrink-0 ltr:mr-2 rtl:ml-2" />
@@ -1221,7 +1220,7 @@ const Edit = () => {
                                                     Preview
                                                 </button>
                                             )} */}
-                                    {/* </div> */}
+                                    </div>
                                 </div>
                             </div>
                         </div>
