@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Space, Table, Modal, message, InputNumber, Spin } from 'antd';
 import { Button, Drawer } from 'antd';
 import { Form, Input, Radio, DatePicker } from 'antd';
-import { EditOutlined, EyeOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, CloseCircleOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import router from 'next/router';
@@ -11,6 +11,9 @@ import { baseUrl } from '@/utils/function.util';
 const Employee = () => {
     const { Search } = Input;
     const [form] = Form.useForm();
+    const { confirm } = Modal;
+
+    const fileInputRef: any = useRef(null);
 
     const [open, setOpen] = useState(false);
     const [editRecord, setEditRecord] = useState<any>(null);
@@ -19,8 +22,13 @@ const Employee = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [dataSource, setDataSource] = useState([]);
     const [messageApi, contextHolder] = message.useMessage();
+    const [fileshow, setFileShow] = useState<any>('');
     const [admin, setAdmin] = useState();
     const [loading, setLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
+    const [fileInputData, setFileInputData] = useState<any>({
+        signature: null,
+    });
     useEffect(() => {
         const Admin: any = localStorage.getItem('admin');
         setAdmin(Admin);
@@ -40,7 +48,7 @@ const Employee = () => {
 
     const getEmployee = () => {
         const Token = localStorage.getItem('token');
-        setLoading(true)
+        setLoading(true);
         axios
             .get(`${baseUrl}/employee_list/`, {
                 headers: {
@@ -48,16 +56,16 @@ const Employee = () => {
                 },
             })
             .then((res) => {
+                console.log('✌️res --->', res);
                 setDataSource(res.data);
                 setFilterData(res.data);
-                setLoading(false)
-
+                setLoading(false);
             })
             .catch((error: any) => {
                 if (error.response?.status === 401) {
                     router.push('/');
                 }
-                setLoading(false)   
+                setLoading(false);
             });
     };
 
@@ -75,9 +83,45 @@ const Employee = () => {
         setIsModalOpen(false);
     };
 
+    const removeFile = () => {
+        setFileShow('');
+        setFileInputData(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
+    // Function to fetch a file from URL and convert it to a File object
+    const convertUrlToFile = async (fileUrl: string) => {
+        try {
+            // Fetch the file from the URL
+            const response = await fetch(fileUrl);
+            const blob = await response.blob(); // Convert response to Blob
+
+            // Extract file name from URL (you can adjust this if the URL doesn't contain a file name)
+            const fileName = fileUrl.substring(fileUrl.lastIndexOf('/') + 1);
+
+            // Create a File object from the Blob
+            const file = new File([blob], fileName, { type: blob.type });
+
+            // Set the file into the state
+            setFileInputData(file);
+        } catch (error) {
+            console.error('Error fetching the file:', error);
+        }
+    };
+
     // drawer
     const showDrawer = (record: any) => {
+        if (record && record.id !== editRecord?.id) {
+            removeFile();
+        }
+
         if (record) {
+            setFileShow(record.signature);
+            if (record.signature) {
+                convertUrlToFile(record.signature);
+            }
             const bodyData = {
                 ...record,
                 dob: dayjs(record.dob),
@@ -88,6 +132,9 @@ const Employee = () => {
         } else {
             setEditRecord(null);
             form.resetFields();
+            setErrorMessage('');
+            setFileInputData(null);
+            removeFile();
         }
 
         setOpen(true);
@@ -96,6 +143,9 @@ const Employee = () => {
     const onClose = () => {
         setOpen(false);
         form.resetFields();
+        setErrorMessage('');
+        setFileInputData(null);
+        removeFile();
     };
 
     // table
@@ -132,7 +182,27 @@ const Employee = () => {
                     ) : (
                         <EditOutlined style={{ cursor: 'pointer', display: 'none' }} onClick={() => showDrawer(record)} className="edit-icon" rev={undefined} />
                     )}
-
+                    {record?.is_active ? (
+                        <CheckCircleOutlined
+                            onClick={() => showDeleteConfirm(record)}
+                            style={{
+                                fontSize: '20px',
+                                color: 'green',
+                                paddingLeft: '8px',
+                                cursor: 'pointer',
+                            }}
+                        />
+                    ) : (
+                        <CloseCircleOutlined
+                            onClick={() => showDeleteConfirm(record)}
+                            style={{
+                                fontSize: '20px',
+                                color: 'red',
+                                paddingLeft: '8px',
+                                cursor: 'pointer',
+                            }}
+                        />
+                    )}
                     {/* <EditOutlined
                         style={{ cursor: "pointer" }}
                         onClick={() => showDrawer(record)}
@@ -159,31 +229,44 @@ const Employee = () => {
         },
     ];
 
-    // const handleDelete = (record: any) => {
-    //     // Implement your delete logic here
-    //     const Token = localStorage.getItem("token")
+    const showDeleteConfirm = (record: any) => {
+        const Token = localStorage.getItem('token');
 
-    //     Modal.confirm({
-    //         title: "Are you sure, you want to delete this EMPLOYEE record?",
-    //         okText: "Yes",
-    //         okType: "danger",
-    //         onOk: () => {
-    //             console.log(record, "values")
-    //             axios.delete(`${baseUrl}/delete_employee/${record.id}/`, {
-    //                 headers:
-    //                 {
-    //                     "Authorization": `Token ${Token}`
-    //                 }
-    //             }).then((res) => {
-    //                 console.log(res)
-    //                 getEmployee()
-    //             }).catch((err) => {
-    //                 console.log(err)
-    //             })
-
-    //         },
-    //     });
-    // };
+        confirm({
+            title: record.is_active ? 'Are you sure you want to InActive this Employee?' : 'Are you sure you want to Active this Employee?',
+            okText: record.is_active ? 'InActive' : 'Active',
+            okType: 'danger',
+            cancelText: 'Cancel',
+            onOk() {
+                setLoading(true);
+                axios
+                    .patch(
+                        `${baseUrl}/employees/${record.id}/update/`,
+                        {
+                            is_active: !record.is_active,
+                        },
+                        {
+                            headers: {
+                                Authorization: `Token ${Token}`,
+                            },
+                        }
+                    )
+                    .then((response) => {
+                        console.log('✌️response --->', response);
+                        getEmployee();
+                    })
+                    .catch((error) => {
+                        console.log('✌️error --->', error);
+                        if (error.response.status === 401) {
+                            router.push('/');
+                        }
+                    });
+            },
+            onCancel() {
+                console.log('Cancel');
+            },
+        });
+    };
 
     // input search
     const [filterData, setFilterData] = useState(dataSource);
@@ -201,60 +284,110 @@ const Employee = () => {
         setFilterData(filteredData);
     };
 
-    // form submit
-    const onFinish = (values: any) => {
-        const Token = localStorage.getItem('token');
-
-        const formattedData = {
-            ...values,
-            dob: dayjs(values.dob),
-            joining_date: dayjs(values.joining_date),
-        };
-
-        // Check if editing or creating
-        if (editRecord) {
-            axios
-                .put(`${baseUrl}/edit_employee/${editRecord.id}/`, formattedData, {
-                    headers: {
-                        Authorization: `Token ${localStorage.getItem('token')}`,
-                    },
-                })
-                .then((res) => {
-                    form.resetFields();
-                    getEmployee();
-                    onClose();
-                })
-                .catch((error) => {
-                    if (error.response.status === 401) {
-                        router.push('/');
-                    }
-                });
-            // Clear editRecord state
-            setEditRecord(null);
-        } else {
-            axios
-                .post(`${baseUrl}/create_employee/`, formattedData, {
-                    headers: {
-                        Authorization: `Token ${Token}`,
-                    },
-                })
-                .then((res) => {
-                    getEmployee();
-                    form.resetFields();
-                    onClose();
-                })
-                .catch((error: any) => {
-                    if (error.response.status === 401) {
-                        router.push('/');
-                    } else {
-                        messageApi.open({
-                            type: 'error',
-                            content: `${error?.response?.data?.user?.username}`,
-                        });
-                    }
-                });
+    const selectFileChange = (e: any) => {
+        console.log('✌️e --->', e);
+        const file = e.target.files[0];
+        console.log('✌️file --->', file);
+        if (file) {
+            setFileInputData(file);
         }
     };
+
+    const url = fileshow;
+    const filenames = url?.substring(url.lastIndexOf('/') + 1); // Extracts the filename from the URL
+
+    console.log('fileInputData?.file', fileInputData);
+    // form submit
+    const onFinish = (values: any) => {
+        console.log('✌️values --->', values);
+        const Token = localStorage.getItem('token');
+        const formData: any = new FormData();
+
+        // Append the non-file form fields to the FormData
+        if (values.employee_name) {
+            formData.append('employee_name', values.employee_name);
+        }
+        if (values.username) {
+            formData.append('username', values.username);
+        }
+        if (values.password) {
+            formData.append('password', values.password);
+        }
+        if (values.address) {
+            formData.append('address', values.address);
+        }
+        if (values.mobile_number) {
+            formData.append('mobile_number', values.mobile_number);
+        }
+        if (values.branch_email) {
+            formData.append('branch_email', values.branch_email);
+        }
+        if (values.role) {
+            formData.append('role', values.role);
+        }
+
+        if (values.dob) {
+            formData.append('dob', dayjs(values.dob).format('YYYY-MM-DD')); // Format date before appending
+        }
+        if (values.joining_date) {
+            formData.append('joining_date', dayjs(values.joining_date).format('YYYY-MM-DD')); // Format date before appending
+        }
+        if (values.gender) {
+            formData.append('gender', values.gender);
+        }
+        if (values.qualification) {
+            formData.append('qualification', values.qualification);
+        }
+        if (values.salary) {
+            formData.append('salary', values.salary);
+        }
+        if (values.branch_email) {
+            formData.append('branch_email', values.branch_email);
+        }
+
+        // Append the signature file if exists
+        if (fileInputData) {
+            formData.append('signature', fileInputData);
+        } else {
+            formData.append('signature', null);
+        }
+
+
+        if(fileInputData == undefined || fileInputData == null){
+            setErrorMessage("Please input your signature!")
+        }
+
+        // Determine the request URL (whether creating or editing an employee)
+        const apiUrl = editRecord ? `${baseUrl}/edit_employee/${editRecord.id}/` : `${baseUrl}/create_employee/`;
+
+        // Perform the API call (POST for create, PUT for edit)
+        const method = editRecord ? 'put' : 'post';
+        axios[method](apiUrl, formData, {
+            headers: {
+                Authorization: `Token ${Token}`,
+                'Content-Type': 'multipart/form-data', // Make sure to set this header for file uploads
+            },
+        })
+            .then((res) => {
+                getEmployee(); // Refresh employee data
+                form.resetFields(); // Reset the form
+                onClose(); // Close the drawer
+            })
+            .catch((error: any) => {
+                if (error.response.status === 401) {
+                    router.push('/');
+                } else {
+                    messageApi.open({
+                        type: 'error',
+                        content: `${error?.response?.data?.user?.username}`,
+                    });
+                }
+            });
+
+        // Clear editRecord state after successful operation
+        setEditRecord(null);
+    };
+
     const onFinishFailed = (errorInfo: any) => {};
 
     type FieldType = {
@@ -269,6 +402,7 @@ const Employee = () => {
         joiningDate?: string;
         salary?: string;
         branch_email?: string;
+        role?: string;
     };
 
     const { TextArea } = Input;
@@ -376,12 +510,16 @@ const Employee = () => {
                     </div>
                 </div>
                 <div className="table-responsive">
-                    <Table dataSource={filterData} columns={columns} scroll={scrollConfig} 
-                      loading={{
-                        spinning: loading, // This enables the loading spinner
-                        indicator: <Spin size="large"/>,
-                        tip: 'Loading data...', // Custom text to show while loading
-                    }}/>
+                    <Table
+                        dataSource={filterData}
+                        columns={columns}
+                        scroll={scrollConfig}
+                        loading={{
+                            spinning: loading, // This enables the loading spinner
+                            indicator: <Spin size="large" />,
+                            tip: 'Loading data...', // Custom text to show while loading
+                        }}
+                    />
                 </div>
 
                 <Drawer title={drawerTitle} placement="right" width={600} onClose={onClose} open={open}>
@@ -403,6 +541,10 @@ const Employee = () => {
                                 <Input.Password />
                             </Form.Item>
                         )}
+
+                        <Form.Item<FieldType> label="Designation" name="role" required={true} rules={[{ required: true, message: 'Please input your Designation!' }]}>
+                            <Input />
+                        </Form.Item>
 
                         <Form.Item<FieldType> label="Address" name="address" required={true} rules={[{ required: true, message: 'Please input your Address!' }]}>
                             <TextArea rows={4} />
@@ -440,8 +582,25 @@ const Employee = () => {
                             </Form.Item>
                         ) : null}
 
+                        <label>
+                            {' '}
+                            <span style={{ color: 'red', paddingRight:"3px" }}>*</span>Signature
+                        </label>
+                        {fileshow ? (
+                            <>
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                    <p style={{ padding: '5px 20px', border: '1px solid #d9d9d9', borderRadius: '7px' }}>{filenames}</p>
+                                    <Button onClick={() => removeFile()}>Remove File</Button>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <input id="file" type="file" ref={fileInputRef} name="signature" accept="image/*" onChange={selectFileChange} required />
+                                <p style={{ color: 'red' }}>{errorMessage}</p>
+                            </>
+                        )}
                         <Form.Item>
-                            <div className="form-btn-main">
+                            <div className="form-btn-main mt-5">
                                 <Space>
                                     <Button danger htmlType="submit" onClick={() => onClose()}>
                                         Cancel

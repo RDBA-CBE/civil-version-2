@@ -29,7 +29,7 @@ const QuotationPreview = () => {
             })
             .then((res) => {
                 setInvoiceReport(res.data); // Set invoice report after fetching data
-                
+
                 // Extract the necessary tax info
                 const selectedPercentages = res.data?.tax_list?.filter((item: any) => res.data.tax.includes(item.id));
                 const totalTaxPercentage = selectedPercentages?.reduce((acc: number, item: any) => acc + parseFloat(item.tax_percentage), 0) || 0;
@@ -156,7 +156,7 @@ const QuotationPreview = () => {
                 </div>
 
                 {/* Quotation Table */}
-                <table className="t-head" style={{...styles.table, marginTop:"20px"}}>
+                <table className="t-head" style={{ ...styles.table, marginTop: '20px' }}>
                     <thead>
                         <tr>
                             <th style={styles.tableCell}>S. No</th>
@@ -209,7 +209,7 @@ const QuotationPreview = () => {
                 </div>
 
                 {/* Scope of Work */}
-                <table style={{...styles.table, marginTop: '20px'}}>
+                <table style={{ ...styles.table, marginTop: '20px' }}>
                     <tbody>
                         <tr>
                             <td colSpan={2} style={{ ...styles.tableCell, fontWeight: 'bold' }}>
@@ -218,7 +218,7 @@ const QuotationPreview = () => {
                         </tr>
                         <tr>
                             <td style={{ ...styles.tableCell, fontWeight: 'bold' }}>COVAI CIVIL TECH LAB</td>
-                            <td style={{ ...styles.tableCell, fontWeight: 'bold' }}>M/s TVS INDUSTRIAL & LOGISTICS PARKS PRIVATE LIMITED</td>
+                            <td style={{ ...styles.tableCell, fontWeight: 'bold' }}>{invoiceReport?.customer?.customer_name}</td>
                         </tr>
                         <tr>
                             <td style={{ ...styles.tableCell }}>
@@ -242,10 +242,10 @@ const QuotationPreview = () => {
                 {/* Signatures */}
                 <div className="sign-div" style={styles.signDiv}>
                     <div className="sign-div-item" style={styles.signDivItem}>
-                        <img src="/assets/images/thirumalai.png" alt="Signature" style={{width:"150px", height:"80px"}} />
+                        <img src="/assets/images/thirumalai.png" alt="Signature" style={{ width: '150px', height: '80px' }} />
                         <p>
                             Tirumalai Ravikumar <br />
-                            Technical Director <br />
+                            Managing Director <br />
                             Covai Civil Lab Private Limited
                         </p>
                     </div>
