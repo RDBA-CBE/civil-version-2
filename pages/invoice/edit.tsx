@@ -115,7 +115,7 @@ const Edit = () => {
             const nameString = selectedName.join(' + ');
 
             const percentagesString = percentagesArray.join(' + ');
-            return `${nameString} : ${percentagesString} = ${totalTaxPercentage}`;
+            return `${nameString} : ${percentagesString} = <strong>${totalTaxPercentage}</strong>`;
         }
         return '';
     };
@@ -1352,7 +1352,21 @@ const Edit = () => {
                             <div className="mt-6 flex flex-col justify-between px-4 sm:flex-row">
                                 <div className="mb-6 sm:mb-0"></div>
                                 <div className="sm:w-2/5">
-                                    <div className="flex items-center justify-between">
+                                    <div className="mt-4 flex items-center justify-between">
+                                        <label htmlFor="bank-name" className="mb-0 w-1/3 ltr:mr-2 rtl:ml-2">
+                                            Total Amount
+                                        </label>
+                                        <input
+                                            id="bank-name"
+                                            type="text"
+                                            className="form-input flex-1"
+                                            name="test-total-amount"
+                                            value={invoiceFormData?.invoice?.amount}
+                                            placeholder="Enter Sub Total"
+                                            disabled
+                                        />
+                                    </div>
+                                    <div className="mt-4 flex items-center justify-between">
                                         <label htmlFor="bank-name" className="mb-0 w-1/3 ltr:mr-2 rtl:ml-2">
                                             Discount (%)
                                         </label>
@@ -1381,7 +1395,7 @@ const Edit = () => {
                                         })}
                                     </div>
                                     <div className="flex items-center justify-between" style={{ marginTop: '20px' }}>
-                                        {formatTotal() && <p> {formatTotal()}</p>}
+                                        {formatTotal() && <p dangerouslySetInnerHTML={{ __html: formatTotal() }}></p>}
                                     </div>
                                     <div className="mt-4 flex items-center justify-between">
                                         <label htmlFor="bank-name" className="mb-0 w-1/3 ltr:mr-2 rtl:ml-2">
@@ -1640,7 +1654,21 @@ const Edit = () => {
                                     </button>
                                 </div>
                                 <div className="sm:w-2/5">
-                                    <div className="flex items-center justify-between">
+                                    <div className="mt-4 flex items-center justify-between">
+                                        <label htmlFor="bank-name" className="mb-0 w-1/3 ltr:mr-2 rtl:ml-2">
+                                            Total Amount
+                                        </label>
+                                        <input
+                                            id="bank-name"
+                                            type="text"
+                                            className="form-input flex-1"
+                                            name="test-total-amount"
+                                            value={invoiceFormData?.invoice?.amount}
+                                            placeholder="Enter Sub Total"
+                                            disabled
+                                        />
+                                    </div>
+                                    <div className="mt-4 flex items-center justify-between">
                                         <label htmlFor="bank-name" className="mb-0 w-1/3 ltr:mr-2 rtl:ml-2">
                                             Discount (%)
                                         </label>
@@ -1694,7 +1722,7 @@ const Edit = () => {
                                         })}
                                     </div>
                                     <div className="flex items-center justify-between" style={{ marginTop: '20px' }}>
-                                        {formatTotal() && <p> {formatTotal()}</p>}
+                                        {formatTotal() && <p dangerouslySetInnerHTML={{ __html: formatTotal() }}></p>}
                                     </div>
                                     <div className="mt-4 flex items-center justify-between">
                                         <label htmlFor="bank-name" className="mb-0 w-1/3 ltr:mr-2 rtl:ml-2">
