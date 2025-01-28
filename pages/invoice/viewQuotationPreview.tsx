@@ -45,9 +45,10 @@ const QuotationPreview = () => {
                 setAfterTaxAmount(AfterTaxAmount);
             })
             .catch((error) => {
-                if (error.response?.status === 401) {
-                    router.push('/');
-                }
+                console.log('✌️error --->', error);
+                // if (error.response?.status === 401) {
+                //     router.push('/');
+                // }
             });
     };
 

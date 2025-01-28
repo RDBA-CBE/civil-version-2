@@ -47,6 +47,13 @@ const App = ({ Component, pageProps }: AppPropsWithLayout) => {
         const pagesWithoutLayout = ['preview', 'print', 'print1', 'print2', 'r', 'u', 'n'];
     }
 
+    if (router.pathname == '/invoice/quotationPreview') {
+        const pagesWithoutLayout = ['preview', 'print', 'print1', 'print2', 'r', 'u', 'c', 'n'];
+    } else {
+        const pagesWithoutLayout = ['preview', 'print', 'print1', 'print2', 'r', 'u', 'n'];
+    }
+    
+
     const currentPageName = (Component.displayName || Component.name)?.toLowerCase();
 
     useEffect(() => {
