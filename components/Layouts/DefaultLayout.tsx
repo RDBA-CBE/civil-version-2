@@ -13,7 +13,7 @@ const DefaultLayout = ({ children }: PropsWithChildren) => {
     const router = useRouter();
     const componentName = router.pathname.substring(1); 
     console.log(componentName,'componentName---------------------------')
-    const pagesWithoutLogin = ['viewinvoicereport', 'print', 'print1','r','c'];
+    const pagesWithoutLogin = ['viewinvoicereport', 'print', 'print1','r','c', 'viewQuotationPreview'];
 
     if(pagesWithoutLogin.includes(componentName)){
 

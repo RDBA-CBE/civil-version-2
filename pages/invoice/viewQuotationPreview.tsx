@@ -266,8 +266,4 @@ const QuotationPreview = () => {
     );
 };
 
-QuotationPreview.getLayout = (page: any) => {
-    return <BlankLayout>{page}</BlankLayout>;
-};
-
 export default QuotationPreview;
