@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Form, Input, Button, DatePicker, Select, Tooltip, Spin } from 'antd';
+import { Table, Form, Input, Button, DatePicker, Select, Tooltip, Spin, Space, Modal } from 'antd';
 import axios from 'axios';
 import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import dayjs from 'dayjs';
 import router from 'next/router';
 import { baseUrl } from '@/utils/function.util';
-
+import { saveAs } from 'file-saver';
+import { message } from 'antd';
 const SaleReport = () => {
     const [form] = Form.useForm();
     const [dataSource, setDataSource] = useState([]);
     const [saleFormData, setSaleFormData] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [messageApi, contextHolder] = message.useMessage();
     useEffect(() => {
         axios
             .get(`${baseUrl}/sale_report/`, {
@@ -350,7 +353,6 @@ const SaleReport = () => {
             worksheet.addRow(rowData);
         });
 
-
         // Generate a Blob containing the Excel file
         const blob = await workbook.xlsx.writeBuffer();
 
@@ -366,6 +368,80 @@ const SaleReport = () => {
     const scrollConfig: any = {
         x: true,
         y: 300,
+    };
+
+    const showModal = () => {
+        setIsModalOpen(true);
+        form.resetFields();
+    };
+    const handleOk = () => {
+        setIsModalOpen(false);
+    };
+    const handleCancel = () => {
+        setIsModalOpen(false);
+        form.resetFields();
+    };
+
+    const onFinishZip = (values: any) => {
+        console.log('✌️values --->', values);
+
+        // Get the selected month and year from the DatePicker value
+        const selectedDate = values.month; // The value from the DatePicker
+        const year = selectedDate?.year(); // Get the year from the selected date
+        const month = selectedDate?.month() + 1; // Get the month (1-based, so add 1)
+
+        // Construct the body object with the selected year and month
+        const body = {
+            year: year,
+            month: month,
+        };
+
+        console.log('Body for API request:', body);
+
+        const Token = localStorage.getItem('token');
+        if (!Token) {
+            console.error('No token found');
+            return;
+        }
+
+        axios
+            .get(`${baseUrl}/invoice-reports/zip/`, {
+                headers: {
+                    Authorization: `Token ${Token}`,
+                },
+                params: { ...body },
+                responseType: 'blob', // Send the year and month as query parameters
+            })
+            .then((res: any) => {
+                console.log('✌️res --->', res);
+                messageApi.open({
+                    type: 'success',
+                    content: 'Invoice report generated successfully.',
+                });
+                setIsModalOpen(false);
+                const blob = new Blob([res.data], { type: 'application/zip' });
+                saveAs(blob, `Invoice Report ${year}-${month}.zip`);
+            })
+            .catch((error: any) => {
+                console.log('✌️error --->', error);
+                if (error.response?.status === 401) {
+                    router.push('/');
+                } else if (error.response?.status === 404) {
+                    messageApi.open({
+                        type: 'error',
+                        content: 'No invoice found for the selected month and year.',
+                    });
+                } else {
+                    console.error('Error fetching invoices:', error);
+                }
+            })
+            .finally(() => {
+                form.resetFields(); // Reset the form after completion
+            });
+    };
+
+    const onFinishFailedZip = (errorInfo: any) => {
+        console.log('Failed:', errorInfo);
     };
 
     return (
@@ -411,9 +487,14 @@ const SaleReport = () => {
                         <h1 className="text-lg font-semibold dark:text-white-light">Sales Report</h1>
                     </div>
                     <div>
-                        <button type="button" onClick={exportToExcel} className="create-button">
-                            Export to Excel{' '}
-                        </button>
+                        <Space>
+                            <Button type="primary" onClick={showModal}>
+                                Export Zip File
+                            </Button>
+                            <button type="button" onClick={exportToExcel} className="create-button">
+                                Export to Excel{' '}
+                            </button>
+                        </Space>
                     </div>
                 </div>
 
@@ -430,6 +511,27 @@ const SaleReport = () => {
                     />
                 </div>
             </div>
+
+            <Modal title="Export Zip File" open={isModalOpen} onOk={handleOk} onCancel={handleCancel} footer={false}>
+                <Form name="basic" layout="vertical" form={form} initialValues={{ remember: true }} onFinish={onFinishZip} onFinishFailed={onFinishFailedZip} autoComplete="off">
+                    <Form.Item label="Year & Month" name="month" required={true} rules={[{ required: true, message: 'Year & Month field is required.' }]}>
+                        <DatePicker picker="month" className="w-full" />
+                    </Form.Item>
+
+                    <Form.Item>
+                        <div className="form-btn-main">
+                            <Space>
+                                <Button danger htmlType="submit" onClick={() => handleCancel()}>
+                                    Cancel
+                                </Button>
+                                <Button type="primary" htmlType="submit">
+                                    Submit
+                                </Button>
+                            </Space>
+                        </div>
+                    </Form.Item>
+                </Form>
+            </Modal>
         </>
     );
 };
