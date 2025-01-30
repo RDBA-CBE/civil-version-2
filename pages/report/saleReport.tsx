@@ -447,6 +447,7 @@ const SaleReport = () => {
     return (
         <>
             <div className="panel">
+                {contextHolder}
                 <div>
                     <Form name="basic" layout="vertical" form={form} initialValues={{ remember: true }} onFinish={onFinish} onFinishFailed={onFinishFailed} autoComplete="off">
                         <div className="sale_report_inputs">
