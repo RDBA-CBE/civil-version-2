@@ -607,7 +607,7 @@ const Edit = () => {
             // bank: formData.bank,
             // cheque_number: formData.cheque_number,
             // payment_mode: formData.payment_mode,
-            // date_created: formData.date_created,
+            date_created: formData.date_created,
             // place_of_testing: formData.place_of_testing,
             // upi: formData.upi,
             completed: formData.completed,
@@ -656,7 +656,7 @@ const Edit = () => {
             // bank: formData.bank,
             // cheque_number: formData.cheque_number,
             // payment_mode: formData.payment_mode,
-            // date_created: formData.date_created,
+            date_created: formData.date_created,
             // place_of_testing: formData.place_of_testing,
             // upi: formData.upi,
             completed: formData.completed,
@@ -948,8 +948,8 @@ const Edit = () => {
                                         className="form-input flex-1"
                                         name="date_created"
                                         value={formData.date_created}
-                                        disabled
-                                        // onChange={inputChange}
+                                        // disabled
+                                        onChange={inputChange}
                                     />
                                 </div>
                                 {/* <div className="mt-4 flex items-center">
