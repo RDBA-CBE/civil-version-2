@@ -42,16 +42,16 @@ const Print = () => {
             // Replace old image source with new image source
             const imgElements = tempDiv.querySelectorAll('img');
             imgElements.forEach((imgElement: any) => {
-                if (imgElement.src === 'http://app.covaicivillab.com/static/header.gif' && invoiceReport.invoice_test.is_old_invoice_format == true ) {
-                    imgElement.src = 'http://app.covaicivillab.com/static/old-header.gif'; // Replace with new image
+                if (imgElement.src === 'https://app.covaicivillab.com/static/header.gif' && invoiceReport.invoice_test.is_old_invoice_format == true ) {
+                    imgElement.src = 'https://app.covaicivillab.com/static/old-header.gif'; // Replace with new image
                 }
             });
 
              // Replace old image source with new image source
              const FooterElement = tempDiv.querySelectorAll('img');
              FooterElement.forEach((imgElement: any) => {
-                 if (imgElement.src === 'http://app.covaicivillab.com//static/test-footer.png' && invoiceReport.invoice_test.is_old_invoice_format == true && invoiceReport.invoice_test.id != 3214) {
-                     imgElement.src = 'http://app.covaicivillab.com//static/old-test-footer.png'; // Replace with new image
+                 if (imgElement.src === 'https://app.covaicivillab.com//static/test-footer.png' && invoiceReport.invoice_test.is_old_invoice_format == true && invoiceReport.invoice_test.id != 3214) {
+                     imgElement.src = 'https://app.covaicivillab.com//static/old-test-footer.png'; // Replace with new image
                  }
              });
 
