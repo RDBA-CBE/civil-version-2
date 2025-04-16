@@ -217,7 +217,7 @@ const QuotationPreview = () => {
                             </td>
                         </tr>
                         <tr>
-                            <td style={{ ...styles.tableCell, fontWeight: 'bold' }}>COVAI CIVIL TECH LAB</td>
+                            <td style={{ ...styles.tableCell, fontWeight: 'bold' }}>Covai Civil Lab Private Limited</td>
                             <td style={{ ...styles.tableCell, fontWeight: 'bold' }}>{invoiceReport?.customer?.customer_name}</td>
                         </tr>
                         <tr>

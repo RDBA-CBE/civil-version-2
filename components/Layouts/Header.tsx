@@ -239,7 +239,6 @@ const Header = () => {
                                     />
                                 </svg>
                                 <span className="px-1">
-                                    {' '}
                                     <Link href="/dashboard">{t('Dashboard')} </Link>
                                 </span>
                             </div>

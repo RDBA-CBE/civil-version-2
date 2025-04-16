@@ -1505,3 +1505,87 @@ border: 1px solid #972e25 !important;
     align-items: center;
     text-align: left;
 }
+
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 64px;
+    border: 1px solid #ccc;
+    padding: 20px 80px;
+    position: relative;
+    margin: 30px;
+    border-radius: 20px;
+    width: auto; /* Added to avoid invalid media query trying to change width without default */
+  }
+  
+  @media (max-width: 500px) {
+    .pagination-container {
+      width: 100%;
+    }
+  }
+  
+  @media (max-width: 400px) {
+    .pagination-container {
+      padding: 20px 50px;
+    }
+  }
+
+  .prev-button,
+.next-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: transparent;
+  border: none;
+  font-size: 16px;
+  padding: 10px;
+}
+
+.prev-button {
+  left: 10px;
+}
+
+.next-button {
+  right: 10px;
+}
+
+@media (max-width: 400px) {
+  .prev-button,
+  .next-button {
+    font-size: 14px;
+  }
+}
+
+.page-numbers {
+  display: flex;
+  gap: 10px;
+}
+
+@media (max-width: 500px) {
+  .page-numbers {
+    gap: 5px;
+  }
+}
+
+.page-button {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 5px 10px;
+    font-size: 16px;
+  
+   
+  }
+  @media (max-width: 500px) {
+    .page-button {    padding: 5px;
+    }
+
+  }
+  
+  .page-button.active {
+    color: white;
+    background-color: #c2882b;
+    border-radius: 5px;
+    padding: 5px 16px;
+  }

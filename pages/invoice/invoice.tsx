@@ -4,7 +4,9 @@ import { EditOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import router from 'next/router';
 import dayjs from 'dayjs';
-import { baseUrl } from '@/utils/function.util';
+import { baseUrl, useSetState } from '@/utils/function.util';
+import Pagination from '@/components/pagination/pagination';
+import Models from '@/imports/models.import';
 
 const Invoice = () => {
     const { Search } = Input;
@@ -12,10 +14,21 @@ const Invoice = () => {
 
     const [open, setOpen] = useState(false);
     const [dataSource, setDataSource] = useState([]);
+    console.log('✌️dataSource --->', dataSource);
     const [formFields, setFormFields] = useState<any>([]);
     const [selectedCustomerId, setSelectedCustomerId] = useState(null);
     const [customerAddress, setCustomerAddress] = useState('');
     const [loading, setLoading] = useState(false);
+
+    const [state, setState] = useSetState({
+        page: 1,
+        pageSize: 10,
+        total: 0,
+        currentPage: 1,
+        pageNext: null,
+        pagePrev: null,
+        invoiceList: [],
+    });
 
     // useEffect(() => {
     //     getInvoice();
@@ -29,6 +42,7 @@ const Invoice = () => {
                 },
             })
             .then((res) => {
+                console.log('useEffect --->', res);
                 setFormFields(res.data);
             })
             .catch((error: any) => {
@@ -56,7 +70,6 @@ const Invoice = () => {
     //         });
     // };
 
-    console.log('formField', formFields);
     // drawer
     const showDrawer = () => {
         setOpen(true);
@@ -236,7 +249,7 @@ const Invoice = () => {
                 },
             })
             .then((res) => {
-                initialData();
+                initialData(1);
                 window.location.href = `/invoice/edit?id=${res?.data?.id}`;
                 setOpen(false);
             })
@@ -267,45 +280,32 @@ const Invoice = () => {
     // search
 
     useEffect(() => {
-        initialData();
+        initialData(1);
     }, []);
 
-    const initialData = () => {
-        const Token = localStorage.getItem('token');
-        console.log('✌️Token --->', Token);
-        setLoading(true);
-        const body = {
-            project_name: '',
-            from_date: '',
-            to_date: '',
-            customer: '',
-            completed: '',
-        };
+    const initialData = async (page: any) => {
+        try {
+            setState({ loading: true });
 
-        console.log('✌️body --->', body);
-
-        axios
-            .post(`${baseUrl}/invoice_list/`, body, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res: any) => {
-                console.log('✌️res --->', res);
-                setDataSource(res?.data);
-                setLoading(false);
-            })
-            .catch((error: any) => {
-                if (error.response?.status === 401) {
-                    router.push('/');
-                }
-                setLoading(false);
+            const res: any = await Models.invoice.invoiceList(page);
+            console.log('abcd --->', res);
+            setState({
+                invoiceList: res?.results,
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
             });
+        } catch (error) {
+            setState({ loading: false });
+            console.log('✌️error --->', error);
+        }
     };
+    console.log('✌️currentPage --->', state.currentPage);
 
     // form submit
     const onFinish2 = (values: any) => {
-        console.log('✌️values --->', values);
         const Token = localStorage.getItem('token');
 
         const body = {
@@ -316,8 +316,6 @@ const Invoice = () => {
             completed: values.completed ? values.completed : '',
         };
 
-        console.log('✌️body --->', body);
-
         axios
             .post(`${baseUrl}/invoice_list/`, body, {
                 headers: {
@@ -325,8 +323,15 @@ const Invoice = () => {
                 },
             })
             .then((res: any) => {
-                console.log('✌️res --->', res);
-                setDataSource(res?.data);
+                setState({
+                    invoiceList: res?.data?.results,
+                    currentPage: state.currentPage,
+                    pageNext: res?.data?.next,
+                    pagePrev: res?.data?.previous,
+                    total: res?.data?.count,
+                    loading: false,
+                });
+                // setDataSource(res?.data);
             })
             .catch((error: any) => {
                 if (error.response.status === 401) {
@@ -337,6 +342,31 @@ const Invoice = () => {
     };
 
     const onFinishFailed2 = (errorInfo: any) => {};
+
+    // const handlePageChange = (number:any) => {
+
+    //     return number;
+    //   };
+
+    const handlePageChange = (number: any) => {
+        console.log('✌️number --->', number);
+
+        initialData(number);
+        setState({ currentPage: number });
+        // pageNext: null,
+        // pagePrev: null,
+        // if (state.pagePrev === null) {
+        //     setState({ pagePrev: state.pagePrev });
+        // } else if (state.pageNext === null) {
+        //     setState({ pageNext: state.pageNext });
+        // }else{
+        //     if(number == state.currentPage + 1){
+
+        //     }
+
+        // }
+        return number;
+    };
 
     return (
         <>
@@ -396,18 +426,32 @@ const Invoice = () => {
                 </div>
                 <div className="table-responsive">
                     <Table
-                        dataSource={dataSource}
+                        dataSource={state.invoiceList}
                         columns={columns}
                         pagination={false}
                         scroll={scrollConfig}
                         loading={{
-                            spinning: loading, // This enables the loading spinner
+                            spinning: state.loading, // This enables the loading spinner
                             indicator: <Spin size="large" />,
                             tip: 'Loading data...', // Custom text to show while loading
                         }}
                     />
                 </div>
-
+                {state.invoiceList?.length > 0 && (
+                    <div>
+                        <div
+                            className="mb-20 "
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <Pagination totalPage={state.total} itemsPerPage={10} currentPages={state.currentPage} activeNumber={handlePageChange} />
+                            {/* <Pagination activeNumber={handlePageChange} totalPages={state.total} currentPages={state.currentPage} /> */}
+                        </div>
+                    </div>
+                )}
                 <Drawer title="Create Invoice" placement="right" width={600} onClose={onClose} open={open}>
                     <Form name="basic-form" layout="vertical" initialValues={{ remember: true }} onFinish={onFinish} onFinishFailed={onFinishFailed} autoComplete="off" form={form}>
                         <Form.Item label="Customer Name" name="customer" required={false} rules={[{ required: true, message: 'Please select Customer Name!' }]}>
