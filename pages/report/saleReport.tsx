@@ -493,7 +493,7 @@ const SaleReport = () => {
                                 Export Zip File
                             </Button>
                             <button type="button" onClick={exportToExcel} className="create-button">
-                                Export to Excel{' '}
+                                Export to Excel
                             </button>
                         </Space>
                     </div>

@@ -28,6 +28,7 @@ const Invoice = () => {
         pageNext: null,
         pagePrev: null,
         invoiceList: [],
+        discount: 0,
     });
 
     // useEffect(() => {
@@ -270,6 +271,22 @@ const Invoice = () => {
 
         setSelectedCustomerId(customerId);
         setCustomerAddress(selectedCustomer?.address1 || '');
+        getCustomerDiscount(customerId);
+    };
+
+    const getCustomerDiscount = async (id: any) => {
+        try {
+            // setState({ loading: true });
+
+            const res: any = await Models.discount.details(id);
+
+            // setCustomerList(res?.customer);
+            setState({ discount: res?.discount });
+        } catch (error: any) {
+            // setState({ loading: false });
+
+            console.log('✌️error --->', error);
+        }
     };
 
     const scrollConfig: any = {
@@ -349,24 +366,13 @@ const Invoice = () => {
     //   };
 
     const handlePageChange = (number: any) => {
-        console.log('✌️number --->', number);
 
         initialData(number);
         setState({ currentPage: number });
-        // pageNext: null,
-        // pagePrev: null,
-        // if (state.pagePrev === null) {
-        //     setState({ pagePrev: state.pagePrev });
-        // } else if (state.pageNext === null) {
-        //     setState({ pageNext: state.pageNext });
-        // }else{
-        //     if(number == state.currentPage + 1){
 
-        //     }
-
-        // }
         return number;
     };
+
 
     return (
         <>
@@ -476,6 +482,9 @@ const Invoice = () => {
                             <Input.TextArea rows={4} value={customerAddress} />
                         </Form.Item>
 
+                        <Form.Item label="Discount" name="Discount" required={false}>
+                            <Input placeholder={state.discount} disabled={true} />
+                        </Form.Item>
                         <Form.Item label="Project Name" name="project_name" required={false} rules={[{ required: true, message: 'Please input your Project Name!' }]}>
                             <Input />
                         </Form.Item>

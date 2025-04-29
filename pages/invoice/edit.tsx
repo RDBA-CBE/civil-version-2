@@ -7,7 +7,9 @@ import { Button, Modal, Form, Input, Select, Space, Drawer, message, Popconfirm 
 import axios from 'axios';
 import { useRouter } from 'next/router';
 import { DeleteOutlined, EditOutlined, PrinterOutlined } from '@ant-design/icons';
-import { baseUrl } from '@/utils/function.util';
+import { baseUrl, ObjIsEmpty } from '@/utils/function.util';
+import Models from '@/imports/models.import';
+import IconLoader from '@/components/Icon/IconLoader';
 
 const Edit = () => {
     const router = useRouter();
@@ -21,6 +23,8 @@ const Edit = () => {
     const [editRecord, setEditRecord] = useState<any>(null);
     const [paymentEditRecord, setPaymentEditRecord] = useState<any>(null);
     const [open, setOpen] = useState(false);
+    const [discountOpen, setDiscountOpen] = useState(false);
+    const [selectedCustomerId, setSelectedCustomerId] = useState(null);
     const [open2, setOpen2] = useState(false);
     const [form] = Form.useForm();
     const [form1] = Form.useForm();
@@ -43,8 +47,12 @@ const Edit = () => {
     const [messageApi, contextHolder] = message.useMessage();
     const [paymentMode, setPaymentMode] = useState<any>('');
     const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+    const [btnLoading, setBtnLoading] = useState(false);
+
     const [admin, setAdmin] = useState<any>();
     const [geteditData, setGetEditData] = useState<any>();
+    const [customerData, setCustomerData] = useState<any>();
+
     const [paymentFormData, setPaymentFormData] = useState<any>({
         payment_mode: '',
         date: '',
@@ -57,6 +65,9 @@ const Edit = () => {
     const [pendingBalance, setPendingBalance] = useState(0);
     const [formSubmitted, setFormSubmitted] = useState(false);
     const [formUpdated, setFormUpdated] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [customerList, setCustomerList] = useState([]);
+    const [isDiscount, setIsDiscount] = useState([]);
 
     const [formData, setFormData] = useState<any>({
         customer: '',
@@ -84,7 +95,17 @@ const Edit = () => {
         if (id) {
             getInvoiceTestData();
         }
+        customersList();
     }, [id]);
+
+    const customersList = async () => {
+        try {
+            const res: any = await Models.discount.customerList();
+            setCustomerList(res?.customer);
+        } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
+    };
 
     const tableTogle = () => {
         setTableVisible(!tableVisible);
@@ -130,6 +151,16 @@ const Edit = () => {
             .then((res) => {
                 let response = res.data;
 
+                const customerData = {
+                    customerId: response?.customer?.id,
+                    customer_name: response?.customer?.customer_name,
+                    customer_discount: response?.customer?.customer_discount !== null ? response?.customer?.customer_discount?.discount : 0,
+                    discount_id: response?.customer?.customer_discount !== null ? response?.customer?.customer_discount?.id : null,
+                };
+
+                setCustomerData(customerData);
+
+                console.log('✌️response --->', response);
                 let mergeArray: any = [response.customer, ...response.customers];
                 const uniqueArray = mergeArray.reduce((acc: any, obj: any) => {
                     const existingObj = acc.find((item: any) => item.id === obj.id);
@@ -137,7 +168,6 @@ const Edit = () => {
                     if (!existingObj) {
                         acc.push(obj);
                     }
-
                     return acc;
                 }, []);
 
@@ -162,11 +192,14 @@ const Edit = () => {
                 });
 
                 setCheckedItems(convertedObj);
+                const discount = !ObjIsEmpty(response?.customer?.customer_discount) && response?.customer?.customer_discount !== null ? response?.customer?.customer_discount?.discount : 0;
 
+                // const discount = !ObjIsEmpty(response?.customer?.customer_discount) && response?.customer?.customer_discount !== null ? response?.customer?.customer_discount?.discount : 0;
+                setIsDiscount(response?.customer?.customer_discount);
                 //Before tax
                 const beforetax: any = response?.invoice_tests.reduce((total: any, test: any) => total + parseFloat(test.total), 0);
-                const discountedAmount = (beforetax * response.invoice.discount) / 100;
-                const discountedBeforeTax = response.invoice.discount !== 0 ? beforetax - discountedAmount : beforetax;
+                const discountedAmount = (beforetax * discount) / 100;
+                const discountedBeforeTax = discount !== 0 ? beforetax - discountedAmount : beforetax;
                 setUpdateBeforeTax(discountedBeforeTax);
                 setBeforeTotalTax(beforetax);
                 // -------------------------------------------------------------------------------------------
@@ -190,7 +223,7 @@ const Edit = () => {
                     ...prevState,
                     customer: uniqueArray[0].id,
                     project_name: response.invoice.project_name,
-                    discount: response.invoice.discount,
+                    discount: discount,
                     advance: response.invoice.advance,
                     date: response.invoice.date,
                     payment_mode: response.invoice.payment_mode,
@@ -227,8 +260,7 @@ const Edit = () => {
             });
     };
 
-    const getInvoiceTestData2 = (isUpdate: String) => {
-        console.log('✌️isUpdate --->', isUpdate);
+    const updateDiscount = (discount: any, customerId: any, customerName: any) => {
         axios
             .get(`${baseUrl}/edit_invoice/${id}/`, {
                 headers: {
@@ -237,6 +269,120 @@ const Edit = () => {
             })
             .then((res) => {
                 let response = res.data;
+                let mergeArray: any = [response.customer, ...response.customers];
+                const uniqueArray = mergeArray.reduce((acc: any, obj: any) => {
+                    const existingObj = acc.find((item: any) => item.id === obj.id);
+
+                    if (!existingObj) {
+                        acc.push(obj);
+                    }
+                    return acc;
+                }, []);
+
+                setSelectedIDs(response?.invoice.tax);
+
+                const data: any = {
+                    customers: uniqueArray,
+                    invoice: response.invoice,
+                    invoice_tests: response.invoice_tests,
+                    payment_mode_choices: response.payment_mode_choices,
+                    sales_mode: response.sales_mode,
+                    taxs: response.taxs,
+                    payments: response.payments,
+                };
+
+                setGetEditData(data);
+                // if (update) {
+                const convertedObj: any = {};
+
+                data?.taxs.forEach((item: any) => {
+                    convertedObj[item.id] = data?.invoice?.tax.includes(item.id);
+                });
+
+                setCheckedItems(convertedObj);
+
+                //Before tax
+                const beforetax: any = response?.invoice_tests.reduce((total: any, test: any) => total + parseFloat(test.total), 0);
+                const discountedAmount = (beforetax * discount) / 100;
+                const discountedBeforeTax = discount !== 0 ? beforetax - discountedAmount : beforetax;
+                setUpdateBeforeTax(discountedBeforeTax);
+                setBeforeTotalTax(beforetax);
+                // -------------------------------------------------------------------------------------------
+                // Tax total prrcentage
+                const matchedTaxs = data?.taxs.filter((item: any) => data?.invoice?.tax.includes(item.id));
+                const sumPercentage = matchedTaxs.reduce((sum: any, item: any) => {
+                    return sum + parseFloat(item.tax_percentage);
+                }, 0);
+
+                const sumAsNumber = Number(sumPercentage);
+                const totalPer: any = (sumAsNumber * discountedBeforeTax) / 100;
+                setTotalTaxPercentage(parseInt(totalPer, 10));
+
+                // -------------------------------------------------------------------------------------------
+                //After tax
+                const After_tax = discountedBeforeTax + totalPer;
+                setAfterTax(parseInt(After_tax, 10));
+                // -------------------------------------------------------------------------------------------
+
+                setFormData((prevState: any) => ({
+                    ...prevState,
+                    customer: customerId,
+                    project_name: response.invoice.project_name,
+                    discount: discount,
+                    advance: response.invoice.advance,
+                    date: response.invoice.date,
+                    payment_mode: response.invoice.payment_mode,
+                    cheque_number: response.invoice.cheque_number,
+                    bank: response.invoice.bank,
+                    place_of_testing: response.invoice.place_of_testing,
+                    amount_paid_date: response.invoice.amount_paid_date,
+                    before_tax: parseInt(discountedBeforeTax, 10) || 0,
+                    invoice_tests: response?.invoice_tests,
+                    upi: response.invoice.upi,
+                    tds: response.invoice.tds,
+                    completed: response.invoice.completed,
+                }));
+
+                setInvoiceFormData(data);
+                // setCustomerAddress(uniqueArray[0]?.address1);
+
+                const totalAmount = response.payments.reduce((accumulator: any, current: any) => {
+                    const amountValue = parseFloat(current.amount);
+
+                    return accumulator + amountValue;
+                }, 0);
+
+                setAdvance(totalAmount);
+
+                const InitialBalance: any = After_tax - totalAmount;
+                setBalance(parseInt(InitialBalance, 10));
+            })
+            .catch((error: any) => {
+                if (error?.response?.status === 401) {
+                    router.push('/');
+                } else {
+                }
+            });
+    };
+
+    const getInvoiceTestData2 = (isUpdate: String) => {
+        axios
+            .get(`${baseUrl}/edit_invoice/${id}/`, {
+                headers: {
+                    Authorization: `Token ${localStorage.getItem('token')}`,
+                },
+            })
+            .then((res) => {
+                let response = res.data;
+                const customerData = {
+                    customerId: response?.customer?.id,
+                    customer_name: response?.customer?.customer_name,
+                    customer_discount: response?.customer?.customer_discount !== null ? response?.customer?.customer_discount?.discount : 0,
+                    discount_id: response?.customer?.customer_discount !== null ? response?.customer?.customer_discount?.id : null,
+                };
+
+                setCustomerData(customerData);
+
                 let mergeArray: any = [response.customer, ...response.customers];
                 const uniqueArray = mergeArray.reduce((acc: any, obj: any) => {
                     const existingObj = acc.find((item: any) => item.id === obj.id);
@@ -259,7 +405,6 @@ const Edit = () => {
                     taxs: response.taxs,
                     payments: response.payments,
                 };
-                console.log('✌️data --->', data);
 
                 setGetEditData(data);
                 // if (update) {
@@ -271,13 +416,12 @@ const Edit = () => {
 
                 setCheckedItems(convertedObj);
 
+                const discount = !ObjIsEmpty(response?.customer?.customer_discount) ? response?.customer?.customer_discount?.discount : response.invoice.discount;
+
                 //Before tax
                 const beforetax: any = response?.invoice_tests.reduce((total: any, test: any) => total + parseFloat(test.total), 0);
-                console.log('✌️beforetax --->', beforetax);
-                const discountedAmount = (beforetax * response.invoice.discount) / 100;
-                console.log('✌️discountedAmount --->', discountedAmount);
-                const discountedBeforeTax = response.invoice.discount !== 0 ? beforetax - discountedAmount : beforetax;
-                console.log('✌️discountedBeforeTax --->', discountedBeforeTax);
+                const discountedAmount = (beforetax * discount) / 100;
+                const discountedBeforeTax = discount !== 0 ? beforetax - discountedAmount : beforetax;
                 setUpdateBeforeTax(discountedBeforeTax);
                 setBeforeTotalTax(beforetax);
                 // -------------------------------------------------------------------------------------------
@@ -290,17 +434,14 @@ const Edit = () => {
                 const sumAsNumber = Number(sumPercentage);
                 const totalPer: any = (sumAsNumber * discountedBeforeTax) / 100;
                 setTotalTaxPercentage(parseInt(totalPer, 10));
-                console.log('✌️parseInt(totalPer, 10) --->', parseInt(totalPer, 10));
 
                 // -------------------------------------------------------------------------------------------
                 //After tax
                 const After_tax = discountedBeforeTax + totalPer;
                 setAfterTax(parseInt(After_tax, 10));
-                console.log('✌️parseInt(After_tax, 10) --->', parseInt(After_tax, 10));
                 // -------------------------------------------------------------------------------------------
 
                 setInvoiceFormData(data);
-                console.log('invoice format --->', data);
                 setCustomerAddress(uniqueArray[0]?.address1);
 
                 const totalAmount = response.payments.reduce((accumulator: any, current: any) => {
@@ -310,11 +451,9 @@ const Edit = () => {
                 }, 0);
 
                 setAdvance(totalAmount);
-                console.log('✌️totalAmount --->', totalAmount);
 
                 const InitialBalance: any = After_tax - totalAmount;
                 setBalance(parseInt(InitialBalance, 10));
-                console.log('✌️parseInt(InitialBalance, 10) --->', parseInt(InitialBalance, 10));
                 if (isUpdate == 'update') {
                     const body = {
                         customer: formData.customer,
@@ -333,7 +472,6 @@ const Edit = () => {
                         upi: formData.upi,
                         completed: formData.completed,
                     };
-                    console.log('✌️body --->', body);
 
                     updateInvoice(body);
                 }
@@ -621,6 +759,7 @@ const Edit = () => {
     };
 
     const invoiceFormSubmit = (e: any) => {
+        setLoading(true);
         const Token = localStorage.getItem('token');
 
         const body = {
@@ -655,8 +794,11 @@ const Edit = () => {
                     type: 'success',
                     content: 'Invoice Successfully Updated',
                 });
+                setLoading(false);
             })
             .catch((error) => {
+                setLoading(false);
+
                 if (error?.response?.status === 401) {
                     router.push('/');
                 } else {
@@ -718,18 +860,181 @@ const Edit = () => {
     };
 
     const handleSelectChange = (e: any) => {
-        // Find the selected customer in the data array
         const selectedCustomer = invoiceFormData?.customers?.find((customer: any) => customer.id == Number(e.target.value));
+        const customerData = {
+            customerId: selectedCustomer?.id,
+            customer_name: selectedCustomer?.customer_name,
+            customer_discount: selectedCustomer?.customer_discount !== null ? selectedCustomer?.customer_discount?.discount : 0,
+            discount_id: selectedCustomer?.customer_discount !== null ? selectedCustomer?.customer_discount?.id : null,
+        };
+        setCustomerData(customerData);
 
         setCustomerAddress(selectedCustomer?.address1 || '');
-        setFormData((prevState: any) => ({
-            ...prevState,
-            customer: selectedCustomer.id,
-        }));
+
+        if (!ObjIsEmpty(selectedCustomer?.customer_discount) && selectedCustomer?.customer_discount !== null) {
+            updateDiscount(selectedCustomer?.customer_discount?.discount, selectedCustomer.id, selectedCustomer?.customer_name);
+        } else {
+            updateDiscount(0, selectedCustomer.id, selectedCustomer?.customer_name);
+        }
 
         form.setFieldsValue({
             'reciever-address': selectedCustomer?.address1 || '',
         });
+    };
+
+    const updateDiscountWithCustomer = async () => {
+        try {
+            setBtnLoading(true);
+            if (customerData?.discount_id) {
+                const body = {
+                    customer: customerData?.customerId,
+                    discount: Number(customerData.customer_discount),
+                };
+                const update = await Models.discount.updateDiscount(customerData.discount_id, body);
+                updateDiscount(customerData.customer_discount, customerData?.customerId, customerData?.customer_name);
+                // setFormData({
+                //     ...formData,
+                //     customer: customerData?.customerId,
+                // });
+                // form.setFieldsValue({
+                //     customer: customerData?.customerId,
+                //     discount: customerData.customer_discount,
+                // });
+            } else {
+                console.log('✌️else --->');
+                const body = {
+                    customer: customerData?.customerId,
+                    discount: Number(customerData.customer_discount),
+                };
+                const create = await Models.discount.createDiscount(body);
+                console.log('✌️create --->', create);
+                // updateCustomer(customerData);
+                updateDiscount(customerData.customer_discount, customerData?.customerId, customerData?.customer_name);
+            }
+            setBtnLoading(false);
+
+            setDiscountOpen(false);
+        } catch (error) {
+            setBtnLoading(false);
+
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const updateCustomer = (customer: any) => {
+        axios
+            .get(`${baseUrl}/edit_invoice/${id}/`, {
+                headers: {
+                    Authorization: `Token ${localStorage.getItem('token')}`,
+                },
+            })
+            .then((res) => {
+                let response = res.data;
+                const customerData = {
+                    customerId: customer?.customerId,
+                    customer_name: customer?.customer_name,
+                    customer_discount: customer?.customer_discount !== null ? customer?.customer_discount?.discount : 0,
+                    discount_id: customer?.customer_discount !== null ? customer?.customer_discount?.id : null,
+                };
+
+                setCustomerData(customerData);
+
+                let mergeArray: any = [response.customer, ...response.customers];
+                const uniqueArray = mergeArray.reduce((acc: any, obj: any) => {
+                    const existingObj = acc.find((item: any) => item.id === obj.id);
+
+                    if (!existingObj) {
+                        acc.push(obj);
+                    }
+
+                    return acc;
+                }, []);
+
+                setSelectedIDs(response?.invoice.tax);
+
+                const data: any = {
+                    customers: uniqueArray,
+                    invoice: response.invoice,
+                    invoice_tests: response.invoice_tests,
+                    payment_mode_choices: response.payment_mode_choices,
+                    sales_mode: response.sales_mode,
+                    taxs: response.taxs,
+                    payments: response.payments,
+                };
+
+                setGetEditData(data);
+                // if (update) {
+                const convertedObj: any = {};
+
+                data?.taxs.forEach((item: any) => {
+                    convertedObj[item.id] = data?.invoice?.tax.includes(item.id);
+                });
+
+                setCheckedItems(convertedObj);
+
+                const discount = !ObjIsEmpty(response?.customer?.customer_discount) ? response?.customer?.customer_discount?.discount : response.invoice.discount;
+
+                //Before tax
+                const beforetax: any = response?.invoice_tests.reduce((total: any, test: any) => total + parseFloat(test.total), 0);
+                const discountedAmount = (beforetax * discount) / 100;
+                const discountedBeforeTax = discount !== 0 ? beforetax - discountedAmount : beforetax;
+                setUpdateBeforeTax(discountedBeforeTax);
+                setBeforeTotalTax(beforetax);
+                // -------------------------------------------------------------------------------------------
+                // Tax total prrcentage
+                const matchedTaxs = data?.taxs.filter((item: any) => data?.invoice?.tax.includes(item.id));
+                const sumPercentage = matchedTaxs.reduce((sum: any, item: any) => {
+                    return sum + parseFloat(item.tax_percentage);
+                }, 0);
+
+                const sumAsNumber = Number(sumPercentage);
+                const totalPer: any = (sumAsNumber * discountedBeforeTax) / 100;
+                setTotalTaxPercentage(parseInt(totalPer, 10));
+
+                // -------------------------------------------------------------------------------------------
+                //After tax
+                const After_tax = discountedBeforeTax + totalPer;
+                setAfterTax(parseInt(After_tax, 10));
+                // -------------------------------------------------------------------------------------------
+
+                setInvoiceFormData(data);
+                setCustomerAddress(uniqueArray[0]?.address1);
+
+                const totalAmount = response.payments.reduce((accumulator: any, current: any) => {
+                    const amountValue = parseFloat(current.amount);
+
+                    return accumulator + amountValue;
+                }, 0);
+
+                setAdvance(totalAmount);
+
+                const InitialBalance: any = After_tax - totalAmount;
+                setBalance(parseInt(InitialBalance, 10));
+                const body = {
+                    customer: customer?.customerId,
+                    project_name: formData.project_name,
+                    discount: customer?.customer_discount,
+                    tax: selectedIDs,
+                    total_amount: parseInt(After_tax, 10),
+                    advance: totalAmount,
+                    balance: parseInt(InitialBalance, 10),
+                    amount_paid_date: formData.amount_paid_date,
+                    bank: formData.bank,
+                    cheque_number: formData.cheque_number,
+                    payment_mode: formData.payment_mode,
+                    date: formData.date,
+                    place_of_testing: formData.place_of_testing,
+                    upi: formData.upi,
+                    completed: formData.completed,
+                };
+
+                updateInvoice(body);
+            })
+            .catch((error: any) => {
+                if (error?.response?.status === 401) {
+                    router.push('/');
+                }
+            });
     };
 
     // drawer
@@ -743,6 +1048,13 @@ const Edit = () => {
         setOpen(false);
         form.resetFields();
         setCustomerAddress('');
+    };
+
+    const onCloseDiscount = () => {
+        setDiscountOpen(false);
+        // setCustomerData(null)
+        // form.resetFields();
+        // setCustomerAddress('');
     };
 
     // Multiple Select
@@ -1214,6 +1526,21 @@ const Edit = () => {
         window.open(url, '_blank');
     };
 
+    const openDrawer = () => {
+        // const customer = formData.customer;
+        // const discount = formData.discount;
+
+        const res = customerData;
+        console.log('✌️res --->', res);
+
+        form.setFieldsValue({
+            customer: customerData?.customerId,
+            discount: customerData?.customer_discount,
+        });
+
+        setDiscountOpen(true);
+    };
+
     return (
         <>
             {admin == 'false' && geteditData?.invoice?.completed == 'Yes' ? (
@@ -1334,7 +1661,6 @@ const Edit = () => {
                                             </tr>
                                         )}
                                         {invoiceFormData.payments?.map((item: any, index: any) => {
-                                            console.log('✌️itempayment --->', item);
                                             return (
                                                 <tr className="align-top" key={item.id}>
                                                     <td>{item?.payment_mode}</td>
@@ -1370,7 +1696,7 @@ const Edit = () => {
                                         <label htmlFor="bank-name" className="mb-0 w-1/3 ltr:mr-2 rtl:ml-2">
                                             Discount (%)
                                         </label>
-                                        <input id="bank-name" type="text" className="form-input flex-1" name="discount" value={formData?.discount} placeholder="Enter Discount" disabled />
+                                        <input id="bank-name" type="text" className="form-input flex-1" name="discount" value={formData?.discount} placeholder="Enter Discount" disabled={true} />
                                     </div>
                                     <div className="mt-4 flex items-center justify-between">
                                         <label htmlFor="bank-name" className="mb-0 w-1/3 ltr:mr-2 rtl:ml-2">
@@ -1668,19 +1994,28 @@ const Edit = () => {
                                             disabled
                                         />
                                     </div>
-                                    <div className="mt-4 flex items-center justify-between">
-                                        <label htmlFor="bank-name" className="mb-0 w-1/3 ltr:mr-2 rtl:ml-2">
-                                            Discount (%)
-                                        </label>
-                                        <input
-                                            id="bank-name"
-                                            type="number"
-                                            className="form-input flex-1"
-                                            name="discount"
-                                            value={formData?.discount}
-                                            onChange={(e) => handleDiscountChange(e.target.value)}
-                                            placeholder="Enter Discount"
-                                        />
+                                    <div className="mt-4 flex w-full items-center justify-between">
+                                        <div className="flex w-1/3  items-center">
+                                            <label htmlFor="bank-name" className="mb-0 ltr:mr-2 rtl:ml-2">
+                                                Discount (%)
+                                            </label>
+                                            <div onClick={() => openDrawer()} className=" cursor-pointer items-center pl-4 text-[#972e25] underline">
+                                                Update
+                                            </div>
+                                        </div>
+                                        <div className="flex w-2/3 items-center  ">
+                                            <input
+                                                id="bank-name"
+                                                type="number"
+                                                className="form-input flex-1"
+                                                name="discount"
+                                                value={formData?.discount}
+                                                onChange={(e) => handleDiscountChange(e.target.value)}
+                                                placeholder="Enter Discount"
+                                                disabled={true}
+                                                style={{ cursor: 'not-allowed' }}
+                                            />
+                                        </div>
                                         {/* <div>Subtotal</div>
                                                                 <div>265.00</div> */}
                                     </div>
@@ -1794,8 +2129,14 @@ const Edit = () => {
                                                                     } */}
 
                                             <button type="button" className="btn btn-civil w-full gap-2" onClick={invoiceFormSubmit}>
-                                                <IconSave className="shrink-0 ltr:mr-2 rtl:ml-2" />
-                                                Update
+                                                {loading ? (
+                                                    <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2 " />
+                                                ) : (
+                                                    <>
+                                                        <IconSave className="shrink-0 ltr:mr-2 rtl:ml-2" />
+                                                        Update
+                                                    </>
+                                                )}
                                             </button>
 
                                             {/* <button className="btn btn-gray w-full gap-2" onClick={() => handlePreviewClick(id)}>
@@ -2126,6 +2467,75 @@ const Edit = () => {
                                 </Button>
                             </div>
                         </form>
+                    </Drawer>
+
+                    <Drawer title={'Update Customer Discount'} placement="right" width={600} onClose={onCloseDiscount} open={discountOpen}>
+                        <Form
+                            name="basic-form"
+                            layout="vertical"
+                            initialValues={{ remember: true }}
+                            onFinish={updateDiscountWithCustomer}
+                            onFinishFailed={onFinishFailed}
+                            autoComplete="off"
+                            form={form}
+                        >
+                            <Form.Item label="Customer Name" name="customer" required={false} rules={[{ required: true, message: 'Please select customer name!' }]}>
+                                <Select
+                                    // onChange={handleCustomerSelectChange}
+                                    placeholder="Select a customer"
+                                    value={selectedCustomerId}
+                                    disabled={true}
+                                    showSearch
+                                    filterOption={(input, option: any) =>
+                                        option.props.children.toString().toLowerCase().indexOf(input.toLowerCase()) >= 0 ||
+                                        option.props.children.toString().toLowerCase().indexOf(input.toLowerCase()) >= 0
+                                    }
+                                >
+                                    {customerList?.map((val: any) => (
+                                        <Select.Option key={val.id} value={val.id}>
+                                            {val.customer_name} - {val.phone_no}
+                                        </Select.Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+
+                            {/* <Form.Item>
+                                                <Input.TextArea rows={4} value={customerAddress} />
+                                            </Form.Item> */}
+
+                            <Form.Item label="Discount (%)" name="discount" required={false} rules={[{ required: true, message: 'Please enter discount !' }]}>
+                                <Input
+                                    type="number"
+                                    placeholder="Discount"
+                                    value={customerData?.customer_discount}
+                                    onChange={(e) =>
+                                        setCustomerData({
+                                            ...customerData,
+                                            customer_discount: e.target.value,
+                                        })
+                                    }
+                                />
+                            </Form.Item>
+
+                            <Form.Item>
+                                {/* <Space> */}
+                                <div className="form-btn-main">
+                                    <Space>
+                                        <Button danger htmlType="submit" onClick={() => onCloseDiscount()}>
+                                            Cancel
+                                        </Button>
+                                        <Button type="primary" htmlType="submit" loading={btnLoading}>
+                                            Submit
+                                        </Button>
+                                    </Space>
+                                </div>
+                                {/* <Button htmlType="submit" style={{ borderColor: "blue", color: "blue" }}>
+                                                            Add Invoice Test
+                                                        </Button> */}
+                                {/* </Space> */}
+                            </Form.Item>
+                            {/* </div> */}
+                        </Form>
                     </Drawer>
                 </div>
             )}

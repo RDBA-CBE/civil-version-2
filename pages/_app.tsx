@@ -58,14 +58,11 @@ const App = ({ Component, pageProps }: AppPropsWithLayout) => {
 
     useEffect(() => {
         // Print the current route for debugging
-        console.log('Current route:', router.pathname);
     }, [router.pathname]);
 
     const shouldUseLayout = !pwh.includes(router.pathname);
     const hideHeaderFooter = pwh.includes(router.pathname);
 
-    console.log('shouldUseLayout:', shouldUseLayout);
-    console.log('currentPageName.toLowerCase()', currentPageName.toLowerCase());
     return (
         <Provider store={store}>
             <Head>

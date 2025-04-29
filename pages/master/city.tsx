@@ -49,7 +49,7 @@ const City = () => {
                 setLoading(false);
             })
             .catch((error: any) => {
-                if (error.response.status === 401) {
+                if (error?.response?.status === 401) {
                     router.push('/');
                 }
                 setLoading(false);

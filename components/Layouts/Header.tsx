@@ -328,6 +328,9 @@ const Header = () => {
                             </div>
                         </button>
                         <ul className="sub-menu">
+                        <li>
+                                <Link href="/master/discount">{t('Discount')}</Link>
+                            </li>
                             <li>
                                 <Link href="/master/tax">{t('Tax')}</Link>
                             </li>

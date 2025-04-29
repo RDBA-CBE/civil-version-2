@@ -32,3 +32,15 @@ export const Warning = (content: any) => {
         content: content,
     });
 };
+
+export const ObjIsEmpty = (object: any) => {
+    if (object) {
+        if (Object.keys(object)?.length === 0) {
+            return true;
+        } else {
+            return false;
+        }
+    } else {
+        return false;
+    }
+};

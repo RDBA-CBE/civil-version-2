@@ -12,7 +12,6 @@ import { useRouter } from 'next/router';
 const DefaultLayout = ({ children }: PropsWithChildren) => {
     const router = useRouter();
     const componentName = router.pathname.substring(1); 
-    console.log(componentName,'componentName---------------------------')
     const pagesWithoutLogin = ['viewinvoicereport', 'print', 'print1','r','c', 'viewQuotationPreview', 'print2', ];
 
     if(pagesWithoutLogin.includes(componentName)){
