@@ -1246,6 +1246,7 @@ const Edit = () => {
 
     // payment post method
     const paymentSubmit = (e: any) => {
+        setLoading(true)
         e.preventDefault();
 
         const balanceValue = parseInt(balance, 10);
@@ -1255,30 +1256,35 @@ const Edit = () => {
                 type: 'error',
                 content: 'The amount filed exceeds the available balance.',
             });
+            setLoading(false)
             return;
         } else if (paymentFormData.payment_mode == 'upi' && paymentFormData?.upi == null) {
             messageApi.open({
                 type: 'error',
                 content: 'UPI field is required',
             });
+             setLoading(false)
             return;
         } else if (paymentFormData.payment_mode === 'cheque' && paymentFormData?.cheque_number == null) {
             messageApi.open({
                 type: 'error',
                 content: 'Cheque Number field is required',
             });
+             setLoading(false)
             return;
         } else if (paymentFormData.payment_mode === 'neft' && paymentFormData?.neft == null) {
             messageApi.open({
                 type: 'error',
                 content: 'Neft field is required',
             });
+             setLoading(false)
             return;
         } else if (paymentFormData.payment_mode === 'tds' && paymentFormData?.tds == null) {
             messageApi.open({
                 type: 'error',
                 content: 'TDS field is required',
             });
+             setLoading(false)
             return;
         } else {
             invoiceFormSubmit(e);
@@ -1291,6 +1297,7 @@ const Edit = () => {
                 })
                 .then((res: any) => {
                     setPaymentModalOpen(false);
+                     setLoading(false)
                     getInvoiceTestData2('update');
                     messageApi.open({
                         type: 'success',
@@ -1316,6 +1323,7 @@ const Edit = () => {
                     setBalance(parseInt(InitialBalance, 10));
                 })
                 .catch((error: any) => {
+                     setLoading(false)
                     if (error?.response?.status === 401) {
                         router.push('/');
                     } else {
@@ -1389,6 +1397,7 @@ const Edit = () => {
     // };
 
     const paymentUpdate = (e: any) => {
+        setLoading(true)
         e.preventDefault();
         const Token = localStorage.getItem('token');
 
@@ -1398,6 +1407,7 @@ const Edit = () => {
                 type: 'error',
                 content: 'The amount filed exceeds the available balance.',
             });
+            setLoading(false)
             return;
         }
 
@@ -1427,6 +1437,7 @@ const Edit = () => {
                 type: 'error',
                 content: errorMessage,
             });
+             setLoading(false)
             return;
         }
 
@@ -1441,6 +1452,7 @@ const Edit = () => {
                 },
             })
             .then((res: any) => {
+                 setLoading(false)
                 setOpen2(false);
 
                 // Calculate total amount and update state
@@ -1457,13 +1469,23 @@ const Edit = () => {
                 getInvoiceTestData2('update');
             })
             .catch((error: any) => {
+                console.log("hello");
+                
+                  setLoading(false)
                 if (error?.response?.status === 401) {
+                    
                     router.push('/');
+
                 } else {
                     // Handle other errors if needed
                 }
             });
+
+            
     };
+
+    console.log("loading", loading);
+    
 
     // payment Delete
     const PaymentDelete = (id: any) => {
@@ -2387,7 +2409,7 @@ const Edit = () => {
                             </div>
                             <div style={{ paddingTop: '30px' }}>
                                 <Button type="primary" htmlType="submit" onClick={paymentSubmit}>
-                                    Add
+                                     {loading ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2 " /> : 'Add'}
                                 </Button>
                             </div>
                         </form>
@@ -2462,8 +2484,8 @@ const Edit = () => {
                                 {formUpdated && paymentFormData?.amount === '' && <p style={{ color: 'red' }}>Amount is required</p>}
                             </div>
                             <div style={{ paddingTop: '30px' }}>
-                                <Button type="primary" htmlType="submit" onClick={paymentUpdate}>
-                                    Update
+                                <Button type="primary" htmlType="submit" onClick={paymentUpdate} >
+                                    {loading ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2 " /> : 'Update'}
                                 </Button>
                             </div>
                         </form>

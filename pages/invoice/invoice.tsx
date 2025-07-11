@@ -29,6 +29,7 @@ const Invoice = () => {
         pagePrev: null,
         invoiceList: [],
         discount: 0,
+        searchValue: null,
     });
 
     // useEffect(() => {
@@ -302,6 +303,10 @@ const Invoice = () => {
 
     const initialData = async (page: any) => {
         try {
+            // const body = bodyData();
+
+            // console.log('body', body);
+
             setState({ loading: true });
 
             const res: any = await Models.invoice.invoiceList(page);
@@ -321,8 +326,32 @@ const Invoice = () => {
     };
     console.log('✌️currentPage --->', state.currentPage);
 
+    const bodyData = () => {
+        const body: any = {};
+        if (state.searchValue) {
+            if (state.searchValue.completed !== undefined) {
+                body.completed = state.searchValue.completed;
+            }
+            if (state.searchValue.customer !== undefined) {
+                body.customer = state.searchValue.customer;
+            }
+            if (state.searchValue.from_date !== undefined) {
+                body.from_date = state.searchValue.from_date;
+            }
+
+            if (state.searchValue.project_name !== undefined) {
+                body.project_name = state.searchValue.project_name;
+            }
+            if (state.searchValue.to_date !== undefined) {
+                body.to_date = state.searchValue.to_date;
+            }
+        }
+
+        return body;
+    };
+
     // form submit
-    const onFinish2 = (values: any) => {
+    const onFinish2 = (values: any, page = 1) => {
         const Token = localStorage.getItem('token');
 
         const body = {
@@ -334,7 +363,7 @@ const Invoice = () => {
         };
 
         axios
-            .post(`${baseUrl}/invoice_list/`, body, {
+            .post(`${baseUrl}/invoice_list/?page=${page}`, body, {
                 headers: {
                     Authorization: `Token ${Token}`,
                 },
@@ -342,11 +371,12 @@ const Invoice = () => {
             .then((res: any) => {
                 setState({
                     invoiceList: res?.data?.results,
-                    currentPage: state.currentPage,
+                    currentPage: page,
                     pageNext: res?.data?.next,
                     pagePrev: res?.data?.previous,
                     total: res?.data?.count,
                     loading: false,
+                    searchValue: values,
                 });
                 // setDataSource(res?.data);
             })
@@ -355,8 +385,10 @@ const Invoice = () => {
                     router.push('/');
                 }
             });
-        form.resetFields();
+        // form.resetFields();
     };
+
+    console.log('searchValue', state.searchValue);
 
     const onFinishFailed2 = (errorInfo: any) => {};
 
@@ -366,13 +398,17 @@ const Invoice = () => {
     //   };
 
     const handlePageChange = (number: any) => {
-
-        initialData(number);
+        console.log('number', number);
         setState({ currentPage: number });
+
+        if (state.searchValue) {
+            onFinish2(state.searchValue, number);
+        } else {
+            initialData(number);
+        }
 
         return number;
     };
-
 
     return (
         <>
@@ -409,9 +445,24 @@ const Invoice = () => {
                                 </Select>
                             </Form.Item>
 
-                            <div style={{ display: 'flex', alignItems: 'end' }}>
+                            <div style={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: '10px' }}>
+                                {/* { state.searchValue &&  */}
+                                    <Form.Item>
+                                        <Button
+                                            type="primary"
+                                            htmlType="submit"
+                                            onClick={() => {
+                                                form.resetFields();
+
+                                            }}
+                                            style={{ width: '100px' }}
+                                        >
+                                            Clear
+                                        </Button>
+                                    </Form.Item>
+                                {/* } */}
                                 <Form.Item>
-                                    <Button type="primary" htmlType="submit" style={{ width: '150px' }}>
+                                    <Button type="primary" htmlType="submit" style={{ width: '100px' }}>
                                         Search
                                     </Button>
                                 </Form.Item>
