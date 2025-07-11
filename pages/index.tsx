@@ -27,7 +27,7 @@ const Index = () => {
 
     const [state, setState] = useSetState({
         loading: false,
-    });
+    }); 
 
     useEffect(() => {
         const Token = localStorage.getItem('token');
