@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Space, Form, Select, DatePicker, Spin, InputNumber, Tooltip } from 'antd';
+import { Table, Button, Space, Form, Select, DatePicker, Spin, InputNumber, Tooltip, Modal } from 'antd';
 import { Input } from 'antd';
 import axios from 'axios';
 import ExcelJS from 'exceljs';
@@ -19,6 +19,7 @@ const InvoiceReport = () => {
     const [saleFormData, setSaleFormData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [formFields, setFormFields] = useState<any>([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     // get GetExpenseReport datas
     useEffect(() => {
@@ -208,7 +209,31 @@ const InvoiceReport = () => {
     ];
 
     // export to excel format
-    const exportToExcel = async () => {
+    const exportToExcel = async (values: any) => {
+        console.log('✌️values --->', values);
+
+        const selectedDate = values.month;
+        const year = selectedDate?.year();
+
+        // Construct the body object with the selected year and month
+        const body = {
+            year: year,
+        };
+
+        console.log('Body for API request:', body);
+        console.log('dataSource', dataSource);
+
+        const fromDate = dayjs(`${year}-04-01`);
+        const toDate = dayjs(`${year + 1}-03-31`);
+
+        const filteredData = dataSource.filter((item: any) => {
+            if (!item.date) return false;
+            const itemDate = dayjs(item.date);
+            return itemDate.isAfter(fromDate.subtract(1, 'day')) && itemDate.isBefore(toDate.add(1, 'day'));
+        });
+
+        console.log('filteredData', filteredData);
+
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Sheet1');
 
@@ -217,7 +242,7 @@ const InvoiceReport = () => {
 
         // Add data rows
 
-        dataSource.forEach((row) => {
+        filteredData.forEach((row) => {
             const rowData: any = [];
             columns.forEach((column) => {
                 if (column.dataIndex === 'invoice_file') {
@@ -241,8 +266,12 @@ const InvoiceReport = () => {
             new Blob([blob], {
                 type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             }),
-            'Invoice-Report.xlsx'
+            `Invoice-Report-${year}.xlsx`
         );
+    };
+
+    const onFinishFailedZip = (errorInfo: any) => {
+        console.log('Failed:', errorInfo);
     };
 
     useEffect(() => {
@@ -390,6 +419,20 @@ const InvoiceReport = () => {
         doc.save('Invoice_Report.pdf');
     };
 
+    const showModal = () => {
+        setIsModalOpen(true);
+
+        form.resetFields();
+    };
+
+    const handleOk = () => {
+        setIsModalOpen(false);
+    };
+    const handleCancel = () => {
+        setIsModalOpen(false);
+        form.resetFields();
+    };
+
     // Function to handle PDF download
     const handleDownloadPDF = (record: any) => {
         const doc = new jsPDF();
@@ -476,7 +519,11 @@ const InvoiceReport = () => {
                     </div>
                     <div>
                         <Space>
-                            <Button type="primary" onClick={exportToExcel}>
+                            <Button
+                                type="primary"
+                                // onClick={exportToExcel}
+                                onClick={showModal}
+                            >
                                 Export to Excel
                             </Button>
                             <Button type="primary" onClick={handleDownloadAll}>
@@ -501,6 +548,27 @@ const InvoiceReport = () => {
                     />
                 </div>
             </div>
+
+            <Modal title="Export to Excel" open={isModalOpen} onOk={handleOk} onCancel={handleCancel} footer={false}>
+                <Form name="basic" layout="vertical" form={form} initialValues={{ remember: true }} onFinish={exportToExcel} onFinishFailed={onFinishFailedZip} autoComplete="off">
+                    <Form.Item label="Financial Year" name="month" required={true} rules={[{ required: true, message: 'Year & Month field is required.' }]}>
+                        <DatePicker picker="year" className="w-full" />
+                    </Form.Item>
+
+                    <Form.Item>
+                        <div className="form-btn-main">
+                            <Space>
+                                <Button danger htmlType="submit" onClick={() => handleCancel()}>
+                                    Cancel
+                                </Button>
+                                <Button type="primary" htmlType="submit">
+                                    Submit
+                                </Button>
+                            </Space>
+                        </div>
+                    </Form.Item>
+                </Form>
+            </Modal>
         </>
     );
 };
