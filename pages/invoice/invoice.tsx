@@ -183,7 +183,7 @@ const Invoice = () => {
 
     const handleEditClick = (record: any) => {
         // Navigate to the /invoice/edit page with the record data as a query parameter
-        window.location.href = `/invoice/edit?id=${record.id}`;
+        window.location.href = `/invoice/edits?id=${record.id}`;
     };
 
     // const handleDelete = (record: any) => {
@@ -252,7 +252,7 @@ const Invoice = () => {
             })
             .then((res) => {
                 initialData(1);
-                window.location.href = `/invoice/edit?id=${res?.data?.id}`;
+                window.location.href = `/invoice/edits?id=${res?.data?.id}`;
                 setOpen(false);
             })
             .catch((error) => {

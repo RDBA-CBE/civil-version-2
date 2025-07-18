@@ -64,6 +64,26 @@ const discount = {
         return promise;
     },
 
+    getCustomerDiscount: (id: any) => {
+        let promise = new Promise((resolve, reject) => {
+            let url = `customer-discount/${id}/`;
+            instance()
+                .get(url)
+                .then((res) => {
+                    resolve(res.data);
+                })
+                .catch((error) => {
+                    console.log('errorsss: ', error);
+                    if (error.response) {
+                        reject(error.response.data);
+                    } else {
+                        reject(error);
+                    }
+                });
+        });
+        return promise;
+    },
+
     updateDiscount: (id: any, data: any) => {
         let promise = new Promise((resolve, reject) => {
             let url = `customer-discount/${id}/`;
@@ -103,10 +123,6 @@ const discount = {
         });
         return promise;
     },
-
-    
-
-   
 };
 
 export default discount;
