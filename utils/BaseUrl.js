@@ -1,1 +1,1 @@
-export const BaseURL = 'https://app.covaicivillab.com/';
+export const BaseURL = 'http://31.97.206.165/';

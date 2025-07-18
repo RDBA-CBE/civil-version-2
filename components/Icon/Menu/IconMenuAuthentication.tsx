@@ -2,10 +2,13 @@ import { FC } from 'react';
 
 interface IconMenuAuthenticationProps {
     className?: string;
+    style?:any;
+    onClick?:any
 }
 
-const IconMenuAuthentication: FC<IconMenuAuthenticationProps> = ({ className }) => {
+const IconMenuAuthentication: FC<IconMenuAuthenticationProps> = ({ className,onClick,style }) => {
     return (
+        <div onClick={onClick && onClick} style={style}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
             <path
                 opacity="0.5"
@@ -20,6 +23,7 @@ const IconMenuAuthentication: FC<IconMenuAuthenticationProps> = ({ className }) 
                 fill="currentColor"
             />
         </svg>
+        </div>
     );
 };
 
