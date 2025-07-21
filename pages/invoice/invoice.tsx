@@ -4,7 +4,7 @@ import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import router from 'next/router';
 import dayjs from 'dayjs';
-import { baseUrl, ObjIsEmpty, useSetState } from '@/utils/function.util';
+import { baseUrl, ObjIsEmpty, roundNumber, useSetState } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import Models from '@/imports/models.import';
 
@@ -135,12 +135,18 @@ const Invoice = () => {
             dataIndex: 'total_amount',
             key: 'total_amount',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{roundNumber(record)}</div>;
+            },
         },
         {
             title: 'Balance',
             dataIndex: 'balance',
             key: 'balance',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{roundNumber(record)}</div>;
+            },
         },
         {
             title: 'Incompleted Test',

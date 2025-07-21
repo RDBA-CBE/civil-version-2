@@ -6,7 +6,7 @@ import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import dayjs from 'dayjs';
 import router from 'next/router';
-import { baseUrl } from '@/utils/function.util';
+import { baseUrl, roundNumber } from '@/utils/function.util';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
@@ -86,6 +86,9 @@ const InvoiceFileReport = () => {
             key: 'invoice_amount',
             className: 'singleLineCell',
             width: 150,
+            render: (record: any) => {
+                return <div>{roundNumber(record)}</div>;
+            },
         },
 
         {

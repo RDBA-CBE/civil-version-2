@@ -6,7 +6,7 @@ import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import dayjs from 'dayjs';
 import router from 'next/router';
-import { baseUrl } from '@/utils/function.util';
+import { baseUrl, roundNumber } from '@/utils/function.util';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import IconEye from '@/components/Icon/IconEye';
@@ -88,6 +88,9 @@ const InvoiceReport = () => {
             dataIndex: 'advance',
             key: 'advance',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{roundNumber(record)}</div>;
+            },
         },
         // {
         //     title: 'Discount',
@@ -120,12 +123,18 @@ const InvoiceReport = () => {
             dataIndex: 'total_amount',
             key: 'total_amount',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{roundNumber(record)}</div>;
+            },
         },
         {
             title: 'Balance',
             dataIndex: 'balance',
             key: 'balance',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{roundNumber(record)}</div>;
+            },
         },
         {
             title: 'Invoice Date',

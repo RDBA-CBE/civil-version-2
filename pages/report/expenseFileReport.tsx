@@ -6,7 +6,7 @@ import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import dayjs from 'dayjs';
 import router from 'next/router';
-import { baseUrl } from '@/utils/function.util';
+import { baseUrl, roundNumber } from '@/utils/function.util';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 
@@ -14,7 +14,6 @@ const ExpenseFileReport = () => {
     const [form] = Form.useForm();
     const [dataSource, setDataSource] = useState([]);
     const [loading, setLoading] = useState(false);
-
 
     // Table Headers
     const columns = [
@@ -29,14 +28,19 @@ const ExpenseFileReport = () => {
             dataIndex: 'expense_amount',
             key: 'expense_amount',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{roundNumber(record)}</div>;
+            },
         },
         {
             title: 'File',
             dataIndex: 'file',
             key: 'file',
             className: 'singleLineCell',
-            render: (text:any, record:any) => (
-                <a href={record.file} target="_blank" rel="noopener noreferrer">Download</a>
+            render: (text: any, record: any) => (
+                <a href={record.file} target="_blank" rel="noopener noreferrer">
+                    Download
+                </a>
             ),
         },
         {
@@ -56,9 +60,9 @@ const ExpenseFileReport = () => {
         worksheet.addRow(columns.map((column) => column.title));
 
         // Add data rows
-      // Add data rows
+        // Add data rows
         dataSource.forEach((row) => {
-            const rowData:any = [];
+            const rowData: any = [];
             columns.forEach((column) => {
                 if (column.dataIndex === 'file') {
                     // Add hyperlink in the specific column
@@ -72,7 +76,6 @@ const ExpenseFileReport = () => {
             });
             worksheet.addRow(rowData);
         });
-
 
         // Generate a Blob containing the Excel file
         const blob = await workbook.xlsx.writeBuffer();
@@ -88,7 +91,7 @@ const ExpenseFileReport = () => {
 
     useEffect(() => {
         const Token = localStorage.getItem('token');
-        setLoading(true)
+        setLoading(true);
         const body = {
             // expense_user: '',
             from_date: '',
@@ -105,13 +108,13 @@ const ExpenseFileReport = () => {
             .then((res: any) => {
                 console.log('✌️res --->', res);
                 setDataSource(res?.data?.reports);
-                setLoading(false)
+                setLoading(false);
             })
             .catch((error: any) => {
                 if (error.response.status === 401) {
                     router.push('/');
                 }
-                setLoading(false)
+                setLoading(false);
             });
     }, []);
 
@@ -150,63 +153,59 @@ const ExpenseFileReport = () => {
         y: 300,
     };
 
+    const handleDownloadAll = () => {
+        console.log('dataSource', dataSource);
 
+        // Create a new jsPDF instance
+        const doc: any = new jsPDF();
 
- const handleDownloadAll = () => {
-    console.log("dataSource", dataSource);
+        // Adding a title to the PDF
+        doc.text('Expense File Report', 14, 16);
 
-    // Create a new jsPDF instance
-    const doc: any = new jsPDF();
+        // Define the column headers
+        const headers = ['ID', 'Expense User', 'Expense Amount', 'Expense Date', 'File'];
 
-    // Adding a title to the PDF
-    doc.text('Expense File Report', 14, 16);
+        // Map the data into the table format
+        const tableData = dataSource.map((item: any) => [
+            item.id, // ID
+            item.expense_user, // Expense User
+            item.expense_amount, // Expense Amount
+            dayjs(item.expense_date).format('DD-MM-YYYY'), // Expense Date (formatted)
+            item.file, // File (this will be the clickable link)
+        ]);
 
-    // Define the column headers
-    const headers = ['ID', 'Expense User', 'Expense Amount', 'Expense Date', 'File'];
+        // Use the autoTable plugin to generate the table in the PDF
+        doc.autoTable({
+            head: [headers], // Table header
+            body: tableData, // Table rows
+            startY: 20, // Starting Y position for the table
+            margin: { horizontal: 10 },
+            theme: 'striped',
+            columnStyles: {
+                0: { cellWidth: 20 }, // Column 1 (ID) - small width
+                1: { cellWidth: 40 }, // Column 2 (Expense User) - wider
+                2: { cellWidth: 30 }, // Column 3 (Expense Amount) - medium width
+                3: { cellWidth: 30 }, // Column 4 (Expense Date) - medium width
+                4: { cellWidth: 150 }, // Column 5 (File) - wide width for the link column
+            },
+            didDrawCell: (data: any) => {
+                // Check if the current cell is in the "File" column (index 4)
+                if (data.column.index === 4) {
+                    const fileUrl = data.cell.raw; // The file URL that should be clickable
 
-    // Map the data into the table format
-    const tableData = dataSource.map((item: any) => [
-        item.id, // ID
-        item.expense_user, // Expense User
-        item.expense_amount, // Expense Amount
-        dayjs(item.expense_date).format('DD-MM-YYYY'), // Expense Date (formatted)
-        item.file, // File (this will be the clickable link)
-    ]);
-
-    // Use the autoTable plugin to generate the table in the PDF
-    doc.autoTable({
-        head: [headers], // Table header
-        body: tableData, // Table rows
-        startY: 20, // Starting Y position for the table
-        margin: { horizontal: 10 },
-        theme: 'striped',
-        columnStyles: {
-            0: { cellWidth: 20 },  // Column 1 (ID) - small width
-            1: { cellWidth: 40 },  // Column 2 (Expense User) - wider
-            2: { cellWidth: 30 },  // Column 3 (Expense Amount) - medium width
-            3: { cellWidth: 30 },  // Column 4 (Expense Date) - medium width
-            4: { cellWidth: 150 },   // Column 5 (File) - wide width for the link column
-        },
-        didDrawCell: (data: any) => {
-            // Check if the current cell is in the "File" column (index 4)
-            if (data.column.index === 4) {
-                const fileUrl = data.cell.raw;  // The file URL that should be clickable
-
-                if (fileUrl) {
-                    // Positioning and drawing the clickable link
-                    doc.setTextColor(0, 0, 255);  // Optional: Make the link text blue
-                    // doc.text('View File', data.cell.x + 2, data.cell.y + 5);  // Position text within the cell
-                    doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url: fileUrl });  // Make the entire cell a clickable link
+                    if (fileUrl) {
+                        // Positioning and drawing the clickable link
+                        doc.setTextColor(0, 0, 255); // Optional: Make the link text blue
+                        // doc.text('View File', data.cell.x + 2, data.cell.y + 5);  // Position text within the cell
+                        doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url: fileUrl }); // Make the entire cell a clickable link
+                    }
                 }
-            }
-        },
-    });
+            },
+        });
 
-    // Save the PDF with the name "Expense_File_Report.pdf"
-    doc.save('Expense_File_Report.pdf');
-};
-
-
+        // Save the PDF with the name "Expense_File_Report.pdf"
+        doc.save('Expense_File_Report.pdf');
+    };
 
     return (
         <>
@@ -264,12 +263,17 @@ const ExpenseFileReport = () => {
                     </div>
                 </div>
                 <div className="table-responsive">
-                    <Table dataSource={dataSource} columns={columns} pagination={false} scroll={scrollConfig} 
-                      loading={{
-                        spinning: loading, // This enables the loading spinner
-                        indicator: <Spin size="large"/>,
-                        tip: 'Loading data...', // Custom text to show while loading
-                    }}/>
+                    <Table
+                        dataSource={dataSource}
+                        columns={columns}
+                        pagination={false}
+                        scroll={scrollConfig}
+                        loading={{
+                            spinning: loading, // This enables the loading spinner
+                            indicator: <Spin size="large" />,
+                            tip: 'Loading data...', // Custom text to show while loading
+                        }}
+                    />
                 </div>
             </div>
         </>

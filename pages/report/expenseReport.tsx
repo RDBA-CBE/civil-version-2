@@ -6,7 +6,7 @@ import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import dayjs from 'dayjs';
 import router from 'next/router';
-import { baseUrl } from '@/utils/function.util';
+import { baseUrl, roundNumber } from '@/utils/function.util';
 
 const ExpenseReport = () => {
     const [form] = Form.useForm();
@@ -57,6 +57,9 @@ const ExpenseReport = () => {
             dataIndex: 'amount',
             key: 'amount',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{roundNumber(record)}</div>;
+            },
         },
         {
             title: 'Narration',
@@ -99,7 +102,7 @@ const ExpenseReport = () => {
 
     useEffect(() => {
         const Token = localStorage.getItem('token');
-        setLoading(true)
+        setLoading(true);
         const body = {
             expense_user: '',
             from_date: '',
@@ -115,13 +118,13 @@ const ExpenseReport = () => {
             })
             .then((res: any) => {
                 setDataSource(res?.data?.reports);
-                setLoading(false)
+                setLoading(false);
             })
             .catch((error: any) => {
                 if (error.response.status === 401) {
                     router.push('/');
                 }
-                setLoading(false)
+                setLoading(false);
             });
     }, []);
 
@@ -179,7 +182,7 @@ const ExpenseReport = () => {
                             </Form.Item>
 
                             <Form.Item label="Expense Category" name="expense_category" style={{ width: '300px' }}>
-                                <Select showSearch filterOption={(input:any, option:any) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}>
+                                <Select showSearch filterOption={(input: any, option: any) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}>
                                     {saleFormData?.map((value: any) => (
                                         <Select.Option key={value.id} value={value.id}>
                                             {value.expense_name}
@@ -212,12 +215,17 @@ const ExpenseReport = () => {
                     </div>
                 </div>
                 <div className="table-responsive">
-                    <Table dataSource={dataSource} columns={columns} pagination={false} scroll={scrollConfig} 
-                      loading={{
-                        spinning: loading, // This enables the loading spinner
-                        indicator: <Spin size="large"/>,
-                        tip: 'Loading data...', // Custom text to show while loading
-                    }} />
+                    <Table
+                        dataSource={dataSource}
+                        columns={columns}
+                        pagination={false}
+                        scroll={scrollConfig}
+                        loading={{
+                            spinning: loading, // This enables the loading spinner
+                            indicator: <Spin size="large" />,
+                            tip: 'Loading data...', // Custom text to show while loading
+                        }}
+                    />
                 </div>
             </div>
         </>

@@ -4,7 +4,7 @@ import { EditOutlined, EyeOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import router from 'next/router';
-import { baseUrl } from '@/utils/function.util';
+import { baseUrl, roundNumber } from '@/utils/function.util';
 
 const ExpenseEntry = () => {
     const [form] = Form.useForm();
@@ -103,6 +103,9 @@ const ExpenseEntry = () => {
             dataIndex: 'amount',
             key: 'amount',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{roundNumber(record)}</div>;
+            },
         },
         {
             title: 'Narration',

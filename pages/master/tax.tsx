@@ -5,7 +5,7 @@ import { Form, Input, Radio } from 'antd';
 import { DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import router from 'next/router';
-import { baseUrl } from '@/utils/function.util';
+import { baseUrl, roundNumber } from '@/utils/function.util';
 
 const Tax = () => {
     const [open, setOpen] = useState(false);
@@ -100,6 +100,9 @@ const Tax = () => {
             dataIndex: 'tax_percentage',
             key: 'tax_percentage',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{roundNumber(record)}</div>;
+            },
         },
         {
             title: 'Tax Status',
@@ -313,7 +316,7 @@ const Tax = () => {
                         scroll={scrollConfig}
                         loading={{
                             spinning: loading, // This enables the loading spinner
-                            indicator: <Spin size="large"/>,
+                            indicator: <Spin size="large" />,
                             tip: 'Loading data...', // Custom text to show while loading
                         }}
                     />

@@ -5,7 +5,7 @@ import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import dayjs from 'dayjs';
 import router from 'next/router';
-import { baseUrl } from '@/utils/function.util';
+import { baseUrl, roundNumber } from '@/utils/function.util';
 import { saveAs } from 'file-saver';
 import { message } from 'antd';
 const SaleReport = () => {
@@ -113,6 +113,9 @@ const SaleReport = () => {
             dataIndex: 'advance',
             key: 'advance',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{roundNumber(record)}</div>;
+            },
         },
 
         {
@@ -127,6 +130,9 @@ const SaleReport = () => {
             key: 'balance',
             className: 'singleLineCell',
             width: 120,
+            render: (record: any) => {
+                return <div>{roundNumber(record)}</div>;
+            },
         },
 
         {
@@ -256,6 +262,9 @@ const SaleReport = () => {
             key: 'total_amount',
             className: 'singleLineCell',
             width: 250,
+            render: (record: any) => {
+                return <div>{roundNumber(record)}</div>;
+            },
         },
     ];
 
