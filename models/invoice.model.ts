@@ -3,9 +3,46 @@ import instance from '@/utils/axios.util';
 const invoice = {
     invoiceList: (page: any) => {
         let promise = new Promise((resolve, reject) => {
-            let url = `invoice_list/?page=${page}`;
+            let url = `invoice/?page=${page}`;
             instance()
                 .get(url)
+                .then((res) => {
+                    resolve(res.data);
+                })
+                .catch((error) => {
+                    console.log('errorsss: ', error);
+                    if (error.response) {
+                        reject(error.response.data.error);
+                    } else {
+                        reject(error);
+                    }
+                });
+        });
+        return promise;
+    },
+
+    filter: (body: any, page: any) => {
+        let promise = new Promise((resolve, reject) => {
+            let url = `invoice/?page=${page}`;
+            if (body?.completed) {
+                url += `&completed=${encodeURIComponent(body.completed)}`;
+            }
+            if (body?.customer) {
+                url += `&customer=${encodeURIComponent(body.customer)}`;
+            }
+            if (body?.to_date) {
+                url += `&to_date=${encodeURIComponent(body.to_date)}`;
+            }
+            if (body?.from_date) {
+                url += `&from_date=${encodeURIComponent(body.from_date)}`;
+            }
+            if (body?.project_name) {
+                url += `&project_name=${encodeURIComponent(body.project_name)}`;
+            }
+            console.log('filter --->', body);
+
+            instance()
+                .get(url, body)
                 .then((res) => {
                     resolve(res.data);
                 })
@@ -41,6 +78,26 @@ const invoice = {
         return promise;
     },
 
+    deleteInvoice: (invoiceId: any) => {
+        let promise = new Promise((resolve, reject) => {
+            let url = `invoice/${invoiceId}/`;
+            instance()
+                .delete(url)
+                .then((res) => {
+                    resolve(res.data);
+                })
+                .catch((error) => {
+                    console.log('errorsss: ', error);
+                    if (error.response) {
+                        reject(error.response.data.error);
+                    } else {
+                        reject(error);
+                    }
+                });
+        });
+        return promise;
+    },
+
     customerList: (page = 1) => {
         let promise = new Promise((resolve, reject) => {
             let url = `customer/?page=${page}`;
@@ -61,7 +118,7 @@ const invoice = {
         return promise;
     },
 
-    customerSearch: (name:any) => {
+    customerSearch: (name: any) => {
         let promise = new Promise((resolve, reject) => {
             let url = `customer/?search=${name}`;
             instance()

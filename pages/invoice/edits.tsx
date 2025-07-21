@@ -663,6 +663,8 @@ export default function Edits() {
 
             // setState({ isOpenPayment: false, paymentId: null, payment_mode: { value: 'cash', label: 'Cash' }, paymentAmount: '', paymentDate: '' });
         } catch (error) {
+            setState({ discountLoading: false });
+
             console.log('✌️error --->', error);
         }
     };
@@ -1286,7 +1288,7 @@ export default function Edits() {
                                     value={state?.payment_mode}
                                     options={PAYMENT_MODE_OPTIONS}
                                     onChange={(selectedOption: any) => {
-                                        setState({ payment_mode: selectedOption });
+                                        setState({ payment_mode: selectedOption, payment_number: '' });
                                     }}
                                 />
                             </div>
