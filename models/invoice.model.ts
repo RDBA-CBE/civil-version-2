@@ -39,7 +39,10 @@ const invoice = {
             if (body?.project_name) {
                 url += `&project_name=${encodeURIComponent(body.project_name)}`;
             }
-            console.log('filter --->', body);
+
+            if (body?.invoice_no) {
+                url += `&invoice_no=${encodeURIComponent(body.invoice_no)}`;
+            }
 
             instance()
                 .get(url, body)

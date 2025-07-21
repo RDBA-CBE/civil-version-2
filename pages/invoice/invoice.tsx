@@ -144,10 +144,9 @@ const Invoice = () => {
         },
         {
             title: 'Incompleted Test',
-            dataIndex: 'incompleted_test',
+            dataIndex: 'completed',
             key: 'incompleted_test',
             className: 'singleLineCell',
-            width: 150,
         },
         {
             title: 'Actions',
@@ -327,6 +326,9 @@ const Invoice = () => {
             if (state.searchValue?.to_date) {
                 body.to_date = state.searchValue.to_date;
             }
+            if (state.searchValue?.invoice_no) {
+                body.invoice_no = state.searchValue.invoice_no;
+            }
         }
 
         return body;
@@ -340,6 +342,8 @@ const Invoice = () => {
             to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
             customer: values.customer ? values.customer : '',
             completed: values.completed ? values.completed : '',
+            invoice_no: values.invoice_no ? values.invoice_no : '',
+            
         };
 
         const res: any = await Models.invoice.filter(body, page);
@@ -380,7 +384,10 @@ const Invoice = () => {
             <div className="panel">
                 <div>
                     <Form name="basic" layout="vertical" form={form} initialValues={{ remember: true }} onFinish={onFinish2} onFinishFailed={onFinishFailed2} autoComplete="off">
-                        <div className="sale_report_inputs">
+                        <div className="sale_report_inputs gap-3">
+                            <Form.Item label="Invoice Number" name="invoice_no" style={{ width: '150px' }}>
+                                <Input />
+                            </Form.Item>
                             <Form.Item label="Project Name" name="project_name" style={{ width: '200px' }}>
                                 <Input />
                             </Form.Item>
