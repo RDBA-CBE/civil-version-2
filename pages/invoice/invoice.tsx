@@ -336,26 +336,32 @@ const Invoice = () => {
 
     // form submit
     const onFinish2 = async (values: any, page = 1) => {
-        const body = {
-            project_name: values.project_name ? values.project_name : '',
-            from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
-            to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
-            customer: values.customer ? values.customer : '',
-            completed: values.completed ? values.completed : '',
-            invoice_no: values.invoice_no ? values.invoice_no : '',
-            
-        };
+        try {
+            setState({ loading: true });
+            const body = {
+                project_name: values.project_name ? values.project_name : '',
+                from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
+                to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
+                customer: values.customer ? values.customer : '',
+                completed: values.completed ? values.completed : '',
+                invoice_no: values.invoice_no ? values.invoice_no : '',
+            };
 
-        const res: any = await Models.invoice.filter(body, page);
-        setState({
-            invoiceList: res?.results,
-            currentPage: page,
-            pageNext: res?.next,
-            pagePrev: res?.previous,
-            total: res?.count,
-            loading: false,
-            searchValue: values,
-        });
+            const res: any = await Models.invoice.filter(body, page);
+            setState({
+                invoiceList: res?.results,
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
+                searchValue: values,
+            });
+        } catch (error) {
+            setState({ loading: false });
+
+            console.log('✌️error --->', error);
+        }
     };
 
     const onFinishFailed2 = (errorInfo: any) => {};
