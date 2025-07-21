@@ -4,8 +4,10 @@ import { EditOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import router from 'next/router';
 import dayjs from 'dayjs';
-import { baseUrl } from '@/utils/function.util';
+import { baseUrl, useSetState } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
+import useDebounce from '@/components/useDebounce/useDebounce';
+import Models from '@/imports/models.import';
 
 
 const Quotations = () => {
@@ -25,6 +27,21 @@ const Quotations = () => {
     //     getInvoice();
     // }, []);
 
+    useEffect(()=>{
+        getQuotation(1)
+    },[])
+
+     const [state, setState] = useSetState({
+            page: 1,
+            pageSize: 10,
+            total: 0,
+            currentPage: 1,
+            pageNext: null,
+            pagePrev: null,
+            searchValue: null,
+            quotationList: []
+        });
+
     useEffect(() => {
         axios
             .get(`${baseUrl}/create_invoice/`, {
@@ -42,6 +59,23 @@ const Quotations = () => {
                 }
             });
     }, []);
+
+     const getQuotation = async (page: number) => {
+            try {
+                const res: any = await Models.qoutation.qoutationList(page);
+    
+                setState({
+                    qoutationList: res?.results,
+                    currentPage: page,
+                    pageNext: res?.next,
+                    pagePrev: res?.previous,
+                    total: res?.count,
+                    loading: false,
+                });
+            } catch (error) {
+                console.log('✌️error --->', error);
+            }
+        };
 
     // const getInvoice = () => {
     //     axios
