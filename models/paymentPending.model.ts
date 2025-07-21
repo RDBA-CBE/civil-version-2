@@ -1,9 +1,9 @@
 import instance from '@/utils/axios.util';
 
-const qoutation = {
-    qoutationList: (page: any) => {
+const paymentPending = {
+    paymentPendingList: (page: any) => {
         let promise = new Promise((resolve, reject) => {
-            let url = `quotation/?page=${page}`;
+            let url = `invoice/?fully_paid/?page=${page}`;
             instance()
                 .get(url)
                 .then((res) => {
@@ -23,8 +23,8 @@ const qoutation = {
 
      filter: (body: any, page: any) => {
             let promise = new Promise((resolve, reject) => {
-                let url = `quotation/?page=${page}`;
-                if (body?.completed !== undefined) {
+                let url = `invoice/?fully_paid/?page=${page}`;
+                if (body?.completed) {
                     url += `&completed=${encodeURIComponent(body.completed)}`;
                 }
                 if (body?.customer) {
@@ -36,6 +36,13 @@ const qoutation = {
                 if (body?.from_date) {
                     url += `&from_date=${encodeURIComponent(body.from_date)}`;
                 }
+                 if (body?.project_name) {
+                url += `&project_name=${encodeURIComponent(body.project_name)}`;
+            }
+
+            if (body?.invoice_no) {
+                url += `&invoice_no=${encodeURIComponent(body.invoice_no)}`;
+            }
                 
     
                 instance()
@@ -56,4 +63,4 @@ const qoutation = {
         },
 }
 
-export default qoutation;
+export default paymentPending;

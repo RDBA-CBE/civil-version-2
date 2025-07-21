@@ -3,7 +3,7 @@ import instance from '@/utils/axios.util';
 const expense = {
     expenseList: (page: number, body: any) => {
         let promise = new Promise((resolve, reject) => {
-            let url = `expense_list/?page=${page}`;
+            let url = `expense/?page=${page}`;
             if (body?.search) {
                 url += `&search=${encodeURIComponent(body.search)}`;
             }

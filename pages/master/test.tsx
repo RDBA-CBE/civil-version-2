@@ -153,7 +153,7 @@ const Test = () => {
     const showDrawer = (record: any) => {
         if (record) {
             const testRecord: any = {
-                material_name: record.material_id.toString(),
+                material_name: record.material_id,
                 test_name: record.test_name,
                 price_per_piece: record.price_per_piece,
                 id: record.id,

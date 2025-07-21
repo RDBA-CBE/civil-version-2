@@ -5,7 +5,10 @@ import * as FileSaver from 'file-saver';
 import ExcelJS from 'exceljs';
 import router from 'next/router';
 import dayjs from 'dayjs';
-import { baseUrl } from '@/utils/function.util';
+import { baseUrl, ObjIsEmpty, useSetState } from '@/utils/function.util';
+import Pagination from '@/components/pagination/pagination';
+import Models from '@/imports/models.import';
+import paymentPending from '@/models/paymentPending.model';
 
 const PendingPayment = () => {
     const { Search } = Input;
@@ -14,6 +17,17 @@ const PendingPayment = () => {
     const [dataSource, setDataSource] = useState([]);
     const [formFields, setFormFields] = useState<any>([]);
     const [loading, setLoading] = useState(false);
+
+    const [state, setState] = useSetState({
+        page: 1,
+        pageSize: 10,
+        total: 0,
+        currentPage: 1,
+        pageNext: null,
+        pagePrev: null,
+        paymentPendingList: [],
+        searchValue: null,
+    });
 
     useEffect(() => {
         axios
@@ -140,65 +154,99 @@ const PendingPayment = () => {
     // search
 
     useEffect(() => {
-        initialData();
+        initialData(1);
     }, []);
 
-    const initialData = () => {
-        const Token = localStorage.getItem('token');
-        setLoading(true);
-        const body = {
-            project_name: '',
-            from_date: '',
-            to_date: '',
-            customer: '',
-            invoice_no: '',
-        };
+    const initialData = async (page: any) => {
+        try {
+            setState({ loading: true });
 
-        axios
-            .post(`${baseUrl}/pending_payment/`, body, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res: any) => {
-                setDataSource(res?.data?.pending_payments);
-                setLoading(false);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
-                setLoading(false);
+            const res: any = await Models.paymentPending.paymentPendingList(page);
+            setState({
+                paymentPendingList: res?.results,
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
             });
+        } catch (error) {
+            setState({ loading: false });
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const bodyData = () => {
+        const body: any = {};
+        if (state.searchValue) {
+            if (state.searchValue?.customer) {
+                body.customer = state.searchValue.customer;
+            }
+            if (state.searchValue?.from_date) {
+                body.from_date = state.searchValue.from_date;
+            }
+
+            if (state.searchValue?.project_name) {
+                body.project_name = state.searchValue.project_name;
+            }
+            if (state.searchValue?.to_date) {
+                body.to_date = state.searchValue.to_date;
+            }
+            if (state.searchValue?.invoice_no) {
+                body.invoice_no = state.searchValue.invoice_no;
+            }
+        }
+
+        return body;
     };
 
     // form submit
-    const onFinish2 = (values: any) => {
-        const Token = localStorage.getItem('token');
+    const onFinish2 = async (values: any, page = 1) => {
+        // const Token = localStorage.getItem('token');
 
-        const body = {
-            project_name: values.project_name ? values.project_name : '',
-            from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
-            to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
-            customer: values.customer ? values.customer : '',
-            invoice_no: values.invoice_no ? values.invoice_no : '',
-        };
+        try {
+            setState({ loading: true });
 
-        axios
-            .post(`${baseUrl}/pending_payment/`, body, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res: any) => {
-                setDataSource(res?.data?.pending_payments);
-            })
-            .catch((error: any) => {
-                if (error?.response?.status === 401) {
-                    router.push('/');
-                }
+            const body = {
+                project_name: values.project_name ? values.project_name : '',
+                from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
+                to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
+                customer: values.customer ? values.customer : '',
+                invoice_no: values.invoice_no ? values.invoice_no : '',
+            };
+
+            const res: any = await Models.paymentPending.filter(body, page);
+            setState({
+                paymentPendingList: res?.results,
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
+                searchValue: values,
             });
-        form.resetFields();
+        } catch (error) {
+            setState({ loading: false });
+
+            console.log('✌️error --->', error);
+        }
+    };
+
+    console.log('currentPage', state.currentPage);
+
+    const handlePageChange = (number: any) => {
+        setState({ currentPage: number });
+        console.log('number', number);
+
+        const body = bodyData();
+
+        if (!ObjIsEmpty(body)) {
+            onFinish2(state.searchValue, number);
+        } else {
+            initialData(number);
+        }
+
+        return number;
     };
 
     const onFinishFailed2 = (errorInfo: any) => {};
@@ -241,6 +289,19 @@ const PendingPayment = () => {
                                         Search
                                     </Button>
                                 </Form.Item>
+
+                                <Form.Item>
+                                    <Button
+                                        type="primary"
+                                        htmlType="submit"
+                                        onClick={() => {
+                                            form.resetFields();
+                                        }}
+                                        style={{ width: '100px' }}
+                                    >
+                                        Clear
+                                    </Button>
+                                </Form.Item>
                             </div>
                         </div>
                     </Form>
@@ -260,9 +321,10 @@ const PendingPayment = () => {
                 </div>
                 <div className="table-responsive">
                     <Table
-                        dataSource={dataSource}
+                        dataSource={state.paymentPendingList}
                         columns={columns}
                         scroll={scrollConfig}
+                        pagination={false}
                         loading={{
                             spinning: loading, // This enables the loading spinner
                             indicator: <Spin size="large" />,
@@ -270,6 +332,22 @@ const PendingPayment = () => {
                         }}
                     />
                 </div>
+
+                {state.paymentPendingList?.length > 0 && (
+                    <div>
+                        <div
+                            className="mb-20 "
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <Pagination totalPage={state.total} itemsPerPage={10} currentPages={state.currentPage} activeNumber={handlePageChange} />
+                            {/* <Pagination activeNumber={handlePageChange} totalPages={state.total} currentPages={state.currentPage} /> */}
+                        </div>
+                    </div>
+                )}
             </div>
         </>
     );

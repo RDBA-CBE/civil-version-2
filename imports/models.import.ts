@@ -6,6 +6,7 @@ import expense from "@/models/expense.model";
 import invoice from "@/models/invoice.model";
 import logs from "@/models/log.model";
 import material from "@/models/material.model";
+import paymentPending from "@/models/paymentPending.model";
 import qoutation from "@/models/qoutation.model";
 import test from "@/models/test.model";
 
@@ -23,7 +24,8 @@ export const Models = {
     test,
     city,
     expense,
-    qoutation
+    qoutation,
+    paymentPending
    
 
 };

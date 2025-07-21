@@ -10,6 +10,7 @@ import { baseUrl, useSetState } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import useDebounce from '@/components/useDebounce/useDebounce';
 import Models from '@/imports/models.import';
+import { result } from 'lodash';
 
 const Expense = () => {
     const { Search } = Input;
@@ -80,8 +81,8 @@ const Expense = () => {
                 total: res?.count,
                 loading: false,
             });
-            setDataSource(res);
-            setFilterData(res);
+            setDataSource(res?.results);
+            setFilterData(res?.results);
         } catch (error) {
             setState({ loading: false });
             console.log('✌️error --->', error);

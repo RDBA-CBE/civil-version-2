@@ -4,11 +4,10 @@ import { EditOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import router from 'next/router';
 import dayjs from 'dayjs';
-import { baseUrl, useSetState } from '@/utils/function.util';
+import { baseUrl, ObjIsEmpty, useSetState } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import useDebounce from '@/components/useDebounce/useDebounce';
 import Models from '@/imports/models.import';
-
 
 const Quotations = () => {
     const { Search } = Input;
@@ -27,20 +26,20 @@ const Quotations = () => {
     //     getInvoice();
     // }, []);
 
-    useEffect(()=>{
-        getQuotation(1)
-    },[])
+    useEffect(() => {
+        getQuotation(1);
+    }, []);
 
-     const [state, setState] = useSetState({
-            page: 1,
-            pageSize: 10,
-            total: 0,
-            currentPage: 1,
-            pageNext: null,
-            pagePrev: null,
-            searchValue: null,
-            quotationList: []
-        });
+    const [state, setState] = useSetState({
+        page: 1,
+        pageSize: 10,
+        total: 0,
+        currentPage: 1,
+        pageNext: null,
+        pagePrev: null,
+        searchValue: null,
+        qoutationList: [],
+    });
 
     useEffect(() => {
         axios
@@ -60,22 +59,22 @@ const Quotations = () => {
             });
     }, []);
 
-     const getQuotation = async (page: number) => {
-            try {
-                const res: any = await Models.qoutation.qoutationList(page);
-    
-                setState({
-                    qoutationList: res?.results,
-                    currentPage: page,
-                    pageNext: res?.next,
-                    pagePrev: res?.previous,
-                    total: res?.count,
-                    loading: false,
-                });
-            } catch (error) {
-                console.log('✌️error --->', error);
-            }
-        };
+    const getQuotation = async (page: number) => {
+        try {
+            const res: any = await Models.qoutation.qoutationList(page);
+
+            setState({
+                qoutationList: res?.results,
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
+            });
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
+    };
 
     // const getInvoice = () => {
     //     axios
@@ -259,7 +258,7 @@ const Quotations = () => {
             })
             .then((res) => {
                 console.log('✌️res --->', res);
-                initialData();
+                initialData(1);
                 window.location.href = `/invoice/editQoutation?id=${res?.data?.id}`;
                 setOpen(false);
             })
@@ -301,42 +300,48 @@ const Quotations = () => {
     // search
 
     useEffect(() => {
-        initialData();
+        initialData(1);
         // TaxList();
     }, []);
 
-    const initialData = () => {
-        const Token = localStorage.getItem('token');
-        console.log('✌️Token --->', Token);
-        setLoading(true);
-        const body = {
-            // project_name: '',
-            start_date: '',
-            end_date: '',
-            customer: '',
-            completed: '',
-        };
+    const initialData = async (page: any) => {
+        try {
+            setState({ loading: true });
 
-        console.log('✌️body --->', body);
-
-        axios
-            .get(`${baseUrl}/quotations/`, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-                params: { ...body },
-            })
-            .then((res: any) => {
-                console.log('✌️res --->', res);
-                setDataSource(res?.data);
-                setLoading(false);
-            })
-            .catch((error: any) => {
-                if (error.response?.status === 401) {
-                    router.push('/');
-                }
-                setLoading(false);
+            const res: any = await Models.qoutation.qoutationList(page);
+            setState({
+                qoutationList: res?.results,
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
             });
+        } catch (error) {
+            setState({ loading: false });
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const bodyData = () => {
+        const body: any = {};
+        if (state.searchValue) {
+            if (state.searchValue?.completed) {
+                body.completed = state.searchValue.completed;
+            }
+            if (state.searchValue?.customer) {
+                body.customer = state.searchValue.customer;
+            }
+            if (state.searchValue?.from_date) {
+                body.from_date = state.searchValue.from_date;
+            }
+
+            if (state.searchValue?.to_date) {
+                body.to_date = state.searchValue.to_date;
+            }
+        }
+
+        return body;
     };
 
     // const TaxList = () => {
@@ -359,40 +364,55 @@ const Quotations = () => {
     // };
 
     // form submit
-    const onFinish2 = (values: any) => {
-        console.log('✌️values --->', values);
-        const Token = localStorage.getItem('token');
+    const onFinish2 = async (values: any, page = 1) => {
+        try {
+            console.log('✌️values --->', values);
 
-        const body = {
-            // project_name: values.project_name ? values.project_name : '',
-            start_date: values?.start_date ? dayjs(values?.start_date).format('YYYY-MM-DD') : '',
-            end_date: values?.end_date ? dayjs(values?.end_date).format('YYYY-MM-DD') : '',
-            customer: values.customer ? values.customer : '',
-            completed: values.completed == 'Yes' ? true : values.completed == 'No' ? false : '',
-        };
+            setState({ loading: true });
+            const body = {
+                // project_name: values.project_name ? values.project_name : '',
+                from_date: values?.start_date ? dayjs(values?.start_date).format('YYYY-MM-DD') : '',
+                to_date: values?.end_date ? dayjs(values?.end_date).format('YYYY-MM-DD') : '',
+                customer: values.customer ? values.customer : '',
+                completed: values.completed == 'Yes' ? true : values.completed == 'No' ? false : '',
+            };
 
-        console.log('✌️body --->', body);
-
-        axios
-            .get(`${baseUrl}/quotations/`, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-                params: { ...body },
-            })
-            .then((res: any) => {
-                console.log('✌️res --->', res);
-                setDataSource(res?.data);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
+            console.log('✌️body --->', body);
+            const res: any = await Models.qoutation.filter(body, page);
+            setState({
+                qoutationList: res?.results,
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
+                searchValue: values,
             });
-        form.resetFields();
+            //  setDataSource(res?.data);
+        } catch (error) {
+            setState({ loading: false });
+
+            console.log('✌️error --->', error);
+        }
+
+     
     };
 
     const onFinishFailed2 = (errorInfo: any) => {};
+
+    const handlePageChange = (number: any) => {
+        setState({ currentPage: number });
+
+        const body = bodyData();
+
+        if (!ObjIsEmpty(body)) {
+            onFinish2(state.searchValue, number);
+        } else {
+            initialData(number);
+        }
+
+        return number;
+    };
 
     // console.log('taxData', taxData);
 
@@ -437,6 +457,18 @@ const Quotations = () => {
                                         Search
                                     </Button>
                                 </Form.Item>
+                                <Form.Item>
+                                    <Button
+                                        type="primary"
+                                        htmlType="submit"
+                                        onClick={() => {
+                                            form.resetFields();
+                                        }}
+                                        style={{ width: '100px' }}
+                                    >
+                                        Clear
+                                    </Button>
+                                </Form.Item>
                             </div>
                         </div>
                     </Form>
@@ -454,17 +486,33 @@ const Quotations = () => {
                 </div>
                 <div className="table-responsive">
                     <Table
-                        dataSource={dataSource}
+                        dataSource={state.qoutationList}
                         columns={columns}
                         pagination={false}
                         scroll={scrollConfig}
                         loading={{
-                            spinning: loading, // This enables the loading spinner
+                            spinning: state.loading, // This enables the loading spinner
                             indicator: <Spin size="large" />,
                             tip: 'Loading data...', // Custom text to show while loading
                         }}
                     />
                 </div>
+
+                {state.qoutationList?.length > 0 && (
+                    <div>
+                        <div
+                            className="mb-20 "
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <Pagination totalPage={state.total} itemsPerPage={10} currentPages={state.currentPage} activeNumber={handlePageChange} />
+                            {/* <Pagination activeNumber={handlePageChange} totalPages={state.total} currentPages={state.currentPage} /> */}
+                        </div>
+                    </div>
+                )}
 
                 <Drawer title="Create Quotation" placement="right" width={600} onClose={onClose} open={open}>
                     <Form name="basic-form" layout="vertical" initialValues={{ remember: true }} onFinish={onFinish} onFinishFailed={onFinishFailed} autoComplete="off" form={form}>
