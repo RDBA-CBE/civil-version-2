@@ -5,7 +5,7 @@ import * as FileSaver from 'file-saver';
 import ExcelJS from 'exceljs';
 import router from 'next/router';
 import dayjs from 'dayjs';
-import { baseUrl } from '@/utils/function.util';
+import { baseUrl, roundNumber } from '@/utils/function.util';
 
 const PendingPaymentReport = () => {
     const { Search } = Input;
@@ -84,18 +84,27 @@ const PendingPaymentReport = () => {
             dataIndex: 'advance',
             key: 'advance',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{roundNumber(record)}</div>;
+            },
         },
         {
             title: 'Total-Amount',
             dataIndex: 'total_amount',
             key: 'total_amount',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{roundNumber(record)}</div>;
+            },
         },
         {
             title: 'Balance',
             dataIndex: 'balance',
             key: 'balance',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{roundNumber(record)}</div>;
+            },
         },
     ];
 
@@ -191,7 +200,7 @@ const PendingPaymentReport = () => {
             })
             .then((res: any) => {
                 console.log(res);
-                
+
                 setDataSource(res?.data?.pending_payments);
                 setLoading(false);
             })
@@ -208,8 +217,6 @@ const PendingPaymentReport = () => {
         const Token = localStorage.getItem('token');
         console.log(values);
         const body = {
-            
-            
             project_name: values.project_name ? values.project_name : '',
             from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
             to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',

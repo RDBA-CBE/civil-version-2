@@ -5,13 +5,10 @@ import IconEye from '@/components/Icon/IconEye';
 import Link from 'next/link';
 import { IRootState } from '../store';
 import dynamic from 'next/dynamic';
-const ReactApexChart = dynamic(
-    () => import('react-apexcharts').then(mod => mod.default),
-    { ssr: false }
-  );
+const ReactApexChart = dynamic(() => import('react-apexcharts').then((mod) => mod.default), { ssr: false });
 import { useRouter } from 'next/router';
 import dayjs from 'dayjs';
-import { baseUrl } from '@/utils/function.util';
+import { baseUrl, roundNumber } from '@/utils/function.util';
 
 const Expense = () => {
     const router = useRouter();
@@ -21,10 +18,8 @@ const Expense = () => {
     const [invoiceTotal, setInvoiceTotal] = useState('');
     const [incompleteinvoiceTotal, setIncompleteInvoiceTotal] = useState('');
 
-
     const [incompletetestTotal, setIncompletetestTotal] = useState('');
     const [incompletetestThisMonthTotal, setincompletetestThisMonthTotal] = useState('');
-
 
     const [invoiceThisMonthTotal, setInvoiceThisMonthTotal] = useState('');
     const [incompleteinvoiceThisMonthTotal, setincompleteInvoiceThisMonthTotal] = useState('');
@@ -36,7 +31,7 @@ const Expense = () => {
     const [expenses, setexpenses] = useState([]);
     const [expense_amount_sum, setexpense_amount_sum] = useState(0);
     const [admin, setAdmin] = useState<any>([]);
-    
+
     useEffect(() => {
         const Admin: any = localStorage.getItem('admin');
         setAdmin(Admin);
@@ -296,7 +291,7 @@ const Expense = () => {
     });
 
     const [expenseChart, setExpenseChart] = useState<any>(null);
-    const [pending_payment, setpending_payment] = useState('');
+    const [pending_payment, setpending_payment] = useState(0);
     const [pending_payment_this_month, setpending_payment_this_month] = useState('');
     const [expenseMonthWise, setexpenseMonthWise] = useState([]);
 
@@ -412,16 +407,16 @@ const Expense = () => {
                 setthisMonthcustomerCount(res.data.this_month_customer_count);
                 setInvoiceTotal(res.data.all_invoice);
 
-                setIncompleteInvoiceTotal(res.data.incompleted_invoice_count )
+                setIncompleteInvoiceTotal(res.data.incompleted_invoice_count);
                 setInvoiceThisMonthTotal(res.data.this_month_generated_invoice);
 
-                setIncompletetestTotal(res.data.incompleted_test_count)
+                setIncompletetestTotal(res.data.incompleted_test_count);
 
-                setincompleteInvoiceThisMonthTotal(res.data.this_month_generated_incompleted_invoice)
-                setincompletetestThisMonthTotal(res.data.this_month_generated_incompleted_test)
+                setincompleteInvoiceThisMonthTotal(res.data.this_month_generated_incompleted_invoice);
+                setincompletetestThisMonthTotal(res.data.this_month_generated_incompleted_test);
                 setExpenseTotal(res.data.total_expense_count);
                 setExpenseThisMonthTotal(res.data.this_month_expense_count);
-                setpending_payment(res.data.pending_payment);
+                setpending_payment(roundNumber(res.data.pending_payment));
                 setpending_payment_this_month(res.data.pending_payment_this_month);
                 setMonthName(res.data.months_name);
                 setTotal(res.data.total_amount);
@@ -832,22 +827,20 @@ const Expense = () => {
                                 </Link>
 
                                 <Link href="/report/testReport">
-           
-                                <div className="panel bg-gradient-to-r from-rose-500 to-rose-400">
-                                    <div className="flex justify-between">
-                                        <div className="text-md font-semibold ltr:mr-1 rtl:ml-1">Incomplete Tests</div>
-                                        <div className="dropdown"></div>
+                                    <div className="panel bg-gradient-to-r from-rose-500 to-rose-400">
+                                        <div className="flex justify-between">
+                                            <div className="text-md font-semibold ltr:mr-1 rtl:ml-1">Incomplete Tests</div>
+                                            <div className="dropdown"></div>
+                                        </div>
+                                        <div className="mt-5 flex items-center">
+                                            <div className="text-3xl font-bold ltr:mr-3 rtl:ml-3">Total : {incompletetestTotal} </div>
+                                        </div>
+                                        <div className="mt-5 flex items-center font-semibold">
+                                            <IconEye className="shrink-0 ltr:mr-2 rtl:ml-2" />
+                                            {thisMonthName} Month Created : {incompletetestThisMonthTotal}
+                                        </div>
                                     </div>
-                                    <div className="mt-5 flex items-center">
-                                        <div className="text-3xl font-bold ltr:mr-3 rtl:ml-3">Total : {incompletetestTotal} </div>
-                                    </div>
-                                    <div className="mt-5 flex items-center font-semibold">
-                                        <IconEye className="shrink-0 ltr:mr-2 rtl:ml-2" />
-                                        {thisMonthName} Month Created : {incompletetestThisMonthTotal}
-                                    </div>
-                                </div>   
-
-                                </Link>                         
+                                </Link>
 
                                 <Link href="/report/expenseReport">
                                     <div className="panel bg-gradient-to-r from-blue-500 to-blue-400">
@@ -883,11 +876,6 @@ const Expense = () => {
                                 </div>
                             </div>
                         </Link>
-
-                        
-
-
-
                     </div>
 
                     {admin === 'true' ? (
@@ -957,8 +945,8 @@ const Expense = () => {
                                             <tr key={rowIndex} className="group text-white-dark hover:text-black dark:hover:text-white-light/90">
                                                 <td>{item.customer}</td>
                                                 <td>{item.invoice_no}</td>
-                                                <td>{item.total_amount}</td>
-                                                <td>{item.balance}</td>
+                                                <td>{roundNumber(item.total_amount)}</td>
+                                                <td>{roundNumber(item.balance)}</td>
                                                 <td>{item.project_name}</td>
                                             </tr>
                                         ))}
@@ -1032,7 +1020,7 @@ const Expense = () => {
                                                         <td>{dayjs(item.date).format('MMMM DD, YYYY')}</td>
                                                         <td>{item.expense_category_name}</td>
 
-                                                        <td>{item.amount}</td>
+                                                        <td>{roundNumber(item.amount)}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>

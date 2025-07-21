@@ -4,7 +4,7 @@ import { EditOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import router from 'next/router';
 import dayjs from 'dayjs';
-import { baseUrl, ObjIsEmpty, useSetState } from '@/utils/function.util';
+import { baseUrl, ObjIsEmpty,roundNumber, useSetState } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import useDebounce from '@/components/useDebounce/useDebounce';
 import Models from '@/imports/models.import';
@@ -39,6 +39,7 @@ const Quotations = () => {
         pagePrev: null,
         searchValue: null,
         qoutationList: [],
+   
     });
 
     useEffect(() => {
@@ -146,6 +147,9 @@ const Quotations = () => {
             dataIndex: 'total_amount',
             key: 'total_amount',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{roundNumber(record)}</div>;
+            },
         },
         // {
         //     title: 'Balance',

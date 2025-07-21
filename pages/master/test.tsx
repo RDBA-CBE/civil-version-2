@@ -5,7 +5,7 @@ import { Form, Input, InputNumber, Select, Spin } from 'antd';
 import { EditOutlined, EyeOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import router from 'next/router';
-import { baseUrl, useSetState } from '@/utils/function.util';
+import { baseUrl, roundNumber, useSetState } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import useDebounce from '@/components/useDebounce/useDebounce';
 import Models from '@/imports/models.import';
@@ -192,6 +192,9 @@ const Test = () => {
             dataIndex: 'price_per_piece',
             key: 'price_per_piece',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{roundNumber(record)}</div>;
+            },
         },
         {
             title: 'Actions',
@@ -353,8 +356,8 @@ const Test = () => {
                 value: viewRecord?.material_name || 'N/A',
             },
             {
-                label: 'price Per Piece:',
-                value: viewRecord?.price_per_piece || 'N/A',
+                label: 'Price Per Piece:',
+                value: roundNumber(viewRecord?.price_per_piece) || 'N/A',
             },
             {
                 label: 'Created By:',

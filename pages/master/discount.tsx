@@ -159,7 +159,6 @@ const Discount = () => {
         form.resetFields();
     };
 
-    // Table Datas
     const columns = [
         {
             title: 'Customer Name',
@@ -168,7 +167,6 @@ const Discount = () => {
             className: 'singleLineCell',
             render: (text: any, record: any) => <div>{record?.customer?.customer_name}</div>,
         },
-
         {
             title: 'Discount',
             dataIndex: 'discount',
@@ -176,24 +174,23 @@ const Discount = () => {
             className: 'singleLineCell',
             render: (text: any, record: any) => <div>{record?.discount}</div>,
         },
-
-        {
-            title: 'Actions',
-            key: 'actions',
-            className: 'singleLineCell',
-            render: (text: any, record: any) => (
-                <Space size="middle">
-                    {/* <EyeOutlined style={{ cursor: 'pointer' }} onClick={() => showModal(record)} className="view-icon" rev={undefined} /> */}
-
-                    {localStorage.getItem('admin') === 'true' ? (
-                        <EditOutlined style={{ cursor: 'pointer' }} onClick={() => showDrawer(record)} className="edit-icon" rev={undefined} />
-                    ) : (
-                        <EditOutlined style={{ cursor: 'pointer', display: 'none' }} onClick={() => showDrawer(record)} className="edit-icon" rev={undefined} />
-                    )}
-                </Space>
-            ),
-        },
+        ...(localStorage.getItem('admin') === 'true'
+            ? [
+                  {
+                      title: 'Actions',
+                      key: 'actions',
+                      className: 'singleLineCell',
+                      render: (text: any, record: any) => (
+                          <Space size="middle">
+                              <EditOutlined style={{ cursor: 'pointer' }} onClick={() => showDrawer(record)} className="edit-icon" rev={undefined} />
+                          </Space>
+                      ),
+                  },
+              ]
+            : []),
     ];
+
+    // Table Datas
 
     // form submit
     const onFinish = async (values: any) => {
@@ -297,7 +294,7 @@ const Discount = () => {
 
     const fetchAllCustomerDiscounts = async () => {
         try {
-            setState({ excelLoading: true }); 
+            setState({ excelLoading: true });
             let allData: any[] = [];
             let page = 1;
             let hasNextPage = true;
@@ -319,7 +316,7 @@ const Discount = () => {
 
             await exportToExcel(allData);
         } catch (error) {
-            setState({ excelLoading: false }); 
+            setState({ excelLoading: false });
 
             console.log('✌️ Error while fetching all discounts --->', error);
         } finally {

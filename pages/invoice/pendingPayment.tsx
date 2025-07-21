@@ -5,10 +5,11 @@ import * as FileSaver from 'file-saver';
 import ExcelJS from 'exceljs';
 import router from 'next/router';
 import dayjs from 'dayjs';
-import { baseUrl, ObjIsEmpty, useSetState } from '@/utils/function.util';
+import { baseUrl, ObjIsEmpty, useSetState,roundNumber } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import Models from '@/imports/models.import';
 import paymentPending from '@/models/paymentPending.model';
+
 
 const PendingPayment = () => {
     const { Search } = Input;
@@ -84,18 +85,27 @@ const PendingPayment = () => {
             dataIndex: 'advance',
             key: 'advance',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{roundNumber(record)}</div>;
+            },
         },
         {
             title: 'Total-Amount',
             dataIndex: 'total_amount',
             key: 'total_amount',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{roundNumber(record)}</div>;
+            },
         },
         {
             title: 'Balance',
             dataIndex: 'balance',
             key: 'balance',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{roundNumber(record)}</div>;
+            },
         },
     ];
 
