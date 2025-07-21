@@ -8,6 +8,7 @@ import router from 'next/router';
 import { baseUrl, useSetState } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import Models from '@/imports/models.import';
+import useDebounce from '@/components/useDebounce/useDebounce';
 
 const Customer = () => {
     const { Search } = Input;
@@ -30,12 +31,19 @@ const Customer = () => {
         currentPage: 1,
         pageNext: null,
         pagePrev: null,
+        search:''
     });
 
     useEffect(() => {
         getCustomer(1);
         getDropDownValues();
     }, []);
+
+    const debouncedSearch = useDebounce(state.search);
+
+        useEffect(() => {
+        getCustomer(1);
+        },[debouncedSearch])
 
     useEffect(() => {
         if (editRecord) {
@@ -69,8 +77,8 @@ const Customer = () => {
     const getCustomer = async (page: any) => {
         try {
             setState({ loading: true });
-
-            const res: any = await Models.customer.costomerList(page);
+            const body = bodyData();
+            const res: any = await Models.customer.costomerList(page, body);
             console.log('abcd --->', res);
             setState({
                 // invoiceList: res?.results,
@@ -107,6 +115,14 @@ const Customer = () => {
                     router.push('/');
                 }
             });
+    };
+
+     const bodyData = () => {
+        const body: any = {};
+        if (state.search) {
+            body.search = state.search;
+        }
+        return body;
     };
 
     const showModal = (record: any) => {
@@ -482,7 +498,7 @@ const Customer = () => {
                         <h1 className="text-lg font-semibold dark:text-white-light">Customer Details</h1>
                     </div>
                     <div>
-                        <Search placeholder="Input search text" onChange={inputChange} enterButton className="search-bar" />
+                        <Search placeholder="Input search text" value={state.search} onChange={(e) => setState({ search: e.target.value })}  enterButton className="search-bar" />
                         <button type="button" onClick={() => showDrawer(null)} className="create-button">
                             + Create Customer
                         </button>

@@ -5,6 +5,8 @@ import axios from 'axios';
 import router from 'next/router';
 import dayjs from 'dayjs';
 import { baseUrl } from '@/utils/function.util';
+import Pagination from '@/components/pagination/pagination';
+
 
 const Quotations = () => {
     const { Search } = Input;

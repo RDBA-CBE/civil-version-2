@@ -10,6 +10,8 @@ import { baseUrl, useSetState } from '@/utils/function.util';
 import IconMenuAuthentication from '@/components/Icon/Menu/IconMenuAuthentication';
 import IconLockDots from '@/components/Icon/IconLockDots';
 import Models from '@/imports/models.import';
+import Pagination from '@/components/pagination/pagination';
+import useDebounce from '@/components/useDebounce/useDebounce';
 
 const Employee = () => {
     const { Search } = Input;
@@ -30,20 +32,38 @@ const Employee = () => {
     const [loading, setLoading] = useState(false);
     const [isUpdatePassword, setIsUpdatePassword] = useState(false);
 
-    const [state, setState] = useSetState({});
 
     const [errorMessage, setErrorMessage] = useState('');
     const [fileInputData, setFileInputData] = useState<any>({
         signature: null,
     });
+
+    const [state, setState] = useSetState({
+            page: 1,
+            pageSize: 10,
+            total: 0,
+            currentPage: 1,
+            pageNext: null,
+            pagePrev: null,
+            search:''
+        });
+
     useEffect(() => {
         const Admin: any = localStorage.getItem('admin');
         setAdmin(Admin);
     }, []);
 
+    
+
     useEffect(() => {
-        getEmployee();
+        getEmployee(1);
     }, []);
+        const debouncedSearch = useDebounce(state.search);
+
+
+     useEffect(() => {
+        getEmployee(1);
+    }, [debouncedSearch]);
 
     useEffect(() => {
         if (editRecord) {
@@ -53,26 +73,72 @@ const Employee = () => {
         }
     }, [editRecord, open]);
 
-    const getEmployee = () => {
-        const Token = localStorage.getItem('token');
-        setLoading(true);
-        axios
-            .get(`${baseUrl}/employee_list/`, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res) => {
-                setDataSource(res.data?.results);
-                setFilterData(res.data?.results);
-                setLoading(false);
-            })
-            .catch((error: any) => {
-                if (error.response?.status === 401) {
-                    router.push('/');
+    // const getEmployee = () => {
+    //     const Token = localStorage.getItem('token');
+    //     setLoading(true);
+    //     axios
+    //         .get(`${baseUrl}/employee_list/`, {
+    //             headers: {
+    //                 Authorization: `Token ${Token}`,
+    //             },
+    //         })
+    //         .then((res) => {
+    //             setDataSource(res.data?.results);
+    //             setFilterData(res.data?.results);
+    //             setLoading(false);
+    //         })
+    //         .catch((error: any) => {
+    //             if (error.response?.status === 401) {
+    //                 router.push('/');
+    //             }
+    //             setLoading(false);
+    //         });
+    // };
+
+    const getEmployee = async(page: any) => {
+
+         try {
+                    setState({ loading: true });
+                    const body = bodyData();
+                    const res: any = await Models.customer.employeeList(page, body);
+                    console.log('abcd --->', res);
+                    setState({
+                        // invoiceList: res?.results,
+                        currentPage: page,
+                        pageNext: res?.next,
+                        pagePrev: res?.previous,
+                        total: res?.count,
+                        loading: false,
+                    });
+                    setDataSource(res?.results);
+                    setFilterData(res?.results);
+                } catch (error) {
+                    setState({ loading: false });
+                    console.log('✌️error --->', error);
                 }
-                setLoading(false);
-            });
+
+    }
+
+      const bodyData = () => {
+        const body: any = {};
+        if (state.search) {
+            body.search = state.search;
+        }
+        return body;
+    };
+
+    const handlePageChange = (number: any) => {
+        console.log('number', number);
+        setState({ currentPage: number });
+        getEmployee(number);
+
+        // if (state.searchValue) {
+        //     onFinish2(state.searchValue, number);
+        // } else {
+        //     initialData(number);
+        // }
+
+        return number;
     };
 
     const showModal = (record: any) => {
@@ -285,7 +351,7 @@ const Employee = () => {
             okType: 'danger',
             cancelText: 'Cancel',
             onOk() {
-                setLoading(true);
+                setState({ loading: true });
                 axios
                     .patch(
                         `${baseUrl}/employees/${record.id}/update/`,
@@ -299,7 +365,7 @@ const Employee = () => {
                         }
                     )
                     .then((response) => {
-                        getEmployee();
+                        getEmployee(1);
                     })
                     .catch((error) => {
                         console.log('✌️error --->', error);
@@ -410,7 +476,7 @@ const Employee = () => {
             },
         })
             .then((res) => {
-                getEmployee(); // Refresh employee data
+                getEmployee(1); // Refresh employee data
                 form.resetFields(); // Reset the form
                 onClose(); // Close the drawer
             })
@@ -545,7 +611,7 @@ const Employee = () => {
                         <h1 className="text-lg font-semibold dark:text-white-light">Employee Details</h1>
                     </div>
                     <div>
-                        <Search placeholder="Input search text" onChange={inputChange} enterButton className="search-bar" />
+                        <Search placeholder="Input search text" value={state.search} onChange={(e) => setState({ search: e.target.value })} enterButton className="search-bar" />
                         <button type="button" onClick={() => showDrawer(null)} className="create-button">
                             + Create Employee{' '}
                         </button>
@@ -555,14 +621,30 @@ const Employee = () => {
                     <Table
                         dataSource={dataSource}
                         columns={columns}
+                        pagination={false}
                         scroll={scrollConfig}
                         loading={{
-                            spinning: loading, // This enables the loading spinner
+                            spinning: state.loading, // This enables the loading spinner
                             indicator: <Spin size="large" />,
                             tip: 'Loading data...', // Custom text to show while loading
                         }}
                     />
                 </div>
+
+                 {filterData?.length > 0 && (
+                    <div>
+                        <div
+                            className="mb-20 "
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <Pagination totalPage={state.total} itemsPerPage={10} currentPages={state.currentPage} activeNumber={handlePageChange} />
+                        </div>
+                    </div>
+                )}
 
                 <Drawer title={drawerTitle} placement="right" width={600} onClose={onClose} open={open}>
                     <Form name="basic" layout="vertical" form={form} initialValues={{ remember: true }} onFinish={onFinish} onFinishFailed={onFinishFailed} autoComplete="off">

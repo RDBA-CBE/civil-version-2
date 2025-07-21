@@ -2,9 +2,12 @@ import instance from '@/utils/axios.util';
 
     const customer = {
 
-         costomerList: (page: any) => {
+         costomerList: (page: any, body: any) => {
         let promise = new Promise((resolve, reject) => {
             let url = `customer/?page=${page}`;
+            if (body?.search) {
+                url += `&search=${encodeURIComponent(body.search)}`;
+            }
             instance()
                 .get(url)
                 .then((res) => {
@@ -22,9 +25,12 @@ import instance from '@/utils/axios.util';
         return promise;
     },
 
-    employeeList: (page: any) => {
+    employeeList: (page: any, body:any) => {
         let promise = new Promise((resolve, reject) => {
-            let url = `employee_list/?page=${page}`;
+            let url = `employee/?page=${page}`;
+            if (body?.search) {
+                url += `&search=${encodeURIComponent(body.search)}`;
+            }
             instance()
                 .get(url)
                 .then((res) => {

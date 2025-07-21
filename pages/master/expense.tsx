@@ -6,7 +6,10 @@ import { EditOutlined, EyeOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import moment from 'moment';
 import router from 'next/router';
-import { baseUrl } from '@/utils/function.util';
+import { baseUrl, useSetState } from '@/utils/function.util';
+import Pagination from '@/components/pagination/pagination';
+import useDebounce from '@/components/useDebounce/useDebounce';
+import Models from '@/imports/models.import';
 
 const Expense = () => {
     const { Search } = Input;
@@ -21,31 +24,76 @@ const Expense = () => {
     const [filterData, setFilterData] = useState(dataSource);
     const [loading, setLoading] = useState(false);
 
+    const [state, setState] = useSetState({
+        page: 1,
+        pageSize: 10,
+        total: 0,
+        currentPage: 1,
+        pageNext: null,
+        pagePrev: null,
+    });
+
     useEffect(() => {
-        getExpense();
+        getExpense(1);
     }, []);
 
-    const getExpense = () => {
-        const Token = localStorage.getItem('token');
-        setLoading(true)
+    const debouncedSearch = useDebounce(state.search);
 
-        axios
-            .get(`${baseUrl}/expense_list/`, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res) => {
-                setDataSource(res.data);
-                setFilterData(res.data);
-                setLoading(false);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
-                setLoading(false)
+    useEffect(() => {
+        getExpense(1);
+    }, [debouncedSearch]);
+
+    // const getExpense = () => {
+    //     const Token = localStorage.getItem('token');
+    //     setLoading(true)
+
+    //     axios
+    //         .get(`${baseUrl}/expense_list/`, {
+    //             headers: {
+    //                 Authorization: `Token ${Token}`,
+    //             },
+    //         })
+    //         .then((res) => {
+    //             setDataSource(res.data);
+    //             setFilterData(res.data);
+    //             setLoading(false);
+    //         })
+    //         .catch((error: any) => {
+    //             if (error.response.status === 401) {
+    //                 router.push('/');
+    //             }
+    //             setLoading(false)
+    //         });
+    // };
+
+    const getExpense = async (page: any) => {
+        try {
+            const body = bodyData();
+            setState({ loading: true });
+
+            const res: any = await Models.expense.expenseList(page, body);
+            console.log('abcd --->', res);
+            setState({
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
             });
+            setDataSource(res);
+            setFilterData(res);
+        } catch (error) {
+            setState({ loading: false });
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const bodyData = () => {
+        const body: any = {};
+        if (state.search) {
+            body.search = state.search;
+        }
+        return body;
     };
 
     const showModal = (record: any) => {
@@ -169,6 +217,20 @@ const Expense = () => {
         setFilterData(searchValue ? filteredData : dataSource);
     };
 
+    const handlePageChange = (number: any) => {
+        console.log('number', number);
+        setState({ currentPage: number });
+        getExpense(number);
+
+        // if (state.searchValue) {
+        //     onFinish2(state.searchValue, number);
+        // } else {
+        //     initialData(number);
+        // }
+
+        return number;
+    };
+
     // form submit
     const onFinish = (values: any) => {
         if (editRecord) {
@@ -179,13 +241,13 @@ const Expense = () => {
                     },
                 })
                 .then((res) => {
-                    getExpense();
+                    getExpense(1);
                     setOpen(false);
                 })
                 .catch((error: any) => {
                     if (error.response.status === 401) {
                         router.push('/');
-                    } 
+                    }
                 });
         } else {
             axios
@@ -195,20 +257,19 @@ const Expense = () => {
                     },
                 })
                 .then((res) => {
-                    getExpense();
+                    getExpense(1);
                     setOpen(false);
                 })
                 .catch((error) => {
                     if (error.response.status === 401) {
                         router.push('/');
-                    } 
+                    }
                 });
         }
         form.resetFields();
     };
 
-    const onFinishFailed = (errorInfo: any) => {
-    };
+    const onFinishFailed = (errorInfo: any) => {};
 
     type FieldType = {
         expense_name?: string;
@@ -273,20 +334,40 @@ const Expense = () => {
                         <h1 className="text-lg font-semibold dark:text-white-light">Manage Expense Category</h1>
                     </div>
                     <div>
-                        <Search placeholder="input search text" onChange={inputChange} enterButton className="search-bar" />
+                        <Search placeholder="input search text" value={state.search} onChange={(e) => setState({ search: e.target.value })} enterButton className="search-bar" />
                         <button type="button" onClick={() => showDrawer(null)} className="create-button">
                             + Create Expense Category
                         </button>
                     </div>
                 </div>
                 <div className="table-responsive">
-                    <Table dataSource={filterData} columns={columns} pagination={false} scroll={scrollConfig} 
+                    <Table
+                        dataSource={filterData}
+                        columns={columns}
+                        pagination={false}
+                        scroll={scrollConfig}
                         loading={{
-                            spinning: loading, // This enables the loading spinner
+                            spinning: state.loading, // This enables the loading spinner
                             indicator: <Spin size="large" />,
                             tip: 'Loading data...', // Custom text to show while loading
-                        }} />
+                        }}
+                    />
                 </div>
+
+                {filterData?.length > 0 && (
+                    <div>
+                        <div
+                            className="mb-20 "
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <Pagination totalPage={state.total} itemsPerPage={10} currentPages={state.currentPage} activeNumber={handlePageChange} />
+                        </div>
+                    </div>
+                )}
 
                 <Drawer title={drawerTitle} placement="right" width={600} onClose={onClose} open={open}>
                     <Form name="basic" layout="vertical" form={form} initialValues={{ remember: true }} onFinish={onFinish} onFinishFailed={onFinishFailed} autoComplete="off">

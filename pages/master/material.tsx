@@ -29,14 +29,14 @@ const Material = () => {
     const [formFields, setFormFields] = useState<any>([]);
     const [loading, setLoading] = useState(false);
 
-     const [state, setState] = useSetState({
-            page: 1,
-            pageSize: 10,
-            total: 0,
-            currentPage: 1,
-            pageNext: null,
-            pagePrev: null,
-        });
+    const [state, setState] = useSetState({
+        page: 1,
+        pageSize: 10,
+        total: 0,
+        currentPage: 1,
+        pageNext: null,
+        pagePrev: null,
+    });
 
     // Get Material Data
     useEffect(() => {
@@ -46,9 +46,9 @@ const Material = () => {
 
     const debouncedSearch = useDebounce(state.search);
 
-    useEffect(()=>{
-        getMaterial(1)
-    },[debouncedSearch])
+    useEffect(() => {
+        getMaterial(1);
+    }, [debouncedSearch]);
 
     useEffect(() => {
         if (editRecord) {
@@ -89,33 +89,32 @@ const Material = () => {
     //         });
     // };
 
-     const getMaterial = async(page:any) => {
+    const getMaterial = async (page: any) => {
         try {
-            const body = bodyData()
-                    setState({ loading: true });
-        
-                    const res: any = await Models.material.materialList(page,body);
-                    console.log('abcd --->', res);
-                    setState({
-                        
-                        currentPage: page,
-                        pageNext: res?.next,
-                        pagePrev: res?.previous,
-                        total: res?.count,
-                        loading: false,
-                    });
-                    setDataSource(res);
-                    setFilterData(res);
-                } catch (error) {
-                    setState({ loading: false });
-                    console.log('✌️error --->', error);
-                }
-     }
+            const body = bodyData();
+            setState({ loading: true });
 
-      const bodyData = () => {
+            const res: any = await Models.material.materialList(page, body);
+            console.log('abcd --->', res);
+            setState({
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
+            });
+            setDataSource(res.results);
+            setFilterData(res.results);
+        } catch (error) {
+            setState({ loading: false });
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const bodyData = () => {
         const body: any = {};
         if (state.search) {
-            body.customer = state.search;
+            body.search = state.search;
         }
         return body;
     };
@@ -271,7 +270,7 @@ const Material = () => {
         setFilterData(searchValue ? filteredData : dataSource);
     };
 
-     const handlePageChange = (number: any) => {
+    const handlePageChange = (number: any) => {
         console.log('number', number);
         setState({ currentPage: number });
         getMaterial(number);
@@ -406,7 +405,7 @@ const Material = () => {
                         <h1 className="text-lg font-semibold dark:text-white-light">Manage Material</h1>
                     </div>
                     <div>
-                        <Search placeholder="Input search text" onChange={inputChange} enterButton className="search-bar" />
+                        <Search placeholder="Input search text" value={state.search} onChange={(e) => setState({ search: e.target.value })} enterButton className="search-bar" />
                         <button type="button" onClick={() => showDrawer(null)} className="create-button">
                             + Create Material
                         </button>
@@ -416,7 +415,7 @@ const Material = () => {
                     <Table
                         dataSource={filterData}
                         columns={columns}
-                         pagination={false}
+                        pagination={false}
                         scroll={scrollConfig}
                         loading={{
                             spinning: state.loading, // This enables the loading spinner
@@ -426,7 +425,7 @@ const Material = () => {
                     />
                 </div>
 
-                 {filterData?.length > 0 && (
+                {filterData?.length > 0 && (
                     <div>
                         <div
                             className="mb-20 "

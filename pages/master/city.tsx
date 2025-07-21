@@ -5,7 +5,10 @@ import { Form, Input } from 'antd';
 import { EditOutlined, EyeOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import router from 'next/router';
-import { baseUrl } from '@/utils/function.util';
+import { baseUrl, useSetState } from '@/utils/function.util';
+import Pagination from '@/components/pagination/pagination';
+import useDebounce from '@/components/useDebounce/useDebounce';
+import Models from '@/imports/models.import';
 
 const City = () => {
     const { Search } = Input;
@@ -20,10 +23,26 @@ const City = () => {
     const [filterData, setFilterData] = useState(dataSource);
     const [loading, setLoading] = useState(false);
 
+    const [state, setState] = useSetState({
+        page: 1,
+        pageSize: 10,
+        total: 0,
+        currentPage: 1,
+        pageNext: null,
+        pagePrev: null,
+    });
+
     // get Tax datas
     useEffect(() => {
-        GetTaxData();
+        GetCityList(1);
     }, []);
+
+     const debouncedSearch = useDebounce(state.search);
+
+    useEffect(() => {
+        GetCityList(1);
+    }, [debouncedSearch]);
+
 
     useEffect(() => {
         if (editRecord) {
@@ -33,27 +52,57 @@ const City = () => {
         }
     }, [editRecord, open]);
 
-    const GetTaxData = () => {
-        const Token = localStorage.getItem('token');
-        setLoading(true);
+    // const GetCityList = () => {
+    //     const Token = localStorage.getItem('token');
+    //     setLoading(true);
 
-        axios
-            .get(`${baseUrl}/city_list/`, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res) => {
-                setDataSource(res?.data);
-                setFilterData(res.data);
-                setLoading(false);
-            })
-            .catch((error: any) => {
-                if (error?.response?.status === 401) {
-                    router.push('/');
-                }
-                setLoading(false);
+    //     axios
+    //         .get(`${baseUrl}/city_list/`, {
+    //             headers: {
+    //                 Authorization: `Token ${Token}`,
+    //             },
+    //         })
+    //         .then((res) => {
+    //             setDataSource(res?.data);
+    //             setFilterData(res.data);
+    //             setLoading(false);
+    //         })
+    //         .catch((error: any) => {
+    //             if (error?.response?.status === 401) {
+    //                 router.push('/');
+    //             }
+    //             setLoading(false);
+    //         });
+    // };
+
+    const GetCityList = async (page:any) => {
+        try {
+            const body = bodyData();
+            setState({ loading: true });
+
+            const res: any = await Models.city.cityList(page, body);
+            console.log('abcd --->', res);
+            setState({
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
             });
+            setDataSource(res.results);
+            setFilterData(res.results);
+        } catch (error) {
+            setState({ loading: false });
+            console.log('✌️error --->', error);
+        }
+    };
+
+     const bodyData = () => {
+        const body: any = {};
+        if (state.search) {
+            body.search = state.search;
+        }
+        return body;
     };
 
     // Model
@@ -155,7 +204,7 @@ const City = () => {
     //         }
     //       }).then((res) => {
     //         console.log(res)
-    //         GetTaxData()
+    //         GetCityList()
     //       }).catch((err) => {
     //         console.log(err)
     //       })
@@ -171,6 +220,20 @@ const City = () => {
         setFilterData(searchValue ? filteredData : dataSource);
     };
 
+     const handlePageChange = (number: any) => {
+        console.log('number', number);
+        setState({ currentPage: number });
+        GetCityList(number);
+
+        // if (state.searchValue) {
+        //     onFinish2(state.searchValue, number);
+        // } else {
+        //     initialData(number);
+        // }
+
+        return number;
+    };
+
     // form submit
     const onFinish = (values: any) => {
         const Token = localStorage.getItem('token');
@@ -183,7 +246,7 @@ const City = () => {
                     },
                 })
                 .then((res: any) => {
-                    GetTaxData();
+                    GetCityList(1);
                     setOpen(false);
                 })
                 .catch((error: any) => {
@@ -199,7 +262,7 @@ const City = () => {
                     },
                 })
                 .then((res: any) => {
-                    GetTaxData();
+                    GetCityList(1);
                     setOpen(false);
                 })
                 .catch((error: any) => {
@@ -277,7 +340,7 @@ const City = () => {
                         <h1 className="text-lg font-semibold dark:text-white-light">Manage City</h1>
                     </div>
                     <div>
-                        <Search placeholder="Input search text" onChange={inputChange} enterButton className="search-bar" />
+                        <Search placeholder="Input search text" value={state.search} onChange={(e) => setState({ search: e.target.value })} enterButton className="search-bar" />
                         <button type="button" onClick={() => showDrawer(null)} className="create-button">
                             + Create City
                         </button>
@@ -290,12 +353,27 @@ const City = () => {
                         pagination={false}
                         scroll={scrollConfig}
                         loading={{
-                            spinning: loading, // This enables the loading spinner
+                            spinning: state.loading, // This enables the loading spinner
                             indicator: <Spin size="large" />,
                             tip: 'Loading data...', // Custom text to show while loading
                         }}
                     />
                 </div>
+
+                {filterData?.length > 0 && (
+                    <div>
+                        <div
+                            className="mb-20 "
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <Pagination totalPage={state.total} itemsPerPage={10} currentPages={state.currentPage} activeNumber={handlePageChange} />
+                        </div>
+                    </div>
+                )}
 
                 <Drawer title={drawerTitle} placement="right" width={600} onClose={onClose} open={open}>
                     <Form name="basic" layout="vertical" form={form} initialValues={{ remember: true }} onFinish={onFinish} onFinishFailed={onFinishFailed} autoComplete="off">
