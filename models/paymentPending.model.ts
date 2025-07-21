@@ -3,7 +3,7 @@ import instance from '@/utils/axios.util';
 const paymentPending = {
     paymentPendingList: (page: any) => {
         let promise = new Promise((resolve, reject) => {
-            let url = `invoice/?fully_paid/?page=${page}`;
+            let url = `invoice/?fully_paid=false/&page=${page}`;
             instance()
                 .get(url)
                 .then((res) => {
@@ -23,7 +23,7 @@ const paymentPending = {
 
      filter: (body: any, page: any) => {
             let promise = new Promise((resolve, reject) => {
-                let url = `invoice/?fully_paid/?page=${page}`;
+                let url = `invoice/?fully_paid=false/&page=${page}`;
                 if (body?.completed) {
                     url += `&completed=${encodeURIComponent(body.completed)}`;
                 }

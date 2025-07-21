@@ -126,7 +126,7 @@ const Test = () => {
 
     const showModal = (record: any) => {
         const testRecord = {
-            material_name: record?.material_name,
+            material_name: record?.material_name.material_name,
             test_name: record.test_name,
             price_per_piece: record.price_per_piece,
             id: record.id,
@@ -153,7 +153,7 @@ const Test = () => {
     const showDrawer = (record: any) => {
         if (record) {
             const testRecord: any = {
-                material_name: record.material_id,
+                material_name: record.material_name.material_name,
                 test_name: record.test_name,
                 price_per_piece: record.price_per_piece,
                 id: record.id,
@@ -183,9 +183,12 @@ const Test = () => {
         },
         {
             title: 'Material Name',
-            dataIndex: 'material_name',
+            // dataIndex: 'material_name',
             key: 'material_name',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{record.material_name.material_name}</div>;
+            },
         },
         {
             title: 'Price',
