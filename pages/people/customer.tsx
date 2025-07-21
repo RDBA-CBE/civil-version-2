@@ -5,7 +5,9 @@ import { Form, Input, Select, Spin } from 'antd';
 import { EditOutlined, EyeOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import router from 'next/router';
-import { baseUrl } from '@/utils/function.util';
+import { baseUrl, useSetState } from '@/utils/function.util';
+import Pagination from '@/components/pagination/pagination';
+import Models from '@/imports/models.import';
 
 const Customer = () => {
     const { Search } = Input;
@@ -19,10 +21,19 @@ const Customer = () => {
     const [dataSource, setDataSource] = useState([]);
     const [formFields, setFormFields] = useState<any>([]);
     const [filterData, setFilterData] = useState(dataSource);
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(false);
+
+    const [state, setState] = useSetState({
+        page: 1,
+        pageSize: 10,
+        total: 0,
+        currentPage: 1,
+        pageNext: null,
+        pagePrev: null,
+    });
 
     useEffect(() => {
-        getCustomer();
+        getCustomer(1);
         getDropDownValues();
     }, []);
 
@@ -34,26 +45,50 @@ const Customer = () => {
         }
     }, [editRecord, open]);
 
-    const getCustomer = () => {
-        setLoading(true)
-        axios
-            .get(`${baseUrl}/customer_list/`, {
-                headers: {
-                    Authorization: `Token ${localStorage.getItem('token')}`,
-                },
-            })
-            .then((res) => {
-                setDataSource(res.data);
-                setFilterData(res.data);
-                setLoading(false)
-            })
-            .catch((error: any) => {
-                if (error.response?.status === 401) {
-                    router.push('/');
-                }
-                setLoading(false)
+    // const getCustomer = () => {
+    //     setLoading(true)
+    //     axios
+    //         .get(`${baseUrl}/customer_list/`, {
+    //             headers: {
+    //                 Authorization: `Token ${localStorage.getItem('token')}`,
+    //             },
+    //         })
+    //         .then((res) => {
+    //             setDataSource(res.data);
+    //             setFilterData(res.data);
+    //             setLoading(false)
+    //         })
+    //         .catch((error: any) => {
+    //             if (error.response?.status === 401) {
+    //                 router.push('/');
+    //             }
+    //             setLoading(false)
+    //         });
+    // };
+
+    const getCustomer = async (page: any) => {
+        try {
+            setState({ loading: true });
+
+            const res: any = await Models.customer.costomerList(page);
+            console.log('abcd --->', res);
+            setState({
+                // invoiceList: res?.results,
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
             });
+            setDataSource(res?.results);
+            setFilterData(res?.results);
+        } catch (error) {
+            setState({ loading: false });
+            console.log('✌️error --->', error);
+        }
     };
+
+    console.log('filterData', filterData);
 
     const getDropDownValues = () => {
         const Token = localStorage.getItem('token');
@@ -75,6 +110,8 @@ const Customer = () => {
     };
 
     const showModal = (record: any) => {
+        console.log('record', record);
+
         setIsModalOpen(true);
         setViewRecord(record);
         modalData();
@@ -206,10 +243,28 @@ const Customer = () => {
 
     const inputChange = (e: any) => {
         const searchValue = e.target.value.toLowerCase();
+        console.log('searchValue', searchValue);
+
+        console.log('dataSource', dataSource);
+
         const filteredData = dataSource.filter(
-            (item: any) => item.customer_name.toLowerCase().includes(searchValue) || item.phone_no.toLowerCase().includes(searchValue) || item.email.toLowerCase().includes(searchValue)
+            (item: any) => item.customer_name?.toLowerCase()?.includes(searchValue) || item.phone_no?.toLowerCase()?.includes(searchValue) || item.email?.toLowerCase()?.includes(searchValue)
         );
         setFilterData(searchValue ? filteredData : dataSource);
+    };
+
+     const handlePageChange = (number: any) => {
+        console.log('number', number);
+        setState({ currentPage: number });
+        getCustomer(number);
+
+        // if (state.searchValue) {
+        //     onFinish2(state.searchValue, number);
+        // } else {
+        //     initialData(number);
+        // }
+
+        return number;
     };
 
     // form submit
@@ -224,7 +279,7 @@ const Customer = () => {
                 })
                 .then((res) => {
                     form.resetFields();
-                    getCustomer();
+                    getCustomer(1);
                 })
                 .catch((error) => {
                     if (error.response.status === 401) {
@@ -242,7 +297,7 @@ const Customer = () => {
                 })
                 .then((res) => {
                     form.resetFields();
-                    getCustomer();
+                    getCustomer(1);
                 })
                 .catch((error: any) => {
                     if (error.response.status === 401) {
@@ -325,15 +380,15 @@ const Customer = () => {
             },
             {
                 label: 'City 1:',
-                value: viewRecord?.city1 || 'N/A',
+                value: viewRecord?.city1?.name || 'N/A',
             },
             {
                 label: 'State 1:',
-                value: viewRecord?.state1 || 'N/A',
+                value: viewRecord?.state1?.name || 'N/A',
             },
             {
                 label: 'Country 1:',
-                value: viewRecord?.country1 || 'N/A',
+                value: viewRecord?.country1?.name || 'N/A',
             },
 
             {
@@ -412,6 +467,8 @@ const Customer = () => {
         return data;
     };
 
+   
+
     const scrollConfig: any = {
         x: true,
         y: 300,
@@ -432,13 +489,33 @@ const Customer = () => {
                     </div>
                 </div>
                 <div className="table-responsive">
-                    <Table dataSource={filterData} columns={columns} scroll={scrollConfig} 
-                      loading={{
-                        spinning: loading, // This enables the loading spinner
-                        indicator: <Spin size="large"/>,
-                        tip: 'Loading data...', // Custom text to show while loading
-                    }}/>
+                    <Table
+                        dataSource={filterData}
+                        columns={columns}
+                        pagination={false}
+                        scroll={scrollConfig}
+                        loading={{
+                            spinning: state.loading, // This enables the loading spinner
+                            indicator: <Spin size="large" />,
+                            tip: 'Loading data...', // Custom text to show while loading
+                        }}
+                    />
                 </div>
+
+                {filterData?.length > 0 && (
+                    <div>
+                        <div
+                            className="mb-20 "
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <Pagination totalPage={state.total} itemsPerPage={10} currentPages={state.currentPage} activeNumber={handlePageChange} />
+                        </div>
+                    </div>
+                )}
 
                 <Drawer title={drawerTitle} placement="right" width={600} onClose={onClose} open={open}>
                     <Form name="basic" layout="vertical" form={form} initialValues={{ remember: true }} onFinish={onFinish} onFinishFailed={onFinishFailed} autoComplete="off">

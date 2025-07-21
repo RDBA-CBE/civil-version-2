@@ -7,7 +7,10 @@ import axios from 'axios';
 import 'react-quill/dist/quill.snow.css';
 import moment from 'moment';
 import router from 'next/router';
-import { baseUrl, Failure } from '@/utils/function.util';
+import { baseUrl, Failure, useSetState } from '@/utils/function.util';
+import Models from '@/imports/models.import';
+import Pagination from '@/components/pagination/pagination';
+import useDebounce from '@/components/useDebounce/useDebounce';
 
 const Material = () => {
     const editorRef: any = useRef();
@@ -26,11 +29,26 @@ const Material = () => {
     const [formFields, setFormFields] = useState<any>([]);
     const [loading, setLoading] = useState(false);
 
+     const [state, setState] = useSetState({
+            page: 1,
+            pageSize: 10,
+            total: 0,
+            currentPage: 1,
+            pageNext: null,
+            pagePrev: null,
+        });
+
     // Get Material Data
     useEffect(() => {
-        getMaterial();
+        getMaterial(1);
         getDropDown();
     }, []);
+
+    const debouncedSearch = useDebounce(state.search);
+
+    useEffect(()=>{
+        getMaterial(1)
+    },[debouncedSearch])
 
     useEffect(() => {
         if (editRecord) {
@@ -48,27 +66,58 @@ const Material = () => {
         setEditorLoaded(true);
     }, []);
 
-    const getMaterial = () => {
-        const Token = localStorage.getItem('token');
-        setLoading(true);
+    // const getMaterial = () => {
+    //     const Token = localStorage.getItem('token');
+    //     setLoading(true);
 
-        axios
-            .get(`${baseUrl}/material_list/`, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res) => {
-                setDataSource(res?.data);
-                setFilterData(res.data);
-                setLoading(false);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
+    //     axios
+    //         .get(`${baseUrl}/material_list/`, {
+    //             headers: {
+    //                 Authorization: `Token ${Token}`,
+    //             },
+    //         })
+    //         .then((res) => {
+    //             setDataSource(res?.data);
+    //             setFilterData(res.data);
+    //             setLoading(false);
+    //         })
+    //         .catch((error: any) => {
+    //             if (error.response.status === 401) {
+    //                 router.push('/');
+    //             }
+    //             setLoading(false);
+    //         });
+    // };
+
+     const getMaterial = async(page:any) => {
+        try {
+            const body = bodyData()
+                    setState({ loading: true });
+        
+                    const res: any = await Models.material.materialList(page,body);
+                    console.log('abcd --->', res);
+                    setState({
+                        
+                        currentPage: page,
+                        pageNext: res?.next,
+                        pagePrev: res?.previous,
+                        total: res?.count,
+                        loading: false,
+                    });
+                    setDataSource(res);
+                    setFilterData(res);
+                } catch (error) {
+                    setState({ loading: false });
+                    console.log('✌️error --->', error);
                 }
-                setLoading(false);
-            });
+     }
+
+      const bodyData = () => {
+        const body: any = {};
+        if (state.search) {
+            body.customer = state.search;
+        }
+        return body;
     };
 
     const getDropDown = () => {
@@ -222,6 +271,20 @@ const Material = () => {
         setFilterData(searchValue ? filteredData : dataSource);
     };
 
+     const handlePageChange = (number: any) => {
+        console.log('number', number);
+        setState({ currentPage: number });
+        getMaterial(number);
+
+        // if (state.searchValue) {
+        //     onFinish2(state.searchValue, number);
+        // } else {
+        //     initialData(number);
+        // }
+
+        return number;
+    };
+
     // form submit
     const onFinish = (values: any) => {
         const Token = localStorage.getItem('token');
@@ -243,7 +306,7 @@ const Material = () => {
                     },
                 })
                 .then((res: any) => {
-                    getMaterial();
+                    getMaterial(1);
                     onClose();
                 })
                 .catch((error: any) => {
@@ -259,7 +322,7 @@ const Material = () => {
                     },
                 })
                 .then((res: any) => {
-                    getMaterial();
+                    getMaterial(1);
                     onClose();
                     form.resetFields();
                 })
@@ -353,14 +416,30 @@ const Material = () => {
                     <Table
                         dataSource={filterData}
                         columns={columns}
+                         pagination={false}
                         scroll={scrollConfig}
                         loading={{
-                            spinning: loading, // This enables the loading spinner
+                            spinning: state.loading, // This enables the loading spinner
                             indicator: <Spin size="large" />,
                             tip: 'Loading data...', // Custom text to show while loading
                         }}
                     />
                 </div>
+
+                 {filterData?.length > 0 && (
+                    <div>
+                        <div
+                            className="mb-20 "
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <Pagination totalPage={state.total} itemsPerPage={10} currentPages={state.currentPage} activeNumber={handlePageChange} />
+                        </div>
+                    </div>
+                )}
 
                 <Drawer title={DrawerTitle} placement="right" width={600} onClose={onClose} open={open}>
                     <Form name="basic" layout="vertical" form={form} initialValues={{ remember: true }} onFinish={onFinish} onFinishFailed={onFinishFailed} autoComplete="off">
