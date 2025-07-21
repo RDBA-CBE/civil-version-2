@@ -3,7 +3,9 @@ import city from "@/models/city.model";
 import customer from "@/models/customer.model";
 import discount from "@/models/discount.model";
 import expense from "@/models/expense.model";
+import expenseEntry from "@/models/expenseEntry.model";
 import invoice from "@/models/invoice.model";
+import invoiceFile from "@/models/invoiceFile.model";
 import logs from "@/models/log.model";
 import material from "@/models/material.model";
 import paymentPending from "@/models/paymentPending.model";
@@ -25,7 +27,9 @@ export const Models = {
     city,
     expense,
     qoutation,
-    paymentPending
+    paymentPending,
+    expenseEntry,
+    invoiceFile
    
 
 };

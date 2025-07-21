@@ -5,7 +5,9 @@ import axios from 'axios';
 import type { UploadProps } from 'antd';
 import router from 'next/router';
 import dayjs from 'dayjs';
-import { baseUrl } from '@/utils/function.util';
+import { baseUrl, ObjIsEmpty, useSetState } from '@/utils/function.util';
+import Pagination from '@/components/pagination/pagination';
+import Models from '@/imports/models.import';
 
 const InvoiceFileUpload = () => {
     const { Search } = Input;
@@ -25,7 +27,19 @@ const InvoiceFileUpload = () => {
     const [fileInputData, setFileInputData] = useState<any>({
         file: null,
     });
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(false);
+
+    const [state, setState] = useSetState({
+        page: 1,
+        pageSize: 10,
+        total: 0,
+        currentPage: 1,
+        pageNext: null,
+        pagePrev: null,
+        invoiceFileList: [],
+        discount: 0,
+        searchValue: null,
+    });
 
     useEffect(() => {
         const Token = localStorage.getItem('token');
@@ -250,7 +264,7 @@ const InvoiceFileUpload = () => {
                 })
                 .then((res: any) => {
                     console.log('✌️res --->', res);
-                    initialData();
+                    initialData(1);
                     setOpen(false);
                     onClose();
                 })
@@ -268,7 +282,7 @@ const InvoiceFileUpload = () => {
                     },
                 })
                 .then((res: any) => {
-                    initialData();
+                    initialData(1);
                     setOpen(false);
                     setFileShow('');
                     onClose();
@@ -385,73 +399,98 @@ const InvoiceFileUpload = () => {
     // search
 
     useEffect(() => {
-        initialData();
+        initialData(1);
     }, []);
 
-    const initialData = () => {
-        const Token = localStorage.getItem('token');
-        console.log('✌️Token --->', Token);
-        setLoading(true)
+    const initialData = async (page: any) => {
+        try {
+            setState({ loading: true });
 
-        const body = {
-            invoice_no: '',
-            from_date: '',
-            to_date: '',
-            category: '',
-        };
-
-        console.log('✌️body --->', body);
-
-        axios
-            .post(`${baseUrl}/invoice_file_upload_list/`, body, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res: any) => {
-                console.log('✌️res --->', res);
-                setDataSource(res?.data.invoice_files);
-                setLoading(false)
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
-                setLoading(false)
+            const res: any = await Models.invoiceFile.invoiceFileList(page);
+            setState({
+                invoiceFileList: res?.results,
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
             });
+        } catch (error) {
+            setState({ loading: false });
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const bodyData = () => {
+        const body: any = {};
+        if (state.searchValue) {
+            if (state.searchValue?.completed) {
+                body.completed = state.searchValue.completed;
+            }
+            if (state.searchValue?.customer) {
+                body.customer = state.searchValue.customer;
+            }
+            if (state.searchValue?.from_date) {
+                body.from_date = state.searchValue.from_date;
+            }
+
+            if (state.searchValue?.project_name) {
+                body.project_name = state.searchValue.project_name;
+            }
+            if (state.searchValue?.to_date) {
+                body.to_date = state.searchValue.to_date;
+            }
+            if (state.searchValue?.invoice_no) {
+                body.invoice_no = state.searchValue.invoice_no;
+            }
+        }
+
+        return body;
     };
 
     // form submit
-    const onFinish2 = (values: any) => {
-        console.log('✌️values --->', values);
-        const Token = localStorage.getItem('token');
+    const onFinish2 = async (values: any, page = 1) => {
+        try {
+            const body = {
+                invoice_no: values.invoice_no ? values.invoice_no : '',
+                from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
+                to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
+                category: values.category ? values.category : '',
+            };
 
-        const body = {
-            invoice_no: values.invoice_no ? values.invoice_no : '',
-            from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
-            to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
-            category: values.category ? values.category : '',
-        };
+            console.log('✌️body --->', body);
 
-        console.log('✌️body --->', body);
-
-        axios
-            .post(`${baseUrl}/invoice_file_upload_list/`, body, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res: any) => {
-                console.log('✌️res --->', res);
-                setDataSource(res?.data?.invoice_files);
-            })
-            .catch((error: any) => {
-                if (error?.response?.status === 401) {
-                    router.push('/');
-                }
+            const res: any = await Models.invoice.filter(body, page);
+             setState({
+                invoiceFileList: res?.results,
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
+                searchValue: values,
             });
-        form.resetFields();
+        } catch (error) {
+            setState({ loading: false });
+
+            console.log('✌️error --->', error);
+        }
     };
+
+    const handlePageChange = (number: any) => {
+            setState({ currentPage: number });
+    
+            const body = bodyData();
+    
+            if (!ObjIsEmpty(body)) {
+                onFinish2(state.searchValue, number);
+            } else {
+                initialData(number);
+            }
+    
+            return number;
+        };
+    
 
     const onFinishFailed2 = (errorInfo: any) => {};
 
@@ -524,13 +563,34 @@ const InvoiceFileUpload = () => {
                     </div>
                 </div>
                 <div className="table-responsive">
-                    <Table dataSource={dataSource} columns={columns} pagination={false} scroll={scrollConfig} 
-                      loading={{
-                        spinning: loading, // This enables the loading spinner
-                        indicator: <Spin size="large"/>,
-                        tip: 'Loading data...', // Custom text to show while loading
-                    }}/>
+                    <Table
+                        dataSource={state.invoiceFileList}
+                        columns={columns}
+                        pagination={false}
+                        scroll={scrollConfig}
+                        loading={{
+                            spinning: loading, // This enables the loading spinner
+                            indicator: <Spin size="large" />,
+                            tip: 'Loading data...', // Custom text to show while loading
+                        }}
+                    />
                 </div>
+
+                {state.invoiceFileList?.length > 0 && (
+                    <div>
+                        <div
+                            className="mb-20 "
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <Pagination totalPage={state.total} itemsPerPage={10} currentPages={state.currentPage} activeNumber={handlePageChange} />
+                            {/* <Pagination activeNumber={handlePageChange} totalPages={state.total} currentPages={state.currentPage} /> */}
+                        </div>
+                    </div>
+                )}
 
                 <Drawer title={drawerTitle} placement="right" width={600} onClose={onClose} open={open}>
                     <Form name="basic" layout="vertical" form={form} initialValues={{ remember: true }} onFinish={onFinish} onFinishFailed={onFinishFailed} autoComplete="off">

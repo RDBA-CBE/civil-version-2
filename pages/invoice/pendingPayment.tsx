@@ -75,10 +75,13 @@ const PendingPayment = () => {
         },
         {
             title: 'Incompleted Test',
-            dataIndex: 'incompleted_test',
+            // dataIndex: 'incompleted_test',
             key: 'incompleted_test',
             className: 'singleLineCell',
             width: 150,
+            render: (record: any) => {
+                return <div>{record.completed}</div>;
+            },
         },
         {
             title: 'Advance',
@@ -336,7 +339,7 @@ const PendingPayment = () => {
                         scroll={scrollConfig}
                         pagination={false}
                         loading={{
-                            spinning: loading, // This enables the loading spinner
+                            spinning: state.loading, // This enables the loading spinner
                             indicator: <Spin size="large" />,
                             tip: 'Loading data...', // Custom text to show while loading
                         }}
