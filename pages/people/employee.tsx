@@ -6,7 +6,10 @@ import { CheckCircleOutlined, CloseCircleOutlined, EditOutlined, EyeOutlined } f
 import axios from 'axios';
 import dayjs from 'dayjs';
 import router from 'next/router';
-import { baseUrl } from '@/utils/function.util';
+import { baseUrl, useSetState } from '@/utils/function.util';
+import IconMenuAuthentication from '@/components/Icon/Menu/IconMenuAuthentication';
+import IconLockDots from '@/components/Icon/IconLockDots';
+import Models from '@/imports/models.import';
 
 const Employee = () => {
     const { Search } = Input;
@@ -25,6 +28,10 @@ const Employee = () => {
     const [fileshow, setFileShow] = useState<any>('');
     const [admin, setAdmin] = useState();
     const [loading, setLoading] = useState(false);
+    const [isUpdatePassword, setIsUpdatePassword] = useState(false);
+
+    const [state, setState] = useSetState({});
+
     const [errorMessage, setErrorMessage] = useState('');
     const [fileInputData, setFileInputData] = useState<any>({
         signature: null,
@@ -56,9 +63,8 @@ const Employee = () => {
                 },
             })
             .then((res) => {
-                console.log('✌️res --->', res);
-                setDataSource(res.data);
-                setFilterData(res.data);
+                setDataSource(res.data?.results);
+                setFilterData(res.data?.results);
                 setLoading(false);
             })
             .catch((error: any) => {
@@ -140,6 +146,44 @@ const Employee = () => {
         setOpen(true);
     };
 
+    const showPasswordDrawer = (record: any) => {
+        setState({ employeeId: record.id, employee_name: record?.employee_name });
+
+        setIsUpdatePassword(true);
+    };
+
+    const handleUpdatePassword = async () => {
+        try {
+            if (!state.new_password) {
+                setState({ newPasswordError: true });
+            } else if (!state.confirm_new_password) {
+                setState({ confirmPasswordError: true });
+            } else if (state.new_password !== state.confirm_new_password) {
+                setState({ matchPasswordError: true });
+            } else {
+                const body = {
+                    employeeId: state.employeeId,
+                    new_password: state.new_password,
+                    confirm_new_password: state.confirm_new_password,
+                };
+                // const res = await Models.auth.changeEmployeePassword(body);
+                setState({
+                    confirm_new_password: '',
+                    showPassword1: false,
+                    new_password: '',
+                    showNewPassword: false,
+                    employeeId: '',
+                    confirmPasswordError: '',
+                    newPasswordError: false,
+                    matchPasswordError: false,
+                });
+                // setIsUpdatePassword(false);
+            }
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
+    };
+
     const onClose = () => {
         setOpen(false);
         form.resetFields();
@@ -178,7 +222,10 @@ const Employee = () => {
                     <EyeOutlined style={{ cursor: 'pointer' }} onClick={() => showModal(record)} className="view-icon" rev={undefined} />
 
                     {localStorage.getItem('admin') === 'true' ? (
-                        <EditOutlined style={{ cursor: 'pointer' }} onClick={() => showDrawer(record)} className="edit-icon" rev={undefined} />
+                        <>
+                            <EditOutlined style={{ cursor: 'pointer' }} onClick={() => showDrawer(record)} className="edit-icon" rev={undefined} />
+                            <IconMenuAuthentication style={{ cursor: 'pointer' }} onClick={() => showPasswordDrawer(record)} className="edit-icon" />
+                        </>
                     ) : (
                         <EditOutlined style={{ cursor: 'pointer', display: 'none' }} onClick={() => showDrawer(record)} className="edit-icon" rev={undefined} />
                     )}
@@ -252,7 +299,6 @@ const Employee = () => {
                         }
                     )
                     .then((response) => {
-                        console.log('✌️response --->', response);
                         getEmployee();
                     })
                     .catch((error) => {
@@ -274,20 +320,18 @@ const Employee = () => {
     const inputChange = (e: any) => {
         const SearchValue = e.target.value;
 
-        const filteredData = dataSource.filter((item: any) => {
-            return (
-                item?.employee_name?.toLowerCase()?.includes(SearchValue?.toLowerCase()) ||
-                item?.username?.toLowerCase()?.includes(SearchValue?.toLowerCase()) ||
-                item?.mobile_number?.includes(SearchValue)
-            );
-        });
-        setFilterData(filteredData);
+        // const filteredData = dataSource.filter((item: any) => {
+        //     return (
+        //         item?.employee_name?.toLowerCase()?.includes(SearchValue?.toLowerCase()) ||
+        //         item?.username?.toLowerCase()?.includes(SearchValue?.toLowerCase()) ||
+        //         item?.mobile_number?.includes(SearchValue)
+        //     );
+        // });
+        // setFilterData(filteredData);
     };
 
     const selectFileChange = (e: any) => {
-        console.log('✌️e --->', e);
         const file = e.target.files[0];
-        console.log('✌️file --->', file);
         if (file) {
             setFileInputData(file);
         }
@@ -296,10 +340,8 @@ const Employee = () => {
     const url = fileshow;
     const filenames = url?.substring(url.lastIndexOf('/') + 1); // Extracts the filename from the URL
 
-    console.log('fileInputData?.file', fileInputData);
     // form submit
     const onFinish = (values: any) => {
-        console.log('✌️values --->', values);
         const Token = localStorage.getItem('token');
         const formData: any = new FormData();
 
@@ -352,9 +394,8 @@ const Employee = () => {
             formData.append('signature', null);
         }
 
-
-        if(fileInputData == undefined || fileInputData == null){
-            setErrorMessage("Please input your signature!")
+        if (fileInputData == undefined || fileInputData == null) {
+            setErrorMessage('Please input your signature!');
         }
 
         // Determine the request URL (whether creating or editing an employee)
@@ -494,6 +535,7 @@ const Employee = () => {
         x: true,
         y: 300,
     };
+
     return (
         <>
             <div className="panel ">
@@ -511,7 +553,7 @@ const Employee = () => {
                 </div>
                 <div className="table-responsive">
                     <Table
-                        dataSource={filterData}
+                        dataSource={dataSource}
                         columns={columns}
                         scroll={scrollConfig}
                         loading={{
@@ -584,7 +626,7 @@ const Employee = () => {
 
                         <label>
                             {' '}
-                            <span style={{ color: 'red', paddingRight:"3px" }}>*</span>Signature
+                            <span style={{ color: 'red', paddingRight: '3px' }}>*</span>Signature
                         </label>
                         {fileshow ? (
                             <>
@@ -626,6 +668,116 @@ const Employee = () => {
                             ) : null}
                         </div>
                     ))}
+                </Modal>
+
+                <Modal
+                    title="Update Password"
+                    open={isUpdatePassword}
+                    // onOk={handleUpdatePassword}
+                    onCancel={() => {
+                        setState({
+                            confirm_new_password: '',
+                            showPassword1: false,
+                            new_password: '',
+                            showNewPassword: false,
+                            employeeId: '',
+                            confirmPasswordError: '',
+                            newPasswordError: '',
+                            matchPasswordError: false,
+                        });
+                        setIsUpdatePassword(false);
+                    }}
+                    footer={false}
+                >
+                    <div className="w-full max-w-[440px] lg:mt-16">
+                        <form className="space-y-5 dark:text-white">
+                            <div>
+                                <label htmlFor="Password">Employee</label>
+                                <div className="relative text-white-dark">
+                                    <input
+                                        required
+                                        id="confirm_new_password"
+                                        type={'text'}
+                                        placeholder="Enter Confirm Password"
+                                        className="form-input  placeholder:text-white-dark"
+                                        name="confirm_new_password"
+                                        value={state.employee_name}
+                                        disabled={true}
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label htmlFor="Password">New Password</label>
+                                <div className="relative text-white-dark">
+                                    <input
+                                        required
+                                        id="new_password"
+                                        type={state.showNewPassword ? 'text' : 'password'}
+                                        placeholder="Enter New Password"
+                                        className="form-input ps-10 placeholder:text-white-dark"
+                                        name="new_password"
+                                        value={state.new_password}
+                                        onChange={(e) => setState({ new_password: e.target.value })}
+                                    />
+
+                                    <span className="absolute start-4 top-1/2 -translate-y-1/2" onClick={() => setState({ showNewPassword: !state.showNewPassword })} style={{ cursor: 'pointer' }}>
+                                        <IconLockDots fill={true} />
+                                    </span>
+                                </div>
+                                {state.newPasswordError == true && <div style={{ color: 'red', marginTop: '5px' }}>New Password is required.</div>}
+                            </div>
+                            <div>
+                                <label htmlFor="Password">Confirm New Password</label>
+                                <div className="relative text-white-dark">
+                                    <input
+                                        required
+                                        id="confirm_new_password"
+                                        type={state.showPassword1 ? 'text' : 'password'}
+                                        placeholder="Enter Confirm Password"
+                                        className="form-input ps-10 placeholder:text-white-dark"
+                                        name="confirm_new_password"
+                                        value={state.confirm_new_password}
+                                        onChange={(e) => setState({ confirm_new_password: e.target.value })}
+                                    />
+                                    <span className="absolute start-4 top-1/2 -translate-y-1/2" onClick={() => setState({ showPassword1: !state.showPassword1 })} style={{ cursor: 'pointer' }}>
+                                        <IconLockDots fill={true} />
+                                    </span>
+                                </div>
+                                {state.confirmPasswordError && <div style={{ color: 'red', marginTop: '5px' }}>Confirm Password is required.</div>}
+                            </div>
+                            {state.matchPasswordError && <div style={{ color: 'red', marginTop: '5px' }}>Password not matched.</div>}
+
+                            <div style={{ display: 'flex' }}>
+                                <button
+                                    type="button"
+                                    className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]"
+                                    onClick={() => handleUpdatePassword()}
+                                >
+                                    Change Password
+                                </button>
+                                <button
+                                    style={{ paddingRight: '10px' }}
+                                    type="button"
+                                    onClick={() => {
+                                        setState({
+                                            confirm_new_password: '',
+                                            showPassword1: false,
+                                            new_password: '',
+                                            showNewPassword: false,
+                                            employeeId: '',
+                                            confirmPasswordError: '',
+                                            newPasswordError: '',
+                                            matchPasswordError: false,
+                                        });
+                                        setIsUpdatePassword(false);
+                                    }}
+                                    className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]"
+                                >
+                                    cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </Modal>
             </div>
         </>

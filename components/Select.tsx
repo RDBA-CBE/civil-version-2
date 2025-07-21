@@ -1,8 +1,25 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import Select from 'react-select';
 
 const CustomSelect = (props: any) => {
-    const { name, borderRadius, disabled, options, value, onChange, placeholder = 'Select...', title, isSearchable = true, className, error, isMulti, required, loadMore, menuOpen } = props;
+    const {
+        name,
+        borderRadius,
+        disabled,
+        options,
+        value,
+        onChange,
+        placeholder = 'Select...',
+        title,
+        isSearchable = true,
+        className,
+        error,
+        isMulti,
+        required,
+        loadMore,
+        menuOpen,
+        onSearch,
+    } = props;
 
     const customStyles = {
         control: (provided: any) => ({
@@ -16,6 +33,32 @@ const CustomSelect = (props: any) => {
         }),
         menuPortal: (base: any) => ({ ...base, zIndex: 9999 }),
         menu: (base: any) => ({ ...base, zIndex: 9999 }),
+    };
+
+    const [inputValue, setInputValue] = useState('');
+
+    // const handleSearchChange = (inputValue: string) => {
+    //     setSearchTerm(inputValue);
+
+    //     if (onSearch && inputValue.length >= 2) {
+    //         // Only search if 2+ characters
+    //         clearTimeout(debounceRef.current);
+    //         debounceRef.current = setTimeout(async () => {
+    //             setIsSearching(true);
+    //             try {
+    //                 await onSearch(inputValue);
+    //             } finally {
+    //                 setIsSearching(false);
+    //             }
+    //         }, debounceTimeout);
+    //     }
+    // };
+
+    const handleInputChange = (newValue: string) => {
+        setInputValue(newValue);
+        if (newValue && onSearch) {
+            onSearch(newValue);
+        }
     };
 
     return (
@@ -43,6 +86,11 @@ const CustomSelect = (props: any) => {
                     onMenuClose={() => menuOpen && menuOpen(false)}
                     className={`border-none`}
                     onMenuScrollToBottom={loadMore}
+                    inputValue={inputValue}
+                    onInputChange={handleInputChange}
+                    components={{
+                        DropdownIndicator: null,
+                    }}
                 />
                 {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
             </div>

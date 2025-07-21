@@ -86,7 +86,7 @@ const PendingPayment = () => {
     ];
 
     const handleRowClick = (record: any) => {
-        window.location.href = `/invoice/edit?id=${record.id}`;
+        window.location.href = `/invoice/edits?id=${record.id}`;
     };
 
     // input search

@@ -56,3 +56,7 @@ export const DropdownArrayString = (arr: any) => {
     const array = arr?.map((item:any) => ({ value: item, label: item }));
     return array;
 };
+
+export const roundNumber = (num:any) => {
+    return Math.round(Number(num));
+  };

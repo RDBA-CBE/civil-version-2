@@ -58,7 +58,7 @@ const TestReport = () => {
             key: 'invoice_no',
             className: 'singleLineCell',
             render: (text:any, record:any) => (
-                <a href={`/invoice/edit?id=${record.invoice}`}  rel="noopener noreferrer">{record.invoice_no}</a>
+                <a href={`/invoice/edits?id=${record.invoice}`}  rel="noopener noreferrer">{record.invoice_no}</a>
             ),
         },
 
