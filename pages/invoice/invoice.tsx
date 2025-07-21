@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { DatePicker, Space, Table, Spin, Button, Drawer, Form, Input, Select } from 'antd';
-import { EditOutlined } from '@ant-design/icons';
+import { DatePicker, Space, Table, Spin, Button, Drawer, Form, Input, Select, Modal } from 'antd';
+import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import router from 'next/router';
 import dayjs from 'dayjs';
-import { baseUrl, useSetState } from '@/utils/function.util';
+import { baseUrl, ObjIsEmpty, useSetState } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import Models from '@/imports/models.import';
 
@@ -14,7 +14,6 @@ const Invoice = () => {
 
     const [open, setOpen] = useState(false);
     const [dataSource, setDataSource] = useState([]);
-    console.log('✌️dataSource --->', dataSource);
     const [formFields, setFormFields] = useState<any>([]);
     const [selectedCustomerId, setSelectedCustomerId] = useState(null);
     const [customerAddress, setCustomerAddress] = useState('');
@@ -32,10 +31,6 @@ const Invoice = () => {
         searchValue: null,
     });
 
-    // useEffect(() => {
-    //     getInvoice();
-    // }, []);
-
     useEffect(() => {
         axios
             .get(`${baseUrl}/create_invoice/`, {
@@ -44,7 +39,6 @@ const Invoice = () => {
                 },
             })
             .then((res) => {
-                console.log('useEffect --->', res);
                 setFormFields(res.data);
             })
             .catch((error: any) => {
@@ -54,23 +48,40 @@ const Invoice = () => {
             });
     }, []);
 
-    // const getInvoice = () => {
+    // useEffect(() => {
     //     axios
-    //         .get('${baseUrl}/invoice_list/', {
+    //         .get(`${baseUrl}/create_invoice/`, {
     //             headers: {
     //                 Authorization: `Token ${localStorage.getItem('token')}`,
     //             },
     //         })
     //         .then((res) => {
-    //             setDataSource(res?.data);
-    //             // setFilterData(res.data);
+    //             console.log('useEffect --->', res);
+    //             setFormFields(res.data);
     //         })
     //         .catch((error: any) => {
-    //             if (error.response.status === 401) {
+    //             if (error.response?.status === 401) {
     //                 router.push('/');
     //             }
     //         });
-    // };
+    // }, []);
+
+    const getInvoice = async (page: number) => {
+        try {
+            const res: any = await Models.invoice.invoiceList(page);
+
+            setState({
+                invoiceList: res?.results,
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
+            });
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
+    };
 
     // drawer
     const showDrawer = () => {
@@ -108,9 +119,10 @@ const Invoice = () => {
         },
         {
             title: 'Customer Name',
-            dataIndex: 'customer',
-            key: 'customer',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{record?.customer?.customer_name}</div>;
+            },
         },
         {
             title: 'Project Name',
@@ -173,9 +185,7 @@ const Invoice = () => {
                     <span onClick={() => handleEditClick(record)} style={{ cursor: 'pointer' }} className="edit-icon">
                         <EditOutlined rev={undefined} />
                     </span>
-                    {/* <DeleteOutlined
-                        style={{ color: "red", cursor: "pointer" }}
-                        onClick={() => handleDelete(record)} className='delete-icon' rev={undefined} /> */}
+                    {/* <DeleteOutlined style={{ color: 'red', cursor: 'pointer' }} onClick={() => handleDelete(record)} className="delete-icon" rev={undefined} /> */}
                 </Space>
             ),
         },
@@ -186,51 +196,31 @@ const Invoice = () => {
         window.location.href = `/invoice/edits?id=${record.id}`;
     };
 
-    // const handleDelete = (record: any) => {
-    //     // Implement your delete logic here
+    const handleDelete = (record: any) => {
+        // Implement your delete logic here
 
-    //     Modal.confirm({
-    //         title: "Are you sure, you want to delete this TAX record?",
-    //         okText: "Yes",
-    //         okType: "danger",
-    //         onOk: () => {
-    //             console.log(record, "values")
-    //             axios.delete(`${baseUrl}/delete_invoice/${record.id}`, {
-    //                 headers: {
-    //                     "Authorization": `Token ${localStorage.getItem("token")}`
-    //                 }
-    //             }).then((res) => {
-    //                 console.log(res)
-    //                 getInvoice()
-    //             }).catch((err: any) => {
-    //                 console.log(err)
-    //             })
+        Modal.confirm({
+            title: 'Are you sure, you want to delete this invoice record?',
+            okText: 'Yes',
+            okType: 'danger',
+            onOk: () => {
+                deleteInvoice(record);
+            },
+        });
+    };
 
-    //         },
-
-    //     });
-    // };
-
-    // input search
-
-    // const inputChange = (e: any) => {
-    //     const SearchValue = e.target.value;
-
-    //     const filteredData = dataSource.filter((item: any) => {
-    //         return (
-    //             item.invoice_no.includes(SearchValue) ||
-    //             item.customer.toLowerCase().includes(SearchValue.toLowerCase()) ||
-    //             item.project_name.toLowerCase().includes(SearchValue.toLowerCase()) ||
-    //             item.total_amount.includes(SearchValue) ||
-    //             item.balance.includes(SearchValue) ||
-    //             item.incompleted_test.includes(SearchValue)
-    //         );
-    //     });
-    //     setFilterData(filteredData);
-    // };
+    const deleteInvoice = async (record: any) => {
+        try {
+            const res: any = await Models.invoice.deleteInvoice(record.id);
+            getInvoice(state.currentPage);
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
+    };
 
     // form submit
     const onFinish = (values: any) => {
+        setState({ btnLoading: true });
         const Token = localStorage.getItem('token');
 
         const body = {
@@ -242,6 +232,7 @@ const Invoice = () => {
             sales_mode: values.sales_mode,
             tax: values.tax,
             id: values.id,
+            date: dayjs().format('YYYY-MM-DD'),
         };
 
         axios
@@ -254,8 +245,11 @@ const Invoice = () => {
                 initialData(1);
                 window.location.href = `/invoice/edits?id=${res?.data?.id}`;
                 setOpen(false);
+                setState({ btnLoading: false });
             })
             .catch((error) => {
+                setState({ btnLoading: false });
+
                 if (error.response.status === 401) {
                     router.push('/');
                 }
@@ -277,15 +271,9 @@ const Invoice = () => {
 
     const getCustomerDiscount = async (id: any) => {
         try {
-            // setState({ loading: true });
-
             const res: any = await Models.discount.details(id);
-
-            // setCustomerList(res?.customer);
             setState({ discount: res?.discount });
         } catch (error: any) {
-            // setState({ loading: false });
-
             console.log('✌️error --->', error);
         }
     };
@@ -303,14 +291,9 @@ const Invoice = () => {
 
     const initialData = async (page: any) => {
         try {
-            // const body = bodyData();
-
-            // console.log('body', body);
-
             setState({ loading: true });
 
             const res: any = await Models.invoice.invoiceList(page);
-            console.log('abcd --->', res);
             setState({
                 invoiceList: res?.results,
                 currentPage: page,
@@ -324,25 +307,24 @@ const Invoice = () => {
             console.log('✌️error --->', error);
         }
     };
-    console.log('✌️currentPage --->', state.currentPage);
 
     const bodyData = () => {
         const body: any = {};
         if (state.searchValue) {
-            if (state.searchValue.completed !== undefined) {
+            if (state.searchValue?.completed) {
                 body.completed = state.searchValue.completed;
             }
-            if (state.searchValue.customer !== undefined) {
+            if (state.searchValue?.customer) {
                 body.customer = state.searchValue.customer;
             }
-            if (state.searchValue.from_date !== undefined) {
+            if (state.searchValue?.from_date) {
                 body.from_date = state.searchValue.from_date;
             }
 
-            if (state.searchValue.project_name !== undefined) {
+            if (state.searchValue?.project_name) {
                 body.project_name = state.searchValue.project_name;
             }
-            if (state.searchValue.to_date !== undefined) {
+            if (state.searchValue?.to_date) {
                 body.to_date = state.searchValue.to_date;
             }
         }
@@ -351,9 +333,7 @@ const Invoice = () => {
     };
 
     // form submit
-    const onFinish2 = (values: any, page = 1) => {
-        const Token = localStorage.getItem('token');
-
+    const onFinish2 = async (values: any, page = 1) => {
         const body = {
             project_name: values.project_name ? values.project_name : '',
             from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
@@ -362,33 +342,17 @@ const Invoice = () => {
             completed: values.completed ? values.completed : '',
         };
 
-        axios
-            .post(`${baseUrl}/invoice_list/?page=${page}`, body, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res: any) => {
-                setState({
-                    invoiceList: res?.data?.results,
-                    currentPage: page,
-                    pageNext: res?.data?.next,
-                    pagePrev: res?.data?.previous,
-                    total: res?.data?.count,
-                    loading: false,
-                    searchValue: values,
-                });
-                // setDataSource(res?.data);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
-            });
-        // form.resetFields();
+        const res: any = await Models.invoice.filter(body, page);
+        setState({
+            invoiceList: res?.results,
+            currentPage: page,
+            pageNext: res?.next,
+            pagePrev: res?.previous,
+            total: res?.count,
+            loading: false,
+            searchValue: values,
+        });
     };
-
-    console.log('searchValue', state.searchValue);
 
     const onFinishFailed2 = (errorInfo: any) => {};
 
@@ -398,10 +362,11 @@ const Invoice = () => {
     //   };
 
     const handlePageChange = (number: any) => {
-        console.log('number', number);
         setState({ currentPage: number });
 
-        if (state.searchValue) {
+        const body = bodyData();
+
+        if (!ObjIsEmpty(body)) {
             onFinish2(state.searchValue, number);
         } else {
             initialData(number);
@@ -446,24 +411,21 @@ const Invoice = () => {
                             </Form.Item>
 
                             <div style={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: '10px' }}>
-                                {/* { state.searchValue &&  */}
-                                    <Form.Item>
-                                        <Button
-                                            type="primary"
-                                            htmlType="submit"
-                                            onClick={() => {
-                                                form.resetFields();
-
-                                            }}
-                                            style={{ width: '100px' }}
-                                        >
-                                            Clear
-                                        </Button>
-                                    </Form.Item>
-                                {/* } */}
                                 <Form.Item>
                                     <Button type="primary" htmlType="submit" style={{ width: '100px' }}>
                                         Search
+                                    </Button>
+                                </Form.Item>
+                                <Form.Item>
+                                    <Button
+                                        type="primary"
+                                        htmlType="submit"
+                                        onClick={() => {
+                                            form.resetFields();
+                                        }}
+                                        style={{ width: '100px' }}
+                                    >
+                                        Clear
                                     </Button>
                                 </Form.Item>
                             </div>
@@ -544,7 +506,7 @@ const Invoice = () => {
                             {/* <Space> */}
                             <div className="form-btn-main">
                                 <Space>
-                                    <Button danger htmlType="submit" onClick={() => onClose()}>
+                                    <Button danger htmlType="submit" onClick={() => onClose()} loading={state.btnLoading}>
                                         Cancel
                                     </Button>
                                     <Button type="primary" htmlType="submit">
