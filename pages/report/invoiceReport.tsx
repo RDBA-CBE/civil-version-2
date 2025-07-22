@@ -6,12 +6,15 @@ import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import dayjs from 'dayjs';
 import router from 'next/router';
-import { baseUrl, roundNumber } from '@/utils/function.util';
+import { baseUrl, ObjIsEmpty, roundNumber, useSetState } from '@/utils/function.util';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import IconEye from '@/components/Icon/IconEye';
 import { DownloadOutlined, EyeOutlined } from '@ant-design/icons';
 import html2canvas from 'html2canvas';
+import Models from '@/imports/models.import';
+import Pagination from '@/components/pagination/pagination';
+import IconLoader from '@/components/Icon/IconLoader';
 
 const InvoiceReport = () => {
     const [form] = Form.useForm();
@@ -20,6 +23,18 @@ const InvoiceReport = () => {
     const [loading, setLoading] = useState(false);
     const [formFields, setFormFields] = useState<any>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const [state, setState] = useSetState({
+        page: 1,
+        pageSize: 10,
+        total: 0,
+        currentPage: 1,
+        pageNext: null,
+        pagePrev: null,
+        invoiceReportList: [],
+        search: '',
+        btnLoading: false,
+    });
 
     // get GetExpenseReport datas
     useEffect(() => {
@@ -66,82 +81,72 @@ const InvoiceReport = () => {
     const columns = [
         {
             title: 'Invoice No',
-            dataIndex: 'invoice_no',
+            // dataIndex: 'invoice_no',
             key: 'invoice_no',
             className: 'singleLineCell',
+            render: (record: any) => {
+                console.log('record', record);
+
+                return <div>{record.invoice.invoice_no}</div>;
+            },
         },
         {
             title: 'Customer',
-            dataIndex: 'customer',
+            // dataIndex: 'customer',
             key: 'customer',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{record.invoice.customer}</div>;
+            },
         },
         {
             title: 'Project Name',
-            dataIndex: 'project_name',
+            // dataIndex: 'project_name',
             key: 'project_name',
             className: 'singleLineCell',
             width: 150,
+            render: (record: any) => {
+                return <div>{record.invoice.project_name}</div>;
+            },
         },
         {
             title: 'Advance',
-            dataIndex: 'advance',
+            // dataIndex: 'advance',
             key: 'advance',
             className: 'singleLineCell',
             render: (record: any) => {
-                return <div>{roundNumber(record)}</div>;
+                return <div>{roundNumber(record.invoice.advance)}</div>;
             },
         },
-        // {
-        //     title: 'Discount',
-        //     dataIndex: 'discount',
-        //     key: 'discount',
-        //     className: 'singleLineCell',
-        //     width: 150,
-        // },
-
-        // {
-        //     title: 'Tax',
-        //     dataIndex: 'tax',
-        //     key: 'tax',
-        //     className: 'singleLineCell',
-        //     width: 150,
-        // },
-
-        // {
-        //     title: 'File',
-        //     dataIndex: 'file',
-        //     key: 'file',
-        //     className: 'singleLineCell',
-        //     render: (text:any, record:any) => (
-        //         <a href={record.file} target="_blank" rel="noopener noreferrer">Download</a>
-        //     ),
-        // },
+        
 
         {
             title: 'Total Amount',
-            dataIndex: 'total_amount',
+            // dataIndex: 'total_amount',
             key: 'total_amount',
             className: 'singleLineCell',
             render: (record: any) => {
-                return <div>{roundNumber(record)}</div>;
+                return <div>{roundNumber(record.invoice.total_amount)}</div>;
             },
         },
         {
             title: 'Balance',
-            dataIndex: 'balance',
+            // dataIndex: 'balance',
             key: 'balance',
             className: 'singleLineCell',
             render: (record: any) => {
-                return <div>{roundNumber(record)}</div>;
+                return <div>{roundNumber(record.invoice.balance)}</div>;
             },
         },
         {
             title: 'Invoice Date',
-            dataIndex: 'date',
+            // dataIndex: 'date',
             key: 'date',
             className: 'singleLineCell',
             width: 150,
+            render: (record: any) => {
+                return <div>{record.invoice.date}</div>;
+            },
         },
         {
             title: 'File',
@@ -150,11 +155,11 @@ const InvoiceReport = () => {
             className: 'singleLineCell',
             width: 150,
             render: (text: any, record: any) => {
-                console.log('✌️record --->', record?.invoice_file);
+                console.log('✌️record --->', record?.invoice.invoice_file);
                 return (
                     <>
                         {record?.invoice_file ? (
-                            <a href={record.invoice_file} target="_blank" rel="noopener noreferrer">
+                            <a href={record.invoice.invoice_file} target="_blank" rel="noopener noreferrer">
                                 Download
                             </a>
                         ) : (
@@ -164,201 +169,228 @@ const InvoiceReport = () => {
                 );
             },
         },
-        // {
-        //     title: 'TDS Amount',
-        //     dataIndex: 'tds_amount',
-        //     key: 'tds_amount',
-        //     className: 'singleLineCell',
-        // },
-        // {
-        //     title: 'Date',
-        //     dataIndex: 'date',
-        //     key: 'date',
-        //     className: 'singleLineCell',
-        // },
-
-        // {
-        //     title: 'Invoice Image',
-        //     dataIndex: 'invoice_image',
-        //     key: 'invoice_image',
-        //     className: 'singleLineCell',
-        // },
+        
         {
             title: 'Completed',
-            dataIndex: 'completed',
+            // dataIndex: 'completed',
             key: 'completed',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{record.invoice.completed}</div>;
+            },
         },
-        // {
-        //     title: `Actions`,
-        //     dataIndex: 'actions',
-        //     key: 'actions',
-        //     className: 'singleLineCell',
-        //     render: (text: any, record: any) => {
-        //         console.log('✌️record --->', record);
-        //         return (
-        //             <Space>
-        //                 <Tooltip title="View Invoice Preview">
-        //                     <EyeOutlined style={{ fontSize: '18px' }} onClick={() => router.push(`/invoice/preview?id=${record.id}`)} aria-label="View Invoice Preview" />
-        //                 </Tooltip>
-        //                 <Tooltip title="Download Invoice">
-        //                     <DownloadOutlined style={{ fontSize: '18px' }} onClick={() => handleDownloadPDF(record)} aria-label="Download Invoice" />
-        //                 </Tooltip>
-        //             </Space>
-        //         );
-        //     },
-        // },
-
-        // {
-        //     title: 'Place Of Testing',
-        //     dataIndex: 'place_of_testing',
-        //     key: 'place_of_testing',
-        //     className: 'singleLineCell',
-        // },
+        
     ];
 
     // export to excel format
-    const exportToExcel = async (values: any) => {
-        console.log('✌️values --->', values);
 
-        const selectedDate = values.month;
-        const year = selectedDate?.year();
 
-        // Construct the body object with the selected year and month
-        const body = {
-            year: year,
-        };
+const exportToExcel = async (values: any) => {
+    setState({ loading: true });
 
-        console.log('Body for API request:', body);
-        console.log('dataSource', dataSource);
+    const selectedDate = values.month;
+    const year = selectedDate?.year();
 
-        const fromDate = dayjs(`${year}-04-01`);
-        const toDate = dayjs(`${year + 1}-03-31`);
+    const fromDate = dayjs(`${year}-04-01`);
+    const toDate = dayjs(`${year + 1}-03-31`);
 
-        const filteredData = dataSource.filter((item: any) => {
-            if (!item.date) return false;
-            const itemDate = dayjs(item.date);
-            return itemDate.isAfter(fromDate.subtract(1, 'day')) && itemDate.isBefore(toDate.add(1, 'day'));
+    // Filter body for API
+    
+      const body = {
+                from_date: state.searchValue?.start_date ? dayjs(state.searchValue?.start_date).format('YYYY-MM-DD') : '',
+                to_date: state.searchValue?.end_date ? dayjs(state.searchValue?.end_date).format('YYYY-MM-DD') : '',
+                invoice_no: state.searchValue?.invoice_no ? state.searchValue?.invoice_no : '',
+                project_name: state.searchValue?.project_name ? state.searchValue?.project_name : '',
+                customer: state.searchValue?.customer ? state.searchValue?.customer : '',
+            };
+
+    let allData: any[] = [];
+    let currentPage = 1;
+    let hasNext = true;
+
+    try {
+        while (hasNext) {
+            let res: any;
+            if (!ObjIsEmpty(bodyData())) {
+                res = await Models.invoiceReport.filter(body, currentPage);
+            } else {
+                res = await Models.invoiceReport.invoiceReportList(currentPage);
+                
+            }
+
+            allData = allData.concat(res?.results || []);
+
+            if (res?.next) {
+                currentPage += 1;
+            } else {
+                hasNext = false;
+            }
+        }
+
+        // Filter again by FY year range (in case backend didn't use date filter)
+        const filteredData = allData.filter((item: any) => {
+            const rawDate = item?.invoice?.date;
+            if (!rawDate) return false;
+
+            const itemDate = dayjs(rawDate);
+            return (
+                itemDate.isAfter(fromDate.subtract(1, 'day')) &&
+                itemDate.isBefore(toDate.add(1, 'day'))
+            );
         });
 
-        console.log('filteredData', filteredData);
+        console.log("filteredData",filteredData);
+        
 
         const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Sheet1');
+        const worksheet = workbook.addWorksheet('Invoice Report');
 
-        // Add header row
-        worksheet.addRow(columns.map((column) => column.title));
+        // Header row
+        worksheet.addRow([
+            'Invoice No',
+            'Customer',
+            'Project Name',
+            'Advance',
+            'Total Amount',
+            'Balance',
+            'Date',
+            'File',
+            'Completed',
+        ]);
 
-        // Add data rows
-
-        filteredData.forEach((row) => {
-            const rowData: any = [];
-            columns.forEach((column) => {
-                if (column.dataIndex === 'invoice_file') {
-                    // Add hyperlink in the specific column
-                    rowData.push({
-                        text: row[column.dataIndex], // Text displayed for the link
-                        hyperlink: row[column.dataIndex], // URL for the link
-                    });
-                } else {
-                    rowData.push(row[column.dataIndex]);
-                }
-            });
-            worksheet.addRow(rowData);
+        // Data rows
+        filteredData.forEach((row: any) => {
+            worksheet.addRow([
+                row.invoice.invoice_no,
+                row.invoice.customer,
+                row.invoice.project_name,
+                roundNumber(row.invoice.advance),
+                roundNumber(row.invoice.total_amount),
+                roundNumber(row.invoice.balance),
+                row.invoice.date,
+                {
+                    text: 'Download',
+                    hyperlink: row.invoice.invoice_file,
+                },
+                row.invoice.completed,
+            ]);
         });
 
-        // Generate a Blob containing the Excel file
+        // Save
         const blob = await workbook.xlsx.writeBuffer();
-
-        // Use file-saver to save the Blob as a file
         FileSaver.saveAs(
             new Blob([blob], {
                 type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             }),
             `Invoice-Report-${year}.xlsx`
         );
-    };
+    } catch (error) {
+        console.error('❌ Error exporting Excel:', error);
+    } finally {
+        setState({ loading: false });
+        setIsModalOpen(false)
+    }
+};
+
+
 
     const onFinishFailedZip = (errorInfo: any) => {
         console.log('Failed:', errorInfo);
     };
 
     useEffect(() => {
-        const Token = localStorage.getItem('token');
-        setLoading(true);
-        const body = {
-            // expense_user: '',
-            start_date: '',
-            end_date: '',
-            invoice_number: '',
-            project_name: '',
-            customer: '',
-            // expense_category: '',
-        };
-
-        axios
-            .get(`${baseUrl}/invoice-reports/`, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-                params: { ...body },
-            })
-
-            .then((res: any) => {
-                console.log('✌️res --->', res);
-                const data = res?.data.map((item: any) => {
-                    return item.invoice;
-                });
-
-                // console.log(res?.data.map((item:any)=>{return item.invoice}));
-
-                // console.log(data);
-
-                setDataSource(data);
-                setLoading(false);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
-                setLoading(false);
-            });
+        initialData();
     }, []);
 
-    console.log('data', dataSource);
+    const initialData = async (page = 1) => {
+        try {
+            setState({
+                loading: true,
+            });
+
+            const res: any = await Models.invoiceReport.invoiceReportList(page);
+            setState({
+                invoiceReportList: res?.results,
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
+            });
+        } catch (error) {
+            setState({ loading: false });
+            console.log('✌️error --->', error);
+        }
+    };
+
+    console.log('data', state.invoiceReportList);
+
+    const bodyData = () => {
+        const body: any = {};
+        if (state.searchValue) {
+            if (state.searchValue?.customer) {
+                body.customer = state.searchValue.customer;
+            }
+            if (state.searchValue?.start_date) {
+                body.from_date = state.searchValue.start_date;
+            }
+
+            if (state.searchValue?.project_name) {
+                body.project_name = state.searchValue.project_name;
+            }
+            if (state.searchValue?.end_date) {
+                body.to_date = state.searchValue.end_date;
+            }
+            if (state.searchValue?.invoice_no) {
+                body.invoice_no = state.searchValue.invoice_no;
+            }
+        }
+
+        return body;
+    };
 
     // form submit
-    const onFinish = (values: any) => {
-        const Token = localStorage.getItem('token');
+    const onFinish = async (values: any, page = 1) => {
+        try {
+            setState({ loading: true });
+            const body = {
+                from_date: values?.start_date ? dayjs(values?.start_date).format('YYYY-MM-DD') : '',
+                to_date: values?.end_date ? dayjs(values?.end_date).format('YYYY-MM-DD') : '',
+                invoice_no: values?.invoice_no ? values?.invoice_no : '',
+                project_name: values?.project_name ? values?.project_name : '',
+                customer: values?.customer ? values?.customer : '',
+            };
 
-        const body = {
-            start_date: values?.start_date ? dayjs(values?.start_date).format('YYYY-MM-DD') : '',
-            end_date: values?.end_date ? dayjs(values?.end_date).format('YYYY-MM-DD') : '',
-            invoice_number: values?.invoice_no ? values?.invoice_no : '',
-            project_name: values?.project_name ? values?.project_name : '',
-            customer: values?.customer ? values?.customer : '',
-        };
+            const res: any = await Models.invoiceReport.filter(body, page);
 
-        axios
-            .get(`${baseUrl}/invoice-reports/`, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-                params: { ...body },
-            })
-            .then((res: any) => {
-                const data = res?.data?.map((item: any) => {
-                    return item.invoice;
-                });
-
-                setDataSource(data);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
+            setState({
+                invoiceReportList: res?.results,
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
+                searchValue: values,
             });
-        form.resetFields();
+        } catch (error) {
+            setState({ loading: false });
+
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const handlePageChange = (number: any) => {
+        setState({ currentPage: number });
+
+        const body = bodyData();
+
+        if (!ObjIsEmpty(body)) {
+            onFinish(state.searchValue, number);
+        } else {
+            initialData(number);
+        }
+
+        return number;
     };
 
     const onFinishFailed = (errorInfo: any) => {};
@@ -369,30 +401,62 @@ const InvoiceReport = () => {
     };
 
     // download
-    const handleDownloadAll = () => {
-        console.log('dataSource', dataSource);
+    const handleDownloadAll = async () => {
+        setState({ loading: true });
+        const { searchValue } = state;
+
+        const body = {
+            from_date: searchValue?.start_date ? dayjs(searchValue?.start_date).format('YYYY-MM-DD') : '',
+            to_date: searchValue?.end_date ? dayjs(searchValue?.end_date).format('YYYY-MM-DD') : '',
+            invoice_no: searchValue?.invoice_no || '',
+            project_name: searchValue?.project_name || '',
+            customer: searchValue?.customer || '',
+        };
+
+        let allData: any[] = [];
+        let currentPage = 1;
+        let hasNext = true;
+
+        // Fetch all paginated data
+        while (hasNext) {
+            let res: any;
+
+            if (!ObjIsEmpty(body)) {
+                res = await Models.invoiceReport.filter(body, currentPage);
+            } else {
+                res = await Models.invoiceReport.invoiceReportList(currentPage);
+            }
+
+            allData = allData.concat(res?.results || []);
+           
+
+            if (res?.next) {
+                currentPage += 1;
+            } else {
+                hasNext = false;
+            }
+        }
+
+         setState({ loading: false });
 
         const doc: any = new jsPDF();
         doc.text('Invoice Report', 14, 16);
 
         const headers = ['Invoice No', 'Customer', 'Project Name', 'Advance Amount', 'Total Amount', 'Balance Amount', 'Date', 'File', 'Completed'];
 
-        const tableData = dataSource.map((item: any) => {
-            console.log(item);
+        const tableData = allData.map((item: any) => {
             return [
-                item.invoice_no,
-                item.customer,
-                item.project_name,
-                item.advance,
-                item.total_amount,
-                item.balance,
-                dayjs(item.date).format('DD-MM-YYYY'),
-                item.invoice_file, // This is your "File" column
-                item.completed,
+                item.invoice.invoice_no,
+                item.invoice.customer,
+                item.invoice.project_name,
+                item.invoice.advance,
+                item.invoice.total_amount,
+                item.invoice.balance,
+                dayjs(item.invoice.date).format('DD-MM-YYYY'),
+                item.invoice.invoice_file,
+                item.invoice.completed,
             ];
         });
-
-        console.log(tableData);
 
         doc.autoTable({
             head: [headers],
@@ -401,21 +465,19 @@ const InvoiceReport = () => {
             margin: { horizontal: 1 },
             theme: 'striped',
             columnStyles: {
-                0: { cellWidth: 20 }, // Column 1 (ID) - small width
-                1: { cellWidth: 20 }, // Column 2 (Expense User) - wider
-                2: { cellWidth: 20 }, // Column 3 (Expense Amount) - medium width
-                3: { cellWidth: 20 }, // Column 4 (Expense Date) - medium width
-                4: { cellWidth: 20 }, // Column 5 (File) - wide width for the link column
-                5: { cellWidth: 20 }, // Column 5 (File) - wide width for the link column
-                6: { cellWidth: 20 }, // Column 5 (File) - wide width for the link column
-                7: { cellWidth: 40 }, // Column 5 (File) - wide width for the link column
-                8: { cellWidth: 20 }, // Column 5 (File) - wide width for the link column
+                0: { cellWidth: 20 },
+                1: { cellWidth: 20 },
+                2: { cellWidth: 20 },
+                3: { cellWidth: 20 },
+                4: { cellWidth: 20 },
+                5: { cellWidth: 20 },
+                6: { cellWidth: 20 },
+                7: { cellWidth: 40 },
+                8: { cellWidth: 20 },
             },
             didDrawCell: (data: any) => {
-                console.log('✌️data --->', data.column);
                 if (data.column.index === 7) {
-                    const fileUrl = data.cell.raw; // The file URL that should be clickable
-
+                    const fileUrl = data.cell.raw;
                     if (fileUrl) {
                         doc.setTextColor(0, 0, 255);
                         doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url: fileUrl });
@@ -424,7 +486,6 @@ const InvoiceReport = () => {
             },
         });
 
-        // Save PDF with a name
         doc.save('Invoice_Report.pdf');
     };
 
@@ -518,6 +579,18 @@ const InvoiceReport = () => {
                                         Search
                                     </Button>
                                 </Form.Item>
+                                <Form.Item>
+                                    <Button
+                                        type="primary"
+                                        htmlType="submit"
+                                        onClick={() => {
+                                            form.resetFields();
+                                        }}
+                                        style={{ width: '100px' }}
+                                    >
+                                        Clear
+                                    </Button>
+                                </Form.Item>
                             </div>
                         </div>
                     </Form>
@@ -535,8 +608,9 @@ const InvoiceReport = () => {
                             >
                                 Export to Excel
                             </Button>
+
                             <Button type="primary" onClick={handleDownloadAll}>
-                                Download PDF
+                                {state.loading ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2 " /> : 'Download PDF'}
                             </Button>
 
                             {/* <Search placeholder="input search text" onChange={inputChange} enterButton className='search-bar' /> */}
@@ -545,17 +619,32 @@ const InvoiceReport = () => {
                 </div>
                 <div className="table-responsive">
                     <Table
-                        dataSource={dataSource}
+                        dataSource={state.invoiceReportList}
                         columns={columns}
                         pagination={false}
                         scroll={scrollConfig}
                         loading={{
-                            spinning: loading, // This enables the loading spinner
+                            spinning: state.loading, // This enables the loading spinner
                             indicator: <Spin size="large" />,
                             tip: 'Loading data...', // Custom text to show while loading
                         }}
                     />
                 </div>
+                {state.invoiceReportList?.length > 0 && (
+                    <div>
+                        <div
+                            className="mb-20 "
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <Pagination totalPage={state.total} itemsPerPage={10} currentPages={state.currentPage} activeNumber={handlePageChange} />
+                            {/* <Pagination activeNumber={handlePageChange} totalPages={state.total} currentPages={state.currentPage} /> */}
+                        </div>
+                    </div>
+                )}
             </div>
 
             <Modal title="Export to Excel" open={isModalOpen} onOk={handleOk} onCancel={handleCancel} footer={false}>
@@ -571,7 +660,8 @@ const InvoiceReport = () => {
                                     Cancel
                                 </Button>
                                 <Button type="primary" htmlType="submit">
-                                    Submit
+                                    {state.loading ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2 " /> : 'Submit'}
+                                    
                                 </Button>
                             </Space>
                         </div>

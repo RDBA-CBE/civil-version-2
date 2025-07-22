@@ -60,6 +60,8 @@ const InvoiceFileUpload = () => {
             });
     }, []);
 
+    console.log('formFields', formFields);
+
     useEffect(() => {
         if (editRecord) {
             setDrawerTitle('Edit File Upload');
@@ -424,19 +426,13 @@ const InvoiceFileUpload = () => {
     const bodyData = () => {
         const body: any = {};
         if (state.searchValue) {
-            if (state.searchValue?.completed) {
-                body.completed = state.searchValue.completed;
-            }
-            if (state.searchValue?.customer) {
-                body.customer = state.searchValue.customer;
+            if (state.searchValue?.category) {
+                body.category_name = state.searchValue.category_name;
             }
             if (state.searchValue?.from_date) {
                 body.from_date = state.searchValue.from_date;
             }
 
-            if (state.searchValue?.project_name) {
-                body.project_name = state.searchValue.project_name;
-            }
             if (state.searchValue?.to_date) {
                 body.to_date = state.searchValue.to_date;
             }
@@ -455,13 +451,13 @@ const InvoiceFileUpload = () => {
                 invoice_no: values.invoice_no ? values.invoice_no : '',
                 from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
                 to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
-                category: values.category ? values.category : '',
+                category_name: values.category ? values.category : '',
             };
 
             console.log('✌️body --->', body);
 
-            const res: any = await Models.invoice.filter(body, page);
-             setState({
+            const res: any = await Models.invoiceFile.filter(body, page);
+            setState({
                 invoiceFileList: res?.results,
                 currentPage: page,
                 pageNext: res?.next,
@@ -478,19 +474,18 @@ const InvoiceFileUpload = () => {
     };
 
     const handlePageChange = (number: any) => {
-            setState({ currentPage: number });
-    
-            const body = bodyData();
-    
-            if (!ObjIsEmpty(body)) {
-                onFinish2(state.searchValue, number);
-            } else {
-                initialData(number);
-            }
-    
-            return number;
-        };
-    
+        setState({ currentPage: number });
+
+        const body = bodyData();
+
+        if (!ObjIsEmpty(body)) {
+            onFinish2(state.searchValue, number);
+        } else {
+            initialData(number);
+        }
+
+        return number;
+    };
 
     const onFinishFailed2 = (errorInfo: any) => {};
 
@@ -541,6 +536,21 @@ const InvoiceFileUpload = () => {
                                         Search
                                     </Button>
                                 </Form.Item>
+
+                                <Form.Item>
+                                    <Button
+                                    type="primary"
+                                    htmlType="submit"
+                                    onClick={() => {
+                                        form.resetFields();
+                                    }}
+                                    style={{ width: '150px' }}
+                                >
+                                    Clear
+                                </Button>
+                                </Form.Item>
+
+                                
                             </div>
                         </div>
                     </Form>

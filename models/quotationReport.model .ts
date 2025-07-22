@@ -1,9 +1,9 @@
 import instance from '@/utils/axios.util';
 
-const invoiceFile = {
-    invoiceFileList: (page: any) => {
+const quotationReport = {
+    quotationReportList: (page: any) => {
         let promise = new Promise((resolve, reject) => {
-            let url = `invoice_file/?page=${page}`;
+            let url = `quotation-reports/?page=${page}`;
             instance()
                 .get(url)
                 .then((res) => {
@@ -23,10 +23,10 @@ const invoiceFile = {
 
      filter: (body: any, page: any) => {
             let promise = new Promise((resolve, reject) => {
-                let url = `invoice_file/?page=${page}`;
-             
-                if (body?.category_name) {
-                    url += `&category=${encodeURIComponent(body.category_name)}`;
+                let url = `quotation-reports/?page=${page}`;
+              
+                if (body?.customer) {
+                    url += `&customer=${encodeURIComponent(body.customer)}`;
                 }
                 if (body?.to_date) {
                     url += `&to_date=${encodeURIComponent(body.to_date)}`;
@@ -34,11 +34,6 @@ const invoiceFile = {
                 if (body?.from_date) {
                     url += `&from_date=${encodeURIComponent(body.from_date)}`;
                 }
-               
-
-            if (body?.invoice_no) {
-                url += `&invoice_no=${encodeURIComponent(body.invoice_no)}`;
-            }
                 
     
                 instance()
@@ -59,4 +54,4 @@ const invoiceFile = {
         },
 }
 
-export default invoiceFile;
+export default quotationReport;
