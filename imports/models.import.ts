@@ -9,6 +9,7 @@ import material from "@/models/material.model";
 import paymentPending from "@/models/paymentPending.model";
 import qoutation from "@/models/qoutation.model";
 import test from "@/models/test.model";
+import preview from "@/models/preview.nodel";
 
 
 
@@ -25,7 +26,8 @@ export const Models = {
     city,
     expense,
     qoutation,
-    paymentPending
+    paymentPending,
+    preview
    
 
 };

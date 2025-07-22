@@ -1,9 +1,10 @@
 import { PrinterOutlined } from '@ant-design/icons';
 import React from 'react';
 import IconEye from '../Icon/IconEye';
+import { roundNumber } from '@/utils/function.util';
 
 export default function invoiceData(props: any) {
-    const { data, checkedItems, invoiceId } = props;
+    const { data, checkedItems, invoiceId, testList, paymentList, taxData } = props;
 
     const handlePrintEmployee = (item: any) => {
         const id = item.id;
@@ -58,15 +59,7 @@ export default function invoiceData(props: any) {
                                 <label htmlFor="reciever-email" className="mb-0 w-1/3 ltr:mr-2 rtl:ml-2">
                                     Project Name
                                 </label>
-                                <input
-                                    id="reciever-email"
-                                    type="text"
-                                    className="form-input flex-1 cursor-not-allowed"
-                                    name="project_name"
-                                    value={data?.invoice?.project_name}
-                                    placeholder=""
-                                    disabled
-                                />
+                                <input id="reciever-email" type="text" className="form-input flex-1 cursor-not-allowed" name="project_name" value={data?.project_name} placeholder="" disabled />
                             </div>
                         </div>
                         <div className="w-full lg:w-1/2">
@@ -76,19 +69,19 @@ export default function invoiceData(props: any) {
                                 <label htmlFor="number" className="mb-0 w-1/3 ltr:mr-2 rtl:ml-2">
                                     Invoice Number
                                 </label>
-                                <input id="number" type="text" className="form-input flex-1 cursor-not-allowed" name="invoice_no" defaultValue={data?.invoice?.invoice_no} disabled />
+                                <input id="number" type="text" className="form-input flex-1 cursor-not-allowed" name="invoice_no" defaultValue={data?.invoice_no} disabled />
                             </div>
                             <div className="mt-4 flex items-center">
                                 <label htmlFor="startDate" className="mb-0 w-1/3 ltr:mr-2 rtl:ml-2">
                                     Invoice Date
                                 </label>
-                                <input id="startDate" type="date" className="form-input flex-1 cursor-not-allowed" name="date" value={data?.invoice?.date} disabled />
+                                <input id="startDate" type="date" className="form-input flex-1 cursor-not-allowed" name="date" value={data?.date} disabled />
                             </div>
                             <div className="mt-4 flex items-center">
                                 <label htmlFor="place_of_testing" className="mb-0 w-1/3 ltr:mr-2 rtl:ml-2">
                                     Place of testing
                                 </label>
-                                <input id="place_of_testing" type="text" className="form-input flex-1 cursor-not-allowed" name="place_of_testing" value={data?.invoice?.place_of_testing} disabled />
+                                <input id="place_of_testing" type="text" className="form-input flex-1 cursor-not-allowed" name="place_of_testing" value={data?.place_of_testing} disabled />
                             </div>
                         </div>
                     </div>
@@ -107,14 +100,14 @@ export default function invoiceData(props: any) {
                                 </tr>
                             </thead>
                             <tbody>
-                                {data?.invoice_tests?.length > 0 ? (
-                                    data?.invoice_tests?.map((item: any, index: any) => {
+                                {testList?.length > 0 ? (
+                                    testList?.map((item: any, index: any) => {
                                         return (
                                             <tr className="align-top" key={item.id}>
                                                 <td>{item.test_name}</td>
-                                                <td>{Number(item?.quantity)}</td>
+                                                <td>{Number(item?.qty)}</td>
                                                 <td> {Number(item?.price_per_sample)} </td>
-                                                <td>{item.quantity * item.price_per_sample}</td>
+                                                <td>{item.qty * item.price_per_sample}</td>
                                                 <td>{item?.completed}</td>
                                                 <td>
                                                     <PrinterOutlined rev={undefined} className="edit-icon" onClick={() => handlePrintEmployee(item)} />
@@ -147,14 +140,14 @@ export default function invoiceData(props: any) {
                                 </tr>
                             </thead>
                             <tbody>
-                                {data?.payments?.length > 0 ? (
-                                    data?.payments?.map((item: any, index: any) => {
+                                {paymentList?.length > 0 ? (
+                                    paymentList?.map((item: any, index: any) => {
                                         return (
                                             <tr className="align-top" key={item.id}>
                                                 <td>{item?.payment_mode}</td>
                                                 <td>{item?.cheque_number}</td>
                                                 <td>{item?.upi} </td>
-                                                <td>{item?.amount}</td>
+                                                <td>{roundNumber(item?.amount)}</td>
                                                 <td>{item?.date}</td>
                                             </tr>
                                         );
@@ -182,37 +175,40 @@ export default function invoiceData(props: any) {
                                     type="text"
                                     className="form-input flex-1 cursor-not-allowed"
                                     name="test-total-amount"
-                                    value={data?.invoice?.amount}
+                                    // value={data?.invoice?.amount}
+                                    value={roundNumber(data?.total_amount)}
                                     placeholder="Enter Sub Total"
                                     disabled
                                 />
                             </div>
-                            <div className="mt-4 flex items-center justify-between">
-                                <label htmlFor="bank-name" className="mb-0 w-1/3 ltr:mr-2 rtl:ml-2">
-                                    Discount (%)
-                                </label>
-                                <input
-                                    id="bank-name"
-                                    type="text"
-                                    className="form-input flex-1 cursor-not-allowed"
-                                    name="discount"
-                                    value={data?.customer?.customer_discount?.discount}
-                                    placeholder="Enter Discount"
-                                    disabled={true}
-                                />
-                            </div>
+                            {data?.invoice_discounts?.length > 0 && data?.invoice_discounts[0]?.discount > 0 && (
+                                <div className="mt-4 flex items-center justify-between">
+                                    <label htmlFor="bank-name" className="mb-0 w-1/3 ltr:mr-2 rtl:ml-2">
+                                        Discount (%)
+                                    </label>
+                                    <input
+                                        id="bank-name"
+                                        type="text"
+                                        className="form-input flex-1 cursor-not-allowed"
+                                        name="discount"
+                                        value={roundNumber(data?.invoice_discounts[0]?.discount)}
+                                        placeholder="Enter Discount"
+                                        disabled={true}
+                                    />
+                                </div>
+                            )}
                             <div className="mt-4 flex items-center justify-between">
                                 <label htmlFor="bank-name" className="mb-0 w-1/3 ltr:mr-2 rtl:ml-2">
                                     Before Tax
                                 </label>
-                                <input id="bank-name" type="text" className="form-input flex-1" name="before_tax" value={data?.before_tax} placeholder="Enter Before Tax" disabled />
+                                <input id="bank-name" type="text" className="form-input flex-1" name="before_tax" value={roundNumber(data?.before_tax_amount)} placeholder="Enter Before Tax" disabled />
                             </div>
                             <div className="mt-4 flex items-center justify-between">
                                 <label htmlFor="country" className="mb-0 w-1/3 ltr:mr-2 rtl:ml-2">
                                     Tax
                                 </label>
 
-                                {data?.taxs?.map((item: any) => {
+                                {data?.tax?.map((item: any) => {
                                     return (
                                         <div key={item.id}>
                                             <label>
@@ -223,26 +219,29 @@ export default function invoiceData(props: any) {
                                     );
                                 })}
                             </div>
-                            <div className="flex items-center justify-between" style={{ marginTop: '20px' }}>
-                                {/* {formatTotal() && <p dangerouslySetInnerHTML={{ __html: formatTotal() }}></p>} */}
-                            </div>
+                            {taxData && (
+                                <strong className="flex items-center justify-between" style={{ marginTop: '20px' }}>
+                                    {taxData}
+                                </strong>
+                            )}
+                            {/* {formatTotal() && <p dangerouslySetInnerHTML={{ __html: formatTotal() }}></p>} */}
                             <div className="mt-4 flex items-center justify-between">
                                 <label htmlFor="bank-name" className="mb-0 w-1/3 ltr:mr-2 rtl:ml-2">
                                     After Tax
                                 </label>
-                                <input id="bank-name" type="text" className="form-input flex-1" name="after_tax" value={data?.afterTax} placeholder="Enter After Tax" disabled />
+                                <input id="bank-name" type="text" className="form-input flex-1" name="after_tax" value={roundNumber(data?.after_tax_amount)} placeholder="Enter After Tax" disabled />
                             </div>
                             <div className="mt-4 flex items-center justify-between">
                                 <label htmlFor="swift-code" className="mb-0 w-1/3 ltr:mr-2 rtl:ml-2">
                                     Advance
                                 </label>
-                                <input id="swift-code" type="text" className="form-input flex-1" name="advance" value={data?.invoice?.advance} disabled />
+                                <input id="swift-code" type="text" className="form-input flex-1" name="advance" value={roundNumber(data?.advance)} disabled />
                             </div>
                             <div className="mt-4 flex items-center justify-between font-semibold">
                                 <label htmlFor="swift-code" className="mb-0 w-1/3 ltr:mr-2 rtl:ml-2">
                                     Balance
                                 </label>
-                                <input id="swift-code" type="text" className="form-input flex-1" name="balance" value={data?.balance} disabled />
+                                <input id="swift-code" type="text" className="form-input flex-1" name="balance" value={roundNumber(data?.balance)} disabled />
                             </div>
                             <div className="mt-4 flex items-center justify-start font-semibold">
                                 <label htmlFor="swift-code" className="mb-0 w-1/3 ltr:mr-2 rtl:ml-2">
@@ -255,11 +254,11 @@ export default function invoiceData(props: any) {
                                     style={{ marginRight: '20px' }}
                                     name="completed"
                                     value="Yes"
-                                    checked={data?.invoice?.completed === 'Yes'}
+                                    checked={data?.completed === 'Yes'}
                                     className="cursor-not-allowed"
                                 />
                                 <label style={{ marginRight: '3px', marginBottom: '0px' }}>No</label>
-                                <input id="swift-code-no" type="radio" name="completed" value="No" checked={data?.invoice?.completed === 'No'} className="cursor-not-allowed" />
+                                <input id="swift-code-no" type="radio" name="completed" value="No" checked={data?.completed === 'No'} className="cursor-not-allowed" />
                             </div>
 
                             <div style={{ marginTop: '50px' }}>

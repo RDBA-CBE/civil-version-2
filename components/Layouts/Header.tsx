@@ -173,7 +173,7 @@ const Header = () => {
                         </Link>
                         <button
                             type="button"
-                            className="mobile-menu collapse-icon flex  rounded-full bg-white-light/40 p-2 hover:bg-white-light/90 hover:text-primary ltr:ml-2 rtl:mr-2 dark:bg-dark/40 dark:text-[#d0d2d6] dark:hover:bg-dark/60 dark:hover:text-primary "
+                            className="mobile-menu collapse-icon flex  rounded-full bg-white-light/40 p-2 hover:bg-white-light/90 hover:text-primary dark:bg-dark/40 dark:text-[#d0d2d6] dark:hover:bg-dark/60 dark:hover:text-primary ltr:ml-2 rtl:mr-2 "
                             onClick={() => dispatch(toggleSidebar())}
                         >
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -223,7 +223,7 @@ const Header = () => {
                 </div>
 
                 {/* horizontal menu */}
-                <ul className="horizontal-menu system-navbar flex border-t border-[#ebedf2] bg-white px-6 py-1.5 font-semibold text-black rtl:space-x-reverse dark:border-[#191e3a] dark:bg-black dark:text-white-dark lg:space-x-1.5 xl:space-x-8">
+                <ul className="horizontal-menu system-navbar flex border-t border-[#ebedf2] bg-white px-6 py-1.5 font-semibold text-black dark:border-[#191e3a] dark:bg-black dark:text-white-dark lg:space-x-1.5 xl:space-x-8 rtl:space-x-reverse">
                     <li className="menu nav-item relative">
                         <button type="button" className="nav-link">
                             <div className="flex items-center">
@@ -298,6 +298,10 @@ const Header = () => {
                             <li>
                                 <Link href="/people/employee">{t('Employee')}</Link>
                             </li>
+
+                            <li>
+                                <Link href="/people/manager">{t('Manager')}</Link>
+                            </li>
                         </ul>
                     </li>
                     <li className="menu nav-item relative">
@@ -328,7 +332,7 @@ const Header = () => {
                             </div>
                         </button>
                         <ul className="sub-menu">
-                        <li>
+                            <li>
                                 <Link href="/master/discount">{t('Discount')}</Link>
                             </li>
                             <li>

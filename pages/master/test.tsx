@@ -5,10 +5,11 @@ import { Form, Input, InputNumber, Select, Spin } from 'antd';
 import { EditOutlined, EyeOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import router from 'next/router';
-import { baseUrl, roundNumber, useSetState } from '@/utils/function.util';
+import { baseUrl, Dropdown, roundNumber, Success, useSetState } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import useDebounce from '@/components/useDebounce/useDebounce';
 import Models from '@/imports/models.import';
+import CustomSelect from '@/components/Select';
 
 const Test = () => {
     const { Search } = Input;
@@ -31,11 +32,16 @@ const Test = () => {
         currentPage: 1,
         pageNext: null,
         pagePrev: null,
+        materialCurrentPage: 1,
+        materialPageNext: null,
+        materialLoading: false,
+        materialList: [],
     });
 
     // get test
     useEffect(() => {
         getTest(1);
+        materialList(1);
     }, []);
 
     const debouncedSearch = useDebounce(state.search);
@@ -52,47 +58,63 @@ const Test = () => {
         }
     });
 
-    useEffect(() => {
-        const Token = localStorage.getItem('token');
+    const materialList = async (page: any) => {
+        try {
+            const body = bodyData();
+            setState({ materialLoading: true });
 
-        axios
-            .get(`${baseUrl}/create_test/`, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res) => {
-                setFormFields(res.data);
-            })
-            .catch((error) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
+            const res: any = await Models.material.materialList(page, body);
+            const dropdown = Dropdown(res.results, 'material_name');
+            setState({
+                materialCurrentPage: page,
+                materialPageNext: res?.next,
+                materialLoading: false,
+                materialList: dropdown,
             });
-    }, []);
+        } catch (error) {
+            setState({ materialLoading: false });
+            console.log('✌️error --->', error);
+        }
+    };
 
-    // const getTest = () => {
-    //     const Token = localStorage.getItem('token');
-    //     setLoading(true);
+    const materialLoadMore = async (page: any) => {
+        try {
+            const body = bodyData();
+            setState({ materialLoading: true });
 
-    //     axios
-    //         .get(`${baseUrl}/test_list/`, {
-    //             headers: {
-    //                 Authorization: `Token ${Token}`,
-    //             },
-    //         })
-    //         .then((res: any) => {
-    //             setDataSource(res.data);
-    //             setFilterData(res.data);
-    //             setLoading(false);
-    //         })
-    //         .catch((error: any) => {
-    //             if (error.response.status === 401) {
-    //                 router.push('/');
-    //             }
-    //             setLoading(false);
-    //         });
-    // };
+            const res: any = await Models.material.materialList(page, body);
+            const dropdown = Dropdown(res.results, 'material_name');
+            setState({
+                materialCurrentPage: page,
+                materialPageNext: res?.next,
+                materialLoading: false,
+                materialList: [...state.materialList, ...dropdown],
+            });
+        } catch (error) {
+            setState({ materialLoading: false });
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const materialSearch = async (text: any) => {
+        try {
+            const body = {
+                search: text,
+            };
+
+            const res: any = await Models.material.materialList(1, body);
+            const dropdown = Dropdown(res.results, 'material_name');
+            setState({
+                materialCurrentPage: 1,
+                materialPageNext: res?.next,
+                materialLoading: false,
+                materialList: dropdown,
+            });
+        } catch (error) {
+            setState({ loading: false });
+            console.log('✌️error --->', error);
+        }
+    };
 
     const getTest = async (page: any) => {
         try {
@@ -153,12 +175,12 @@ const Test = () => {
     const showDrawer = (record: any) => {
         if (record) {
             const testRecord: any = {
-                material_name: record.material_name.material_name,
+                material_name: { value: record.material_name.id, label: record.material_name.material_name },
                 test_name: record.test_name,
                 price_per_piece: record.price_per_piece,
                 id: record.id,
             };
-
+            materialList(1);
             setEditRecord(testRecord);
             form.setFieldsValue(testRecord);
         } else {
@@ -265,14 +287,6 @@ const Test = () => {
     //     });
     // };
 
-    const inputChange = (e: any) => {
-        const searchValue = e.target.value.toLowerCase();
-        const filteredData = dataSource.filter(
-            (item: any) => item.test_name.toLowerCase().includes(searchValue) || item.material_name.toLowerCase().includes(searchValue) || item.price_per_piece.includes(searchValue)
-        );
-        setFilterData(searchValue ? filteredData : dataSource);
-    };
-
     const handlePageChange = (number: any) => {
         console.log('number', number);
         setState({ currentPage: number });
@@ -288,42 +302,34 @@ const Test = () => {
     };
 
     // form submit
-    const onFinish = (values: any) => {
-        const Token = localStorage.getItem('token');
+    const handleSubmit = async (values: any) => {
+        setState({ btnLoading: true });
+        try {
+            const body = {
+                material_name: values.material_name?.value,
+                test_name: values.test_name,
+                price_per_piece: values.price_per_piece,
+            };
 
-        if (editRecord) {
-            axios
-                .put(`${baseUrl}/edit_test/${editRecord.id}/`, values, {
-                    headers: {
-                        Authorization: `Token ${Token}`,
-                    },
-                })
-                .then((res: any) => {
-                    getTest(1);
-                    setOpen(false);
-                })
-                .catch((error: any) => {
-                    if (error.response.status === 401) {
-                        router.push('/');
-                    }
-                });
-        } else {
-            axios
-                .post(`${baseUrl}/create_test/`, values, {
-                    headers: {
-                        Authorization: `Token ${localStorage.getItem('token')}`,
-                    },
-                })
-                .then((res) => {
-                    getTest(1);
-                    setOpen(false);
-                    form.resetFields();
-                })
-                .catch((error: any) => {
-                    if (error.response.status === 401) {
-                        router.push('/');
-                    }
-                });
+            if (editRecord) {
+                const res = await Models.test.update(editRecord.id, body);
+                getTest(state.currentPage);
+                form.resetFields();
+                setOpen(false);
+                setState({ btnLoading: false });
+                Success('Test updated successfully');
+            } else {
+                const res = await Models.test.create(body);
+                getTest(state.currentPage);
+                setOpen(false);
+                form.resetFields();
+                setState({ btnLoading: false });
+                Success('Test created successfully');
+            }
+        } catch (error) {
+            setState({ btnLoading: false });
+
+            console.log('✌️error --->', error);
         }
     };
 
@@ -432,15 +438,25 @@ const Test = () => {
                 )}
 
                 <Drawer title={drawertitle} placement="right" width={600} onClose={onClose} open={open}>
-                    <Form name="basic" layout="vertical" form={form} initialValues={{ remember: true }} onFinish={onFinish} onFinishFailed={onFinishFailed} autoComplete="off">
+                    <Form name="basic" layout="vertical" form={form} initialValues={{ remember: true }} onFinish={handleSubmit} onFinishFailed={onFinishFailed} autoComplete="off">
                         <Form.Item label="Material Name" name="material_name" required={true} rules={[{ required: true, message: 'Please Select your Material Name!' }]}>
-                            <Select showSearch filterOption={(input: any, option: any) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}>
-                                {formFields?.materials?.map((val: any) => (
-                                    <Select.Option key={val.id} value={val.material_id}>
-                                        {val.material_name}
-                                    </Select.Option>
-                                ))}
-                            </Select>
+                            <CustomSelect
+                                onSearch={(data: any) => materialSearch(data)}
+                                value={state.material_name}
+                                options={state.materialList}
+                                className=" flex-1"
+                                onChange={(selectedOption: any) => {
+                                    form.setFieldsValue({ material_name: selectedOption });
+                                    materialList(state.materialCurrentPage);
+                                }}
+                                loadMore={() => {
+                                    if (state.materialPageNext) {
+                                        materialLoadMore(state.materialCurrentPage + 1);
+                                    }
+                                }}
+                                isSearchable
+                                filterOption={(input: string, option: any) => option.label.toLowerCase().includes(input.toLowerCase())}
+                            />
                         </Form.Item>
 
                         <Form.Item label="Test Name" name="test_name" required={true} rules={[{ required: true, message: 'Please input your Test Name!' }]}>
@@ -457,7 +473,7 @@ const Test = () => {
                                     <Button danger htmlType="submit" onClick={() => onClose()}>
                                         Cancel
                                     </Button>
-                                    <Button type="primary" htmlType="submit">
+                                    <Button type="primary" htmlType="submit" loading={state.btnLoading}>
                                         Submit
                                     </Button>
                                 </Space>

@@ -48,24 +48,6 @@ const Invoice = () => {
             });
     }, []);
 
-    // useEffect(() => {
-    //     axios
-    //         .get(`${baseUrl}/create_invoice/`, {
-    //             headers: {
-    //                 Authorization: `Token ${localStorage.getItem('token')}`,
-    //             },
-    //         })
-    //         .then((res) => {
-    //             console.log('useEffect --->', res);
-    //             setFormFields(res.data);
-    //         })
-    //         .catch((error: any) => {
-    //             if (error.response?.status === 401) {
-    //                 router.push('/');
-    //             }
-    //         });
-    // }, []);
-
     const getInvoice = async (page: number) => {
         try {
             const res: any = await Models.invoice.invoiceList(page);
@@ -190,7 +172,7 @@ const Invoice = () => {
                     <span onClick={() => handleEditClick(record)} style={{ cursor: 'pointer' }} className="edit-icon">
                         <EditOutlined rev={undefined} />
                     </span>
-                    {/* <DeleteOutlined style={{ color: 'red', cursor: 'pointer' }} onClick={() => handleDelete(record)} className="delete-icon" rev={undefined} /> */}
+                    <DeleteOutlined style={{ color: 'red', cursor: 'pointer' }} onClick={() => handleDelete(record)} className="delete-icon" rev={undefined} />
                 </Space>
             ),
         },
@@ -224,44 +206,62 @@ const Invoice = () => {
     };
 
     // form submit
-    const onFinish = (values: any) => {
-        setState({ btnLoading: true });
-        const Token = localStorage.getItem('token');
+    const handleSubmit = async (values: any) => {
+        try {
+            setState({ btnLoading: true });
 
-        const body = {
-            customer: values.customer,
-            project_name: values.project_name,
-            advance: values.advance,
-            balance: values.balance,
-            discount: values.discount,
-            sales_mode: values.sales_mode,
-            tax: values.tax,
-            id: values.id,
-            date: dayjs().format('YYYY-MM-DD'),
-        };
+            const body = {
+                customer: values.customer,
+                project_name: values.project_name,
+                advance: values.advance,
+                balance: values.balance,
+                discount: values.discount,
+                sales_mode: values.sales_mode,
+                tax: values.tax,
+                id: values.id,
+            };
 
-        axios
-            .post(`${baseUrl}/create_invoice/`, body, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res) => {
-                initialData(1);
-                window.location.href = `/invoice/edits?id=${res?.data?.id}`;
-                setOpen(false);
-                setState({ btnLoading: false });
-            })
-            .catch((error) => {
-                setState({ btnLoading: false });
+            const res: any = await Models.invoice.createInvoice(body);
+            console.log('✌️res --->', res);
+            updateDiscount(res, values);
+        } catch (error) {
+            setState({ btnLoading: false });
 
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
-            });
+            console.log('✌️error --->', error);
+        }
+    };
 
-        form.resetFields();
-        onClose();
+    const updateDiscount = async (invoiceResponse: any, customerData: any) => {
+        try {
+            if (!invoiceResponse?.customer?.id) {
+                console.warn('No customer ID in invoice response');
+                return;
+            }
+            let discountValue = 0;
+            const customer: any = await Models.discount.getCustomerDiscount(invoiceResponse.customer.id);
+            if (customer?.results?.length > 0) {
+                discountValue = customer?.results[0].discount;
+            } else {
+                discountValue = 0;
+            }
+
+            const discountBody = {
+                discount: discountValue,
+                invoice: invoiceResponse.id,
+            };
+
+           await Models.invoice.createInvoiceDiscount(discountBody);
+            window.location.href = `/invoice/edits?id=${invoiceResponse?.id}`;
+            setOpen(false);
+            setState({ btnLoading: false });
+            // // Update the discount if needed
+            // if (createdDiscount?.id) {
+            //     const updatedDiscount = await Models.invoice.updateInvoiceDiscount(createdDiscount.id, discountBody);
+            //     console.log('Discount updated:', updatedDiscount);
+            // }
+        } catch (error) {
+            console.error('Error in updateDiscount:', error);
+        }
     };
 
     const onFinishFailed = (errorInfo: any) => {};
@@ -276,8 +276,14 @@ const Invoice = () => {
 
     const getCustomerDiscount = async (id: any) => {
         try {
-            const res: any = await Models.discount.details(id);
-            setState({ discount: res?.discount });
+            const res: any = await Models.discount.getCustomerDiscount(id);
+            if (res?.results?.length > 0) {
+                setState({ discount: res?.results[0]?.discount });
+            } else {
+                setState({ discount: 0 });
+            }
+
+            // setState({ discount: res?.discount });
         } catch (error: any) {
             console.log('✌️error --->', error);
         }
@@ -491,7 +497,7 @@ const Invoice = () => {
                     </div>
                 )}
                 <Drawer title="Create Invoice" placement="right" width={600} onClose={onClose} open={open}>
-                    <Form name="basic-form" layout="vertical" initialValues={{ remember: true }} onFinish={onFinish} onFinishFailed={onFinishFailed} autoComplete="off" form={form}>
+                    <Form name="basic-form" layout="vertical" initialValues={{ remember: true }} onFinish={handleSubmit} onFinishFailed={onFinishFailed} autoComplete="off" form={form}>
                         <Form.Item label="Customer Name" name="customer" required={false} rules={[{ required: true, message: 'Please select Customer Name!' }]}>
                             <Select
                                 onChange={handleSelectChange}
@@ -525,10 +531,10 @@ const Invoice = () => {
                             {/* <Space> */}
                             <div className="form-btn-main">
                                 <Space>
-                                    <Button danger htmlType="submit" onClick={() => onClose()} loading={state.btnLoading}>
+                                    <Button danger htmlType="submit" onClick={() => onClose()}>
                                         Cancel
                                     </Button>
-                                    <Button type="primary" htmlType="submit">
+                                    <Button type="primary" htmlType="submit" loading={state.btnLoading}>
                                         Submit
                                     </Button>
                                 </Space>

@@ -236,7 +236,7 @@ const SaleReport = () => {
             className: 'singleLineCell',
             width: 150,
             render: (text: any, record: any) => {
-                console.log('✌️record --->', record?.invoice_file);
+                console.log('✌️record --->', record);
                 return (
                     <>
                         {record?.invoice_file ? (
@@ -359,6 +359,8 @@ const SaleReport = () => {
                     rowData.push(row[column.dataIndex]);
                 }
             });
+console.log('✌️columns --->', columns);
+
             worksheet.addRow(rowData);
         });
 

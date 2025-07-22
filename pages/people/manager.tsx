@@ -16,7 +16,7 @@ const Customer = () => {
 
     const [open, setOpen] = useState(false);
     const [editRecord, setEditRecord] = useState<any>(null);
-    const [drawerTitle, setDrawerTitle] = useState('Create Employee Details');
+    const [drawerTitle, setDrawerTitle] = useState('Create Manager Details');
     const [viewRecord, setViewRecord] = useState<any>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [dataSource, setDataSource] = useState([]);
@@ -47,9 +47,9 @@ const Customer = () => {
 
     useEffect(() => {
         if (editRecord) {
-            setDrawerTitle('Edit Customer');
+            setDrawerTitle('Edit Manager');
         } else {
-            setDrawerTitle('Create Customer');
+            setDrawerTitle('Create Manager');
         }
     }, [editRecord, open]);
 
@@ -445,12 +445,12 @@ const Customer = () => {
             <div className="panel ">
                 <div className="tax-heading-main">
                     <div>
-                        <h1 className="text-lg font-semibold dark:text-white-light">Customer Details</h1>
+                        <h1 className="text-lg font-semibold dark:text-white-light">Manager Details</h1>
                     </div>
                     <div>
                         <Search placeholder="Input search text" value={state.search} onChange={(e) => setState({ search: e.target.value })} enterButton className="search-bar" />
                         <button type="button" onClick={() => showDrawer(null)} className="create-button">
-                            + Create Customer
+                            + Create Manager
                         </button>
                     </div>
                 </div>
@@ -631,7 +631,7 @@ const Customer = () => {
                 </Drawer>
 
                 {/* modal */}
-                <Modal title="View Customer" open={isModalOpen} onOk={handleOk} onCancel={handleCancel} footer={false}>
+                <Modal title="View Manager" open={isModalOpen} onOk={handleOk} onCancel={handleCancel} footer={false}>
                     {modalData()?.map((value: any) => {
                         return (
                             <>

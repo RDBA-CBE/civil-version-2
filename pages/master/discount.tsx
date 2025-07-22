@@ -45,6 +45,7 @@ const Discount = () => {
     useEffect(() => {
         getCustomerDiscount(state.currentPage);
         customersList();
+        role();
     }, []);
 
     const debouncedSearch = useDebounce(state.search);
@@ -78,6 +79,29 @@ const Discount = () => {
             setState({ loading: false });
 
             console.log('✌️error --->', error);
+        }
+    };
+
+    const role = async () => {
+        try {
+            setState({ loading: true });
+            const data = localStorage.getItem('admin');
+            console.log('Admin data from localStorage:', data);
+
+            let isAdmin = false;
+            if (data) {
+                try {
+                    const parsedData = JSON.parse(data);
+                    isAdmin = !!parsedData; // Convert to boolean
+                } catch (parseError) {
+                    console.error('Error parsing admin data:', parseError);
+                    isAdmin = false;
+                }
+            }
+            console.log('✌️isAdmin --->', isAdmin);
+            setState({ isAdmin, loading: false });
+        } catch (error) {
+            setState({ loading: false });
         }
     };
 
@@ -174,7 +198,7 @@ const Discount = () => {
             className: 'singleLineCell',
             render: (text: any, record: any) => <div>{record?.discount}</div>,
         },
-        ...(localStorage.getItem('admin') === 'true'
+        ...(state.isAdmin
             ? [
                   {
                       title: 'Actions',

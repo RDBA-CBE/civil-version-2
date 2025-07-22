@@ -23,6 +23,48 @@ const test = {
         });
         return promise;
     },
+
+    create: (body: any) => {
+        let promise = new Promise((resolve, reject) => {
+            let url = `test/`;
+
+            instance()
+                .post(url, body)
+                .then((res) => {
+                    resolve(res.data);
+                })
+                .catch((error) => {
+                    console.log('errorsss: ', error);
+                    if (error.response) {
+                        reject(error.response.data);
+                    } else {
+                        reject(error);
+                    }
+                });
+        });
+        return promise;
+    },
+
+    update: (id: any, body: any) => {
+        let promise = new Promise((resolve, reject) => {
+            let url = `test/${id}/`;
+
+            instance()
+                .patch(url, body)
+                .then((res) => {
+                    resolve(res.data);
+                })
+                .catch((error) => {
+                    console.log('errorsss: ', error);
+                    if (error.response) {
+                        reject(error.response.data);
+                    } else {
+                        reject(error);
+                    }
+                });
+        });
+        return promise;
+    },
 };
 
 export default test;

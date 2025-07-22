@@ -64,7 +64,31 @@ export default function Edits() {
         }
         customersList(state.customerCurrentPage);
         materialNameList();
+        role();
     }, [id]);
+
+    const role = async () => {
+        try {
+            setState({ loading: true });
+            const data = localStorage.getItem('admin');
+            console.log('Admin data from localStorage:', data);
+
+            let isAdmin = false;
+            if (data) {
+                try {
+                    const parsedData = JSON.parse(data);
+                    isAdmin = !!parsedData;
+                } catch (parseError) {
+                    console.error('Error parsing admin data:', parseError);
+                    isAdmin = false;
+                }
+            }
+            setState({ isAdmin, loading: false });
+            console.log('✌️isAdmin --->', isAdmin);
+        } catch (error) {
+            setState({ loading: false });
+        }
+    };
 
     const customersList = async (page = 1) => {
         try {
@@ -122,12 +146,20 @@ export default function Edits() {
                 taxs: res?.tax,
                 after_tax_amount: res?.after_tax_amount,
                 before_tax_amount: res?.before_tax_amount,
-                discountData: !ObjIsEmpty(res?.customer?.customer_discount) ? res?.customer?.customer_discount : null,
-                discount: !ObjIsEmpty(res?.customer?.customer_discount) ? Number(res?.customer?.customer_discount?.discount) : null,
+                // discountData: !ObjIsEmpty(res?.customer?.customer_discount) ? res?.customer?.customer_discount : null,
+                // discount: !ObjIsEmpty(res?.customer?.customer_discount) ? Number(res?.customer?.customer_discount?.discount) : null,
             });
+
+            if (res?.invoice_discounts?.length > 0) {
+                setState({
+                    discount: roundNumber(res?.invoice_discounts[0]?.discount) || 0,
+                    discountData: res?.invoice_discounts[0],
+                });
+            }
             form2.setFieldsValue({
-                customer: res?.customer?.customer_name || '',
-                discount: !ObjIsEmpty(res?.customer?.customer_discount) ? Number(res?.customer?.customer_discount?.discount) : null,
+                invoice_no: res?.invoice_no || '',
+                // customer: res?.customer?.customer_name || '',
+                discount: res?.invoice_discounts?.length > 0 ? roundNumber(res?.invoice_discounts[0]?.discount) || 0 : 0,
             });
             if (res?.tax?.length > 0) {
                 const initialCheckedState = TAX.reduce((acc, tax) => {
@@ -304,7 +336,8 @@ export default function Edits() {
     const showDrawer = (item: any) => {
         const data = {
             ...item,
-            test_name: item?.test?.test_name || '',
+            test_name: item?.test_name || '',
+            quantity: item.qty,
         };
         form.setFieldsValue(data);
         setState({
@@ -354,26 +387,50 @@ export default function Edits() {
         }
     };
 
-    const handleChange = async (taxId: any, percentage: any) => {
+    const handleChange = async (taxId: number) => {
         try {
-            const newCheckedItems = {
-                ...state.checkedItems,
-                [taxId]: !state.checkedItems[taxId],
-            };
+            let newCheckedItems = { ...state.checkedItems };
+
+            // If IGST is being checked
+            if (taxId === 3) {
+                newCheckedItems = {
+                    1: false, // Uncheck CGST
+                    2: false, // Uncheck SGST
+                    3: !newCheckedItems[3], // Toggle IGST
+                };
+            }
+            // If CGST is being toggled
+            else if (taxId === 1) {
+                newCheckedItems = {
+                    1: !newCheckedItems[1], // Toggle CGST
+                    2: !newCheckedItems[1], // SGST matches CGST
+                    3: false, // Uncheck IGST
+                };
+            } else if (taxId === 2) {
+                newCheckedItems = {
+                    1: !newCheckedItems[2], // CGST matches SGST
+                    2: !newCheckedItems[2], // Toggle SGST
+                    3: false, // Uncheck IGST
+                };
+            }
+
             const selectedTaxIds = Object.keys(newCheckedItems)
-                .filter((key) => newCheckedItems[key])
+                .filter((key) => newCheckedItems[Number(key)])
                 .map(Number);
 
             const body = {
                 tax: selectedTaxIds,
             };
+
             await Models.invoice.editInvoice(id, body);
+            setState({
+                checkedItems: newCheckedItems,
+            });
+
             getInvoice();
         } catch (error) {
             console.log('✌️error --->', error);
         }
-
-        // Update state
     };
 
     const inputUpdate = (e: any) => {
@@ -479,12 +536,37 @@ export default function Edits() {
     };
 
     const updateInvoiceCustomer = async (value: any) => {
+        console.log('✌️value --->', value);
         try {
             const body = {
-                customer: value.value,
+                customer: value?.value,
             };
+
+            let discountValue = 0;
+            const customer: any = await Models.discount.getCustomerDiscount(value.value);
+            if (customer?.results?.length > 0) {
+                discountValue = customer?.results[0].discount;
+            } else {
+                discountValue = 0;
+            }
+
+            const discountBody = {
+                discount: discountValue,
+                invoice: id,
+            };
+
+            if (state.discountData == undefined) {
+                const discountBody = {
+                    discount: discountValue,
+                    invoice: id,
+                };
+
+                await Models.invoice.createInvoiceDiscount(discountBody);
+            } else {
+                await Models.invoice.updateInvoiceDiscount(state.discountData?.id, discountBody);
+            }
             await Models.invoice.editInvoice(id, body);
-            getInvoice();
+            await getInvoice();
         } catch (error) {
             console.log('✌️error --->', error);
         }
@@ -640,28 +722,30 @@ export default function Edits() {
         }
     };
 
-    const updateDiscount = async () => {
+    const updateDiscount = async (values: any) => {
         try {
             setState({ discountLoading: true });
-            if (state.discountData) {
-                const body = {
-                    customer: state.customerName?.value,
-                    discount: Number(state.discount),
+
+            if (state.discountData == undefined) {
+                console.log('✌️ if --->');
+                const discountBody = {
+                    discount: values?.discount ? values?.discount : 0,
+                    invoice: id,
                 };
-                const update = await Models.discount.updateDiscount(state.discountData.id, body);
-                getInvoice();
+
+                await Models.invoice.createInvoiceDiscount(discountBody);
+                await getInvoice();
                 setState({ isOpenDiscount: false, discountLoading: false });
             } else {
+                console.log('✌️else --->');
                 const body = {
-                    customer: state.customerName?.value,
-                    discount: Number(state.discount),
+                    discount: values?.discount ? values?.discount : 0,
                 };
-                const create = await Models.discount.createDiscount(body);
-                getInvoice();
+
+                await Models.invoice.updateInvoiceDiscount(state.discountData.id, body);
+                await getInvoice();
                 setState({ isOpenDiscount: false, discountLoading: false });
             }
-
-            // setState({ isOpenPayment: false, paymentId: null, payment_mode: { value: 'cash', label: 'Cash' }, paymentAmount: '', paymentDate: '' });
         } catch (error) {
             setState({ discountLoading: false });
 
@@ -698,7 +782,7 @@ export default function Edits() {
     };
 
     return state.isAdmin ? (
-        <InvoiceData data={state.details} checkedItems={state.checkedItems} invoiceId={id} />
+        <InvoiceData data={state.details} taxData={state.taxData} testList={state.testList} paymentList={state.paymentList} checkedItems={state.checkedItems} invoiceId={id} />
     ) : (
         <Spin size="large" spinning={state.loading} delay={500}>
             <div className="flex flex-col gap-2.5 xl:flex-row">
@@ -804,10 +888,10 @@ export default function Edits() {
                                         state.testList?.map((item: any, index: any) => {
                                             return (
                                                 <tr className="align-top" key={item.id}>
-                                                    <td>{item.test?.test_name}</td>
-                                                    <td>{Number(item?.quantity)}</td>
+                                                    <td>{item.test_name}</td>
+                                                    <td>{Number(item?.qty)}</td>
                                                     <td> {Number(item?.price_per_sample)} </td>
-                                                    <td>{item.quantity * item.price_per_sample}</td>
+                                                    <td>{item.qty * item.price_per_sample}</td>
                                                     <td>
                                                         <Space>
                                                             <EditOutlined rev={undefined} className="edit-icon" onClick={() => showDrawer(item)} />
@@ -980,7 +1064,7 @@ export default function Edits() {
                                                         type="checkbox"
                                                         value={item.tax_name}
                                                         checked={state.checkedItems[item.id]}
-                                                        onChange={() => handleChange(item.id, item.tax_percentage)}
+                                                        onChange={() => handleChange(item.id)}
                                                         style={{ marginRight: '5px' }}
                                                     />
                                                     {item.tax_name}
@@ -1333,7 +1417,7 @@ export default function Edits() {
                 </Modal>
 
                 <Drawer
-                    title={'Update Customer Discount'}
+                    title={'Update Invoice Discount'}
                     placement="right"
                     width={600}
                     onClose={() => {
@@ -1341,17 +1425,13 @@ export default function Edits() {
                     }}
                     open={state.isOpenDiscount}
                 >
-                    <Form name="basic-form" layout="vertical" initialValues={{ remember: true }} onFinish={() => updateDiscount()} autoComplete="off" form={form2}>
-                        <Form.Item label="Customer Name" name="customer" required={false} rules={[{ required: true, message: 'Please select customer name!' }]}>
-                            <Input type="text" placeholder="Discount" value={state.customerName?.label} disabled className="form-input flex-1 cursor-not-allowed" />
+                    <Form name="basic-form" layout="vertical" initialValues={{ remember: true }} onFinish={(value) => updateDiscount(value)} autoComplete="off" form={form2}>
+                        <Form.Item label="Invoice Number" name="invoice_no" required={false} rules={[{ required: true, message: 'Please select customer name!' }]}>
+                            <Input type="text" placeholder="Invoice Number" value={state.invoice_no} disabled className="form-input flex-1 cursor-not-allowed" />
                         </Form.Item>
 
-                        {/* <Form.Item>
-                                                <Input.TextArea rows={4} value={customerAddress} />
-                                            </Form.Item> */}
-
                         <Form.Item label="Discount (%)" name="discount" required={false} rules={[{ required: true, message: 'Please enter discount !' }]}>
-                            <Input type="number" placeholder="Discount" value={state.discount} onChange={(e) => setState({ discount: e.target.value })} />
+                            <Input type="number" placeholder="Discount" />
                         </Form.Item>
 
                         <Form.Item>

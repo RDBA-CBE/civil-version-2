@@ -21,6 +21,86 @@ const invoice = {
         return promise;
     },
 
+    createInvoiceDiscount: (data: any) => {
+        let promise = new Promise((resolve, reject) => {
+            let url = `invoice-discount/`;
+            instance()
+                .post(url, data)
+                .then((res) => {
+                    resolve(res.data);
+                })
+                .catch((error) => {
+                    console.log('errorsss: ', error);
+                    if (error.response) {
+                        reject(error.response.data.error);
+                    } else {
+                        reject(error);
+                    }
+                });
+        });
+        return promise;
+    },
+
+    updateInvoiceDiscount: (id: any, data: any) => {
+        let promise = new Promise((resolve, reject) => {
+            let url = `invoice-discount/${id}/`;
+            instance()
+                .patch(url, data)
+                .then((res) => {
+                    resolve(res.data);
+                })
+                .catch((error) => {
+                    console.log('errorsss: ', error);
+                    if (error.response) {
+                        reject(error.response.data.error);
+                    } else {
+                        reject(error);
+                    }
+                });
+        });
+        return promise;
+    },
+
+    getInvoiceDiscount: (id: any) => {
+        let promise = new Promise((resolve, reject) => {
+            let url = `invoice-discount/${id}/`;
+            instance()
+                .get(url)
+                .then((res) => {
+                    resolve(res.data);
+                })
+                .catch((error) => {
+                    console.log('errorsss: ', error);
+                    if (error.response) {
+                        reject(error.response.data.error);
+                    } else {
+                        reject(error);
+                    }
+                });
+        });
+        return promise;
+    },
+
+    createInvoice: (data: any) => {
+        let promise = new Promise((resolve, reject) => {
+            let url = `invoice/`;
+            instance()
+                .post(url, data)
+                .then((res) => {
+                    resolve(res.data);
+                })
+                .catch((error) => {
+                    console.log('errorsss: ', error);
+                    if (error.response) {
+                        reject(error.response.data);
+                    } else {
+                        reject(error);
+                    }
+                });
+        });
+        return promise;
+    },
+
     filter: (body: any, page: any) => {
         let promise = new Promise((resolve, reject) => {
             let url = `invoice/?page=${page}`;

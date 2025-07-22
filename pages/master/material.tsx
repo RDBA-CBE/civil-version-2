@@ -7,7 +7,7 @@ import axios from 'axios';
 import 'react-quill/dist/quill.snow.css';
 import moment from 'moment';
 import router from 'next/router';
-import { baseUrl, Failure, useSetState } from '@/utils/function.util';
+import { baseUrl, Failure, Success, useSetState } from '@/utils/function.util';
 import Models from '@/imports/models.import';
 import Pagination from '@/components/pagination/pagination';
 import useDebounce from '@/components/useDebounce/useDebounce';
@@ -38,7 +38,6 @@ const Material = () => {
         pagePrev: null,
     });
 
-    // Get Material Data
     useEffect(() => {
         getMaterial(1);
         getDropDown();
@@ -66,36 +65,12 @@ const Material = () => {
         setEditorLoaded(true);
     }, []);
 
-    // const getMaterial = () => {
-    //     const Token = localStorage.getItem('token');
-    //     setLoading(true);
-
-    //     axios
-    //         .get(`${baseUrl}/material_list/`, {
-    //             headers: {
-    //                 Authorization: `Token ${Token}`,
-    //             },
-    //         })
-    //         .then((res) => {
-    //             setDataSource(res?.data);
-    //             setFilterData(res.data);
-    //             setLoading(false);
-    //         })
-    //         .catch((error: any) => {
-    //             if (error.response.status === 401) {
-    //                 router.push('/');
-    //             }
-    //             setLoading(false);
-    //         });
-    // };
-
     const getMaterial = async (page: any) => {
         try {
             const body = bodyData();
             setState({ loading: true });
 
             const res: any = await Models.material.materialList(page, body);
-            console.log('abcd --->', res);
             setState({
                 currentPage: page,
                 pageNext: res?.next,
@@ -161,7 +136,11 @@ const Material = () => {
     const showDrawer = (record: any) => {
         if (record) {
             setEditRecord(record);
-            form.setFieldsValue(record);
+            form.setFieldsValue({
+                ...record,
+                print_format: record.print_format?.id,
+                letter_pad_logo: record.letter_pad_logo?.id,
+            });
             setEditor(record.template);
         } else {
             setEditRecord(null);
@@ -207,136 +186,54 @@ const Material = () => {
                     ) : (
                         <EditOutlined style={{ cursor: 'pointer', display: 'none' }} onClick={() => showDrawer(record)} className="edit-icon" rev={undefined} />
                     )}
-
-                    {/* <EditOutlined
-            style={{ cursor: "pointer" }}
-            onClick={() => showDrawer(record)}
-            className='edit-icon' rev={undefined} />
-
-          {
-            localStorage.getItem('admin') === 'true' ? (
-              <DeleteOutlined
-                style={{ color: "red", cursor: "pointer" }}
-                onClick={() => handleDelete(record)}
-                className='delete-icon'
-                rev={undefined}
-              />
-            ) : (
-              <DeleteOutlined
-                style={{ display: "none" }}
-                onClick={() => handleDelete(record)}
-                className='delete-icon'
-                rev={undefined}
-              />
-            )
-          } */}
                 </Space>
             ),
         },
     ];
 
-    // const handleDelete = (record: any) => {
-    //   // Implement your delete logic here
-    //   const Token = localStorage.getItem("token")
-    //   console.log("TokenTokenTokenToken", Token)
-
-    //   Modal.confirm({
-    //     title: "Are you sure, you want to delete this MATERIAL record?",
-    //     okText: "Yes",
-    //     okType: "danger",
-    //     onOk: () => {
-    //       console.log("values", record)
-    //       axios.delete(`${baseUrl}/delete_material/${record.id}`, {
-    //         headers: {
-    //           "Authorization": `Token ${Token}`
-    //         }
-    //       }).then((res) => {
-    //         console.log(res)
-    //         getMaterial()
-    //       }).catch((err) => {
-    //         console.log(err)
-    //       })
-
-    //     },
-
-    //   });
-    // };
-
     const [filterData, setFilterData] = useState(dataSource);
 
-    const inputChange = (e: any) => {
-        const searchValue = e.target.value.toLowerCase();
-        const filteredData = dataSource.filter((item: any) => item?.material_name?.toLowerCase().includes(searchValue) || item?.created_date?.includes(searchValue));
-        setFilterData(searchValue ? filteredData : dataSource);
-    };
-
     const handlePageChange = (number: any) => {
-        console.log('number', number);
         setState({ currentPage: number });
         getMaterial(number);
-
-        // if (state.searchValue) {
-        //     onFinish2(state.searchValue, number);
-        // } else {
-        //     initialData(number);
-        // }
-
         return number;
     };
 
-    // form submit
-    const onFinish = (values: any) => {
-        const Token = localStorage.getItem('token');
+    const handleSubmit = async (values: any) => {
+        try {
+            setState({ btnLoading: true });
+            const body = {
+                template: editor == null ? '' : editor,
+                material_name: values.material_name,
+                letter_pad_logo: values.letter_pad_logo,
+                print_format: values.print_format,
+            };
 
-        console.log('editor', editor);
+            if (editRecord) {
+                await Models.material.update(body, editRecord.id);
+                getMaterial(1);
+                onClose();
+                form.resetFields();
+                setState({ btnLoading: false });
+                Success('Material updated successfully');
+            } else {
+                await Models.material.create(body);
+                getMaterial(1);
+                onClose();
+                form.resetFields();
+                setState({ btnLoading: false });
+                Success('Material created successfully');
+            }
+        } catch (error: any) {
+            setState({ btnLoading: false });
 
-        const body = {
-            template: editor == null ? '' : editor,
-            material_name: values.material_name,
-            letter_pad_logo: values.letter_pad_logo,
-            print_format: values.print_format,
-        };
-
-        if (editRecord) {
-            axios
-                .put(`${baseUrl}/edit_material/${editRecord.id}/`, body, {
-                    headers: {
-                        Authorization: `Token ${Token}`,
-                    },
-                })
-                .then((res: any) => {
-                    getMaterial(1);
-                    onClose();
-                })
-                .catch((error: any) => {
-                    if (error.response.status === 401) {
-                        router.push('/');
-                    }
-                });
-        } else {
-            axios
-                .post(`${baseUrl}/create_material/`, body, {
-                    headers: {
-                        Authorization: `Token ${Token}`,
-                    },
-                })
-                .then((res: any) => {
-                    getMaterial(1);
-                    onClose();
-                    form.resetFields();
-                })
-                .catch((error) => {
-                    console.log('✌️error --->', error);
-                    if (error.response.status === 401) {
-                        router.push('/');
-                    }
-                    if (error?.response?.data?.template) {
-                        Failure(`Template : ${error?.response?.data?.template[0]}`);
-                    }
-                    if (error?.response?.data?.material_name) {
-                        Failure(` ${error?.response?.data?.material_name[0]}`);
-                    }
-                });
+            if (error?.template?.length > 0) {
+                Failure(`Template : ${error?.template[0]}`);
+            }
+            if (error?.material_name?.length > 0) {
+                Failure(` ${error?.material_name[0]}`);
+            }
+            console.log('✌️error --->', error);
         }
     };
 
@@ -441,7 +338,7 @@ const Material = () => {
                 )}
 
                 <Drawer title={DrawerTitle} placement="right" width={600} onClose={onClose} open={open}>
-                    <Form name="basic" layout="vertical" form={form} initialValues={{ remember: true }} onFinish={onFinish} onFinishFailed={onFinishFailed} autoComplete="off">
+                    <Form name="basic" layout="vertical" form={form} initialValues={{ remember: true }} onFinish={handleSubmit} onFinishFailed={onFinishFailed} autoComplete="off">
                         <Form.Item<FieldType> label="Material Name" name="material_name" required={true} rules={[{ required: true, message: 'Material Name field is required' }]}>
                             <Input />
                         </Form.Item>
@@ -481,7 +378,7 @@ const Material = () => {
                                     <Button danger htmlType="submit" onClick={() => onClose()}>
                                         Cancel
                                     </Button>
-                                    <Button type="primary" htmlType="submit">
+                                    <Button type="primary" htmlType="submit" loading={state.btnLoading}>
                                         Submit
                                     </Button>
                                 </Space>
