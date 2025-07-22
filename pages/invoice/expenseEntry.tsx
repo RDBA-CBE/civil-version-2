@@ -4,7 +4,9 @@ import { EditOutlined, EyeOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import router from 'next/router';
-import { baseUrl, roundNumber } from '@/utils/function.util';
+import { baseUrl, roundNumber, ObjIsEmpty, useSetState } from '@/utils/function.util';
+import Pagination from '@/components/pagination/pagination';
+import Models from '@/imports/models.import';
 
 const ExpenseEntry = () => {
     const [form] = Form.useForm();
@@ -17,6 +19,18 @@ const ExpenseEntry = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formFields, setFormFields] = useState<any>([]);
     const [loading, setLoading] = useState(false);
+
+    const [state, setState] = useSetState({
+        page: 1,
+        pageSize: 10,
+        total: 0,
+        currentPage: 1,
+        pageNext: null,
+        pagePrev: null,
+        expenseList: [],
+        discount: 0,
+        searchValue: null,
+    });
 
     useEffect(() => {
         axios
@@ -34,6 +48,10 @@ const ExpenseEntry = () => {
                 } else {
                 }
             });
+    }, []);
+    
+       useEffect(() => {
+        initialData(1);
     }, []);
 
     useEffect(() => {
@@ -194,7 +212,7 @@ const ExpenseEntry = () => {
                     },
                 })
                 .then((res: any) => {
-                    initialData();
+                    initialData(1);
                     setOpen(false);
                 })
                 .catch((error: any) => {
@@ -211,7 +229,7 @@ const ExpenseEntry = () => {
                     },
                 })
                 .then((res: any) => {
-                    initialData();
+                    initialData(1);
                     setOpen(false);
                 })
                 .catch((error: any) => {
@@ -304,64 +322,93 @@ const ExpenseEntry = () => {
 
     // search
 
-    useEffect(() => {
-        initialData();
-    }, []);
+ 
 
-    const initialData = () => {
-        const Token = localStorage.getItem('token');
-        setLoading(true);
-        const body = {
-            from_date: '',
-            to_date: '',
-            expense_user: '',
-            expense_category: '',
-        };
+    const initialData = async (page: any) => {
+        try {
+            setState({ loading: true });
 
-        axios
-            .post(`${baseUrl}/expense_entry_list/`, body, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res: any) => {
-                setDataSource(res?.data);
-                setLoading(false);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
-                setLoading(false);
+            const res: any = await Models.expenseEntry.expenseEntryList(page);
+            setState({
+                expenseList: res?.results,
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
             });
+        } catch (error) {
+            setState({ loading: false });
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const bodyData = () => {
+        const body: any = {};
+        if (state.searchValue) {
+            if (state.searchValue?.expense_user) {
+                body.expense_user = state.searchValue.expense_user;
+            }
+            if (state.searchValue?.expense_category) {
+                body.expense_category = state.searchValue.expense_category;
+            }
+            if (state.searchValue?.from_date) {
+                body.from_date = state.searchValue.from_date;
+            }
+
+            if (state.searchValue?.to_date) {
+                body.to_date = state.searchValue.to_date;
+            }
+        }
+
+        return body;
     };
 
     // form submit
-    const onFinish2 = (values: any) => {
-        const Token = localStorage.getItem('token');
+    const onFinish2 = async (values: any, page = 1) => {
+        console.log('values', values);
 
-        const body = {
-            from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
-            to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
-            expense_user: values.expense_user ? values.expense_user : '',
-            expense_category: values.expense_category ? values.expense_category : '',
-        };
+        try {
+            setState({ loading: true });
 
-        axios
-            .post(`${baseUrl}/expense_entry_list/`, body, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res: any) => {
-                setDataSource(res?.data);
-            })
-            .catch((error: any) => {
-                if (error?.response?.status === 401) {
-                    router.push('/');
-                }
+            const body = {
+                from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
+                to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
+                expense_user: values.expense_user ? values.expense_user : '',
+                expense_category: values.expense_category ? values.expense_category : '',
+            };
+
+            console.log('body', body);
+
+            const res: any = await Models.expenseEntry.filter(body, page);
+            setState({
+                expenseList: res?.results,
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
+                searchValue: values,
             });
-        form.resetFields();
+        } catch (error) {
+            setState({ loading: false });
+
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const handlePageChange = (number: any) => {
+        setState({ currentPage: number });
+
+        const body = bodyData();
+
+        if (!ObjIsEmpty(body)) {
+            onFinish2(state.searchValue, number);
+        } else {
+            initialData(number);
+        }
+
+        return number;
     };
 
     const onFinishFailed2 = (errorInfo: any) => {};
@@ -400,6 +447,18 @@ const ExpenseEntry = () => {
                                         Search
                                     </Button>
                                 </Form.Item>
+                                <Form.Item>
+                                    <Button
+                                        type="primary"
+                                        htmlType="submit"
+                                        onClick={() => {
+                                            form.resetFields();
+                                        }}
+                                        style={{ width: '100px' }}
+                                    >
+                                        Clear
+                                    </Button>
+                                </Form.Item>
                             </div>
                         </div>
                     </Form>
@@ -417,17 +476,32 @@ const ExpenseEntry = () => {
                 </div>
                 <div className="table-responsive">
                     <Table
-                        dataSource={dataSource}
+                        dataSource={state.expenseList}
                         columns={columns}
                         pagination={false}
                         scroll={scrollConfig}
                         loading={{
-                            spinning: loading, // This enables the loading spinner
+                            spinning: state.loading, // This enables the loading spinner
                             indicator: <Spin size="large" />,
                             tip: 'Loading data...', // Custom text to show while loading
                         }}
                     />
                 </div>
+                {state.expenseList?.length > 0 && (
+                    <div>
+                        <div
+                            className="mb-20 "
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <Pagination totalPage={state.total} itemsPerPage={10} currentPages={state.currentPage} activeNumber={handlePageChange} />
+                            {/* <Pagination activeNumber={handlePageChange} totalPages={state.total} currentPages={state.currentPage} /> */}
+                        </div>
+                    </div>
+                )}
 
                 <Drawer title={drawerTitle} placement="right" width={600} onClose={onClose} open={open}>
                     <Form name="basic" layout="vertical" form={form} initialValues={{ remember: true }} onFinish={onFinish} onFinishFailed={onFinishFailed} autoComplete="off">

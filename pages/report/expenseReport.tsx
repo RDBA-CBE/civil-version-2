@@ -6,30 +6,46 @@ import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import dayjs from 'dayjs';
 import router from 'next/router';
-import { baseUrl, roundNumber } from '@/utils/function.util';
+import { baseUrl, ObjIsEmpty, roundNumber, useSetState } from '@/utils/function.util';
+import Models from '@/imports/models.import';
+import Pagination from '@/components/pagination/pagination';
+import IconLoader from '@/components/Icon/IconLoader';
 
 const ExpenseReport = () => {
     const [form] = Form.useForm();
     const [dataSource, setDataSource] = useState([]);
-    const [saleFormData, setSaleFormData] = useState([]);
+    const [saleFormData, setSaleFormData] = useState<any>([]);
     const [loading, setLoading] = useState(false);
+
+    const [state, setState] = useSetState({
+        page: 1,
+        pageSize: 10,
+        total: 0,
+        currentPage: 1,
+        pageNext: null,
+        pagePrev: null,
+        expenseList: [],
+        search: '',
+        btnLoading: false,
+    });
 
     // get GetExpenseReport datas
     useEffect(() => {
         GetExpenseReport();
+        initialData(1);
     }, []);
 
     const GetExpenseReport = () => {
         const Token = localStorage.getItem('token');
 
         axios
-            .get(`${baseUrl}/expense_report/`, {
+            .get(`${baseUrl}/create_expense_entry/`, {
                 headers: {
                     Authorization: `Token ${Token}`,
                 },
             })
             .then((res) => {
-                setSaleFormData(res.data?.expense_category);
+                setSaleFormData(res.data);
             })
             .catch((error: any) => {
                 if (error.response.status === 401) {
@@ -48,7 +64,7 @@ const ExpenseReport = () => {
         },
         {
             title: 'Expense Category',
-            dataIndex: 'expense_category',
+            dataIndex: 'expense_category_name',
             key: 'expense_category',
             className: 'singleLineCell',
         },
@@ -75,29 +91,121 @@ const ExpenseReport = () => {
         },
     ];
 
+    const button = [
+        {
+            id: 1,
+            name: 'Export to Excel',
+        },
+        {
+            id: 2,
+            name: 'Download PDF',
+        },
+    ];
+
+    const initialData = async (page: any) => {
+        try {
+            setState({ loading: true });
+
+            const res: any = await Models.expenseEntry.expenseEntryList(page);
+            setState({
+                expenseList: res?.results,
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
+            });
+        } catch (error) {
+            setState({ loading: false });
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const bodyData = () => {
+        const body: any = {};
+        if (state.searchValue) {
+            if (state.searchValue?.expense_user) {
+                body.expense_user = state.searchValue.expense_user;
+            }
+            if (state.searchValue?.expense_category) {
+                body.expense_category = state.searchValue.expense_category;
+            }
+            if (state.searchValue?.from_date) {
+                body.from_date = state.searchValue.from_date;
+            }
+
+            if (state.searchValue?.to_date) {
+                body.to_date = state.searchValue.to_date;
+            }
+        }
+
+        return body;
+    };
+
     // export to excel format
     const exportToExcel = async () => {
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Sheet1');
+        setState({ loading: true });
 
-        // Add header row
-        worksheet.addRow(columns.map((column) => column.title));
+        const body = {
+            from_date: state.searchValue?.from_date ? dayjs(state.searchValue.from_date).format('YYYY-MM-DD') : '',
+            to_date: state.searchValue?.to_date ? dayjs(state.searchValue.to_date).format('YYYY-MM-DD') : '',
+            expense_user: state.searchValue?.expense_user || '',
+            expense_category: state.searchValue?.expense_category || '',
+        };
 
-        // Add data rows
-        dataSource.forEach((row: any) => {
-            worksheet.addRow(columns.map((column: any) => row[column.dataIndex]));
-        });
+        let allData: any[] = [];
+        let currentPage = 1;
+        let hasNext = true;
 
-        // Generate a Blob containing the Excel file
-        const blob = await workbook.xlsx.writeBuffer();
+        try {
+            while (hasNext) {
+                let res: any;
 
-        // Use file-saver to save the Blob as a file
-        FileSaver.saveAs(
-            new Blob([blob], {
-                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            }),
-            'Expense-Report.xlsx'
-        );
+                if (!ObjIsEmpty(bodyData())) {
+                    res = await Models.expenseEntry.filter(body, currentPage);
+                } else {
+                    res = await Models.expenseEntry.expenseEntryList(currentPage);
+                }
+
+                allData = allData.concat(res?.results || []);
+                hasNext = !!res?.next;
+                if (hasNext) currentPage += 1;
+            }
+
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Expense Report');
+
+            // Add header row using column titles
+            worksheet.addRow(columns.map((col) => col.title));
+
+            // Add data rows
+            allData.forEach((row: any) => {
+                const rowData: any[] = columns.map((col) => {
+                    const value = row[col.dataIndex];
+
+                    if (col.dataIndex === 'amount') {
+                        return roundNumber(value);
+                    }
+
+                    return value ?? ''; // fallback if null/undefined
+                });
+
+                worksheet.addRow(rowData);
+            });
+
+            const blob = await workbook.xlsx.writeBuffer();
+
+            FileSaver.saveAs(
+                new Blob([blob], {
+                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                }),
+                'Expense-Report.xlsx'
+            );
+        } catch (error) {
+            console.error('Error exporting to Excel:', error);
+        } finally {
+            setState({ loading: false, id: null });
+        }
     };
 
     useEffect(() => {
@@ -129,31 +237,36 @@ const ExpenseReport = () => {
     }, []);
 
     // form submit
-    const onFinish = (values: any) => {
-        const Token = localStorage.getItem('token');
+    const onFinish = async (values: any, page = 1) => {
+        console.log('values', values);
 
-        const body = {
-            expense_user: values.expense_user ? values.expense_user : '',
-            from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
-            to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
-            expense_category: values.expense_category ? values.expense_category : '',
-        };
+        try {
+            setState({ loading: true });
 
-        axios
-            .post(`${baseUrl}/expense_report/`, body, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res: any) => {
-                setDataSource(res?.data?.reports);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
+            const body = {
+                from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
+                to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
+                expense_user: values.expense_user ? values.expense_user : '',
+                expense_category: values.expense_category ? values.expense_category : '',
+            };
+
+            console.log('body', body);
+
+            const res: any = await Models.expenseEntry.filter(body, page);
+            setState({
+                expenseList: res?.results,
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
+                searchValue: values,
             });
-        form.resetFields();
+        } catch (error) {
+            setState({ loading: false });
+
+            console.log('✌️error --->', error);
+        }
     };
 
     const onFinishFailed = (errorInfo: any) => {};
@@ -161,6 +274,20 @@ const ExpenseReport = () => {
     const scrollConfig: any = {
         x: true,
         y: 300,
+    };
+
+    const handlePageChange = (number: any) => {
+        setState({ currentPage: number });
+
+        const body = bodyData();
+
+        if (!ObjIsEmpty(body)) {
+            onFinish(state.searchValue, number);
+        } else {
+            initialData(number);
+        }
+
+        return number;
     };
 
     return (
@@ -183,7 +310,7 @@ const ExpenseReport = () => {
 
                             <Form.Item label="Expense Category" name="expense_category" style={{ width: '300px' }}>
                                 <Select showSearch filterOption={(input: any, option: any) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}>
-                                    {saleFormData?.map((value: any) => (
+                                    {saleFormData?.expense?.map((value: any) => (
                                         <Select.Option key={value.id} value={value.id}>
                                             {value.expense_name}
                                         </Select.Option>
@@ -197,6 +324,18 @@ const ExpenseReport = () => {
                                         Search
                                     </Button>
                                 </Form.Item>
+                                <Form.Item>
+                                    <Button
+                                        type="primary"
+                                        htmlType="submit"
+                                        onClick={() => {
+                                            form.resetFields();
+                                        }}
+                                        style={{ width: '100px' }}
+                                    >
+                                        Clear
+                                    </Button>
+                                </Form.Item>
                             </div>
                         </div>
                     </Form>
@@ -208,25 +347,42 @@ const ExpenseReport = () => {
                     <div>
                         <Space>
                             <Button type="primary" onClick={exportToExcel}>
-                                Export to Excel
+                                {state.loading ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2" /> : 'Export To Excel'}
                             </Button>
+
                             {/* <Search placeholder="input search text" onChange={inputChange} enterButton className='search-bar' /> */}
                         </Space>
                     </div>
                 </div>
                 <div className="table-responsive">
                     <Table
-                        dataSource={dataSource}
+                        dataSource={state.expenseList}
                         columns={columns}
                         pagination={false}
                         scroll={scrollConfig}
                         loading={{
-                            spinning: loading, // This enables the loading spinner
+                            spinning: state.loading, // This enables the loading spinner
                             indicator: <Spin size="large" />,
                             tip: 'Loading data...', // Custom text to show while loading
                         }}
                     />
                 </div>
+
+                {state.expenseList?.length > 0 && (
+                    <div>
+                        <div
+                            className="mb-20 "
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <Pagination totalPage={state.total} itemsPerPage={10} currentPages={state.currentPage} activeNumber={handlePageChange} />
+                            {/* <Pagination activeNumber={handlePageChange} totalPages={state.total} currentPages={state.currentPage} /> */}
+                        </div>
+                    </div>
+                )}
             </div>
         </>
     );

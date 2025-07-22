@@ -6,11 +6,14 @@ import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import dayjs from 'dayjs';
 import router from 'next/router';
-import { baseUrl, roundNumber } from '@/utils/function.util';
+import { baseUrl, ObjIsEmpty, roundNumber, useSetState } from '@/utils/function.util';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import IconEye from '@/components/Icon/IconEye';
 import { DownloadOutlined, EyeOutlined } from '@ant-design/icons';
+import Models from '@/imports/models.import';
+import Pagination from '@/components/pagination/pagination';
+import IconLoader from '@/components/Icon/IconLoader';
 
 const QuotationReport = () => {
     const [form] = Form.useForm();
@@ -19,9 +22,22 @@ const QuotationReport = () => {
     const [loading, setLoading] = useState(false);
     const [formFields, setFormFields] = useState<any>([]);
 
+    const [state, setState] = useSetState({
+        page: 1,
+        pageSize: 10,
+        total: 0,
+        currentPage: 1,
+        pageNext: null,
+        pagePrev: null,
+        quotationReportList: [],
+        search: '',
+        btnLoading: false,
+    });
+
     // get GetExpenseReport datas
     useEffect(() => {
         GetExpenseReport();
+        initialData(1);
     }, []);
 
     const GetExpenseReport = () => {
@@ -60,19 +76,57 @@ const QuotationReport = () => {
             });
     }, []);
 
+    const button = [
+        {
+            id: 1,
+            name: 'Export to Excel',
+        },
+        {
+            id: 2,
+            name: 'Download PDF',
+        },
+    ];
+
+    const initialData = async (page = 1) => {
+        try {
+            setState({
+                loading: true,
+            });
+
+            const res: any = await Models.quotationReport.quotationReportList(page);
+            setState({
+                quotationReportList: res?.results,
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
+            });
+        } catch (error) {
+            setState({ loading: false });
+            console.log('✌️error --->', error);
+        }
+    };
+
     // Table Headers
     const columns = [
         {
             title: 'Quotation No',
-            dataIndex: 'quotation_number',
+            // dataIndex: 'quotation_number',
             key: 'quotation_number',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{record.quotation.quotation_number}</div>;
+            },
         },
         {
             title: 'Customer',
-            dataIndex: 'customer',
+            // dataIndex: 'customer',
             key: 'customer',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{record.quotation.customer}</div>;
+            },
         },
         {
             title: 'File',
@@ -95,221 +149,141 @@ const QuotationReport = () => {
                 );
             },
         },
-        // {
-        //     title: 'Advance',
-        //     dataIndex: 'advance',
-        //     key: 'advance',
-        //     className: 'singleLineCell',
-        // },
-        // {
-        //     title: 'Discount',
-        //     dataIndex: 'discount',
-        //     key: 'discount',
-        //     className: 'singleLineCell',
-        //     width: 150,
-        // },
-
-        // {
-        //     title: 'Tax',
-        //     dataIndex: 'tax',
-        //     key: 'tax',
-        //     className: 'singleLineCell',
-        //     width: 150,
-        // },
-
-        // {
-        //     title: 'File',
-        //     dataIndex: 'file',
-        //     key: 'file',
-        //     className: 'singleLineCell',
-        //     render: (text:any, record:any) => (
-        //         <a href={record.file} target="_blank" rel="noopener noreferrer">Download</a>
-        //     ),
-        // },
 
         {
             title: 'Total Amount',
-            dataIndex: 'total_amount',
+            // dataIndex: 'total_amount',
             key: 'total_amount',
             className: 'singleLineCell',
             render: (record: any) => {
-                return <div>{roundNumber(record)}</div>;
+                return <div>{roundNumber(record.quotation.total_amount)}</div>;
             },
         },
-        // {
-        //     title: 'Balance',
-        //     dataIndex: 'balance',
-        //     key: 'balance',
-        //     className: 'singleLineCell',
-        // },
-        // {
-        //     title: 'TDS Amount',
-        //     dataIndex: 'tds_amount',
-        //     key: 'tds_amount',
-        //     className: 'singleLineCell',
-        // },
-        // {
-        //     title: 'Date',
-        //     dataIndex: 'date',
-        //     key: 'date',
-        //     className: 'singleLineCell',
-        // },
-
-        // {
-        //     title: 'Invoice Image',
-        //     dataIndex: 'invoice_image',
-        //     key: 'invoice_image',
-        //     className: 'singleLineCell',
-        // },
-        // {
-        //     title: 'Completed',
-        //     dataIndex: 'completed',
-        //     key: 'completed',
-        //     className: 'singleLineCell',
-        //     render: (text: any, record: any) => record.completed === true ? 'Yes' : 'No',
-        // },
-        // {
-        //     title: `Actions`,
-        //     dataIndex: 'actions',
-        //     key: 'actions',
-        //     className: 'singleLineCell',
-        //     render: (text: any, record: any) => {
-        //         console.log('✌️record --->', record);
-        //         return (
-        //             <Space>
-        //                 <Tooltip title="View Invoice Preview">
-        //                     <EyeOutlined style={{ fontSize: '18px' }} onClick={() => router.push(`/invoice/preview?id=${record.id}`)} aria-label="View Invoice Preview" />
-        //                 </Tooltip>
-        //                 <Tooltip title="Download Invoice">
-        //                     <DownloadOutlined style={{ fontSize: '18px' }} onClick={() => handleDownloadPDF(record)} aria-label="Download Invoice" />
-        //                 </Tooltip>
-        //             </Space>
-        //         );
-        //     },
-        // },
-
-        // {
-        //     title: 'Place Of Testing',
-        //     dataIndex: 'place_of_testing',
-        //     key: 'place_of_testing',
-        //     className: 'singleLineCell',
-        // },
     ];
 
-    // export to excel format
-    const exportToExcel = async () => {
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Sheet1');
+    const bodyData = () => {
+        const body: any = {};
+        if (state.searchValue) {
+            if (state.searchValue?.customer) {
+                body.customer = state.searchValue.customer;
+            }
+            if (state.searchValue?.start_date) {
+                body.from_date = state.searchValue.start_date;
+            }
 
-        // Add header row
-        worksheet.addRow(columns.map((column) => column.title));
+            if (state.searchValue?.end_date) {
+                body.to_date = state.searchValue.end_date;
+            }
+        }
 
-        // Add data rows
-
-        dataSource.forEach((row) => {
-            const rowData: any = [];
-            columns.forEach((column) => {
-                if (column.dataIndex === 'quotation_file') {
-                    // Add hyperlink in the specific column
-                    rowData.push({
-                        text: row[column.dataIndex], // Text displayed for the link
-                        hyperlink: row[column.dataIndex], // URL for the link
-                    });
-                } else {
-                    rowData.push(row[column.dataIndex]);
-                }
-            });
-            worksheet.addRow(rowData);
-        });
-
-        // Generate a Blob containing the Excel file
-        const blob = await workbook.xlsx.writeBuffer();
-
-        // Use file-saver to save the Blob as a file
-        FileSaver.saveAs(
-            new Blob([blob], {
-                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            }),
-            'Quotation-Report.xlsx'
-        );
+        return body;
     };
 
-    useEffect(() => {
-        const Token = localStorage.getItem('token');
-        setLoading(true);
+    // export to excel format
+
+    const exportToExcel = async (item: any) => {
+        setState({ loading: true, id: item.id });
+        console.log('searchValue', state.searchValue);
+
         const body = {
-            // expense_user: '',
-            start_date: '',
-            end_date: '',
-            invoice_number: '',
-            project_name: '',
-            customer: '',
-            // expense_category: '',
+            from_date: state.searchValue?.start_date ? dayjs(state.searchValue.start_date).format('YYYY-MM-DD') : '',
+            to_date: state.searchValue?.end_date ? dayjs(state.searchValue.end_date).format('YYYY-MM-DD') : '',
+            customer: state.searchValue?.customer ? state.searchValue?.customer : '',
         };
 
-        axios
-            .get(`${baseUrl}/quotation-reports/`, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-                params: { ...body },
-            })
+        console.log('body', body);
 
-            .then((res: any) => {
-                console.log('✌️res --->', res);
-                const data = res?.data.map((item: any) => {
-                    return item.quotation;
-                });
+        let allData: any[] = [];
+        let currentPage = 1;
+        let hasNext = true;
 
-                // console.log(res?.data.map((item:any)=>{return item.invoice}));
+        try {
+            while (hasNext) {
+                let res: any;
 
-                // console.log(data);
-
-                setDataSource(data);
-                setLoading(false);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
+                if (!ObjIsEmpty(bodyData())) {
+                    res = await Models.quotationReport.filter(body, currentPage);
+                } else {
+                    res = await Models.quotationReport.quotationReportList(currentPage);
                 }
-                setLoading(false);
-            });
-    }, []);
 
-    console.log('data', dataSource);
+                allData = allData.concat(res?.results || []);
+
+                hasNext = !!res?.next;
+                if (hasNext) currentPage += 1;
+            }
+
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Quotation Report');
+
+            // Manual headers based on your column config
+            worksheet.addRow(['Quotation No', 'Customer', 'File', 'Total Amount']);
+
+            allData.forEach((row: any) => {
+                const quotation = row?.quotation || {};
+                const fileUrl = row?.quotation_file;
+
+                worksheet.addRow([quotation.quotation_number || '', quotation.customer || '', fileUrl ? { text: 'Download', hyperlink: fileUrl } : 'No File', roundNumber(quotation.total_amount)]);
+            });
+
+            const blob = await workbook.xlsx.writeBuffer();
+
+            FileSaver.saveAs(
+                new Blob([blob], {
+                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                }),
+                'Quotation-Report.xlsx'
+            );
+        } catch (error) {
+            console.error('❌ Error exporting Excel:', error);
+        } finally {
+            setState({ loading: false });
+        }
+    };
+
+   
 
     // form submit
-    const onFinish = (values: any) => {
-        const Token = localStorage.getItem('token');
+    const onFinish = async (values: any, page = 1) => {
+        try {
+            setState({ loading: true });
+            const body = {
+                from_date: values?.start_date ? dayjs(values?.start_date).format('YYYY-MM-DD') : '',
+                to_date: values?.end_date ? dayjs(values?.end_date).format('YYYY-MM-DD') : '',
+                // invoice_number: values?.invoice_no ? values?.invoice_no : '',
+                // project_name: values?.project_name ? values?.project_name : '',
+                customer: values?.customer ? values?.customer : '',
+            };
 
-        const body = {
-            start_date: values?.start_date ? dayjs(values?.start_date).format('YYYY-MM-DD') : '',
-            end_date: values?.end_date ? dayjs(values?.end_date).format('YYYY-MM-DD') : '',
-            // invoice_number: values?.invoice_no ? values?.invoice_no : '',
-            // project_name: values?.project_name ? values?.project_name : '',
-            customer: values?.customer ? values?.customer : '',
-        };
-
-        axios
-            .get(`${baseUrl}/quotation-reports/`, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-                params: { ...body },
-            })
-            .then((res: any) => {
-                const data = res?.data?.map((item: any) => {
-                    return item.quotation;
-                });
-
-                setDataSource(data);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
+            const res: any = await Models.quotationReport.filter(body, page);
+            setState({
+                quotationReportList: res?.results,
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
+                searchValue: values,
             });
-        form.resetFields();
+        } catch (error) {
+            setState({ loading: false });
+
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const handlePageChange = (number: any) => {
+        setState({ currentPage: number });
+
+        const body = bodyData();
+
+        if (!ObjIsEmpty(body)) {
+            onFinish(state.searchValue, number);
+        } else {
+            initialData(number);
+        }
+
+        return number;
     };
 
     const onFinishFailed = (errorInfo: any) => {};
@@ -320,8 +294,39 @@ const QuotationReport = () => {
     };
 
     // download
-    const handleDownloadAll = () => {
-        console.log('dataSource', dataSource);
+    const handleDownloadAll = async (item: any) => {
+        setState({ loading: true, id: item.id });
+        const { searchValue } = state;
+
+        const body = {
+            from_date: state.searchValue?.start_date ? dayjs(state.searchValue.start_date).format('YYYY-MM-DD') : '',
+            to_date: state.searchValue?.end_date ? dayjs(state.searchValue.end_date).format('YYYY-MM-DD') : '',
+            customer: state.searchValue?.customer ? state.searchValue?.customer : '',
+        };
+
+        let allData: any[] = [];
+        let currentPage = 1;
+        let hasNext = true;
+
+        while (hasNext) {
+            let res: any;
+
+            if (!ObjIsEmpty(body)) {
+                res = await Models.quotationReport.filter(body, currentPage);
+            } else {
+                res = await Models.quotationReport.quotationReportList(currentPage);
+            }
+
+            allData = allData.concat(res?.results || []);
+
+            if (res?.next) {
+                currentPage += 1;
+            } else {
+                hasNext = false;
+            }
+        }
+
+        setState({ loading: false });
 
         // Create a new jsPDF instance
         const doc: any = new jsPDF();
@@ -347,21 +352,21 @@ const QuotationReport = () => {
         ];
 
         // Map the data into the table format
-        const tableData = dataSource.map((item: any) => {
+        const tableData = allData.map((item: any) => {
             console.log(item);
             return [
-                item.quotation_number,
-                item.customer, // ID
+                item.quotation.quotation_number,
+                item.quotation.customer, // ID
                 // item.project_name, // Expense User
                 // item.discount,
                 // item.advance,
                 // item.balance,
-                item.total_amount,
+                item.quotation.total_amount,
                 // item.tds_amount,
 
-                item.place_of_testing,
-                item.completed,
-                dayjs(item.date).format('DD-MM-YYYY'), // Expense Date (formatted)
+                item.quotation.place_of_testing,
+                item.quotation.completed,
+                dayjs(item.quotation.date).format('DD-MM-YYYY'), // Expense Date (formatted)
                 // {
                 //     content: item.file, // URL to the file
                 //     link: item.file, // URL should be a clickable link in the PDF
@@ -447,10 +452,20 @@ const QuotationReport = () => {
                                 </Select>
                             </Form.Item> */}
 
-                            <div style={{ display: 'flex', alignItems: 'end' }}>
+                            <div style={{ display: 'flex', alignItems: 'between' }}>
                                 <Form.Item>
-                                    <Button type="primary" htmlType="submit" style={{ width: '200px' }}>
+                                    <Button type="primary" htmlType="submit" style={{ width: '150px' }}>
                                         Search
+                                    </Button>
+                                    <Button
+                                        type="primary"
+                                        htmlType="submit"
+                                        onClick={() => {
+                                            form.resetFields();
+                                        }}
+                                        style={{ width: '150px' }}
+                                    >
+                                        Clear
                                     </Button>
                                 </Form.Item>
                             </div>
@@ -463,12 +478,25 @@ const QuotationReport = () => {
                     </div>
                     <div>
                         <Space>
-                            <Button type="primary" onClick={exportToExcel}>
-                                Export to Excel
-                            </Button>
-                            <Button type="primary" onClick={handleDownloadAll}>
-                                Download PDF
-                            </Button>
+                            {button.map((item) => {
+                                console.log(state.loading && item.id == state.id);
+
+                                return (
+                                    <Button
+                                        key={item.id}
+                                        type="primary"
+                                        onClick={() => {
+                                            if (item.id == 1) {
+                                                exportToExcel(item);
+                                            } else {
+                                                handleDownloadAll(item);
+                                            }
+                                        }}
+                                    >
+                                        {state.loading && item.id == state.id ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2" /> : item.name}
+                                    </Button>
+                                );
+                            })}
 
                             {/* <Search placeholder="input search text" onChange={inputChange} enterButton className='search-bar' /> */}
                         </Space>
@@ -476,17 +504,32 @@ const QuotationReport = () => {
                 </div>
                 <div className="table-responsive">
                     <Table
-                        dataSource={dataSource}
+                        dataSource={state.quotationReportList}
                         columns={columns}
                         pagination={false}
                         scroll={scrollConfig}
                         loading={{
-                            spinning: loading, // This enables the loading spinner
+                            spinning: state.loading, // This enables the loading spinner
                             indicator: <Spin size="large" />,
                             tip: 'Loading data...', // Custom text to show while loading
                         }}
                     />
                 </div>
+                {state.quotationReportList?.length > 0 && (
+                    <div>
+                        <div
+                            className="mb-20 "
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <Pagination totalPage={state.total} itemsPerPage={10} currentPages={state.currentPage} activeNumber={handlePageChange} />
+                            {/* <Pagination activeNumber={handlePageChange} totalPages={state.total} currentPages={state.currentPage} /> */}
+                        </div>
+                    </div>
+                )}
             </div>
         </>
     );
