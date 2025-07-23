@@ -131,7 +131,9 @@ const Header = () => {
         setNotifications(notifications.filter((user) => user.id !== value));
     };
 
-    const { t, i18n } = useTranslation();
+    // const { t, i18n } = useTranslation();
+
+    const { t } = useTranslation<'common'>();
 
     const { confirm } = Modal;
 
