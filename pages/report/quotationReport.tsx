@@ -452,22 +452,26 @@ const QuotationReport = () => {
                                 </Select>
                             </Form.Item> */}
 
-                            <div style={{ display: 'flex', alignItems: 'between' }}>
+                            <div style={{ display: 'flex', alignItems: 'between', justifyContent: 'space-between', gap: '10px' }}>
                                 <Form.Item>
-                                    <Button type="primary" htmlType="submit" style={{ width: '150px' }}>
+                                    <Button type="primary" htmlType="submit" style={{ width: '100px' }}>
                                         Search
                                     </Button>
+                                    
+                                </Form.Item>
+                                <Form.Item>
                                     <Button
                                         type="primary"
                                         htmlType="submit"
                                         onClick={() => {
                                             form.resetFields();
                                         }}
-                                        style={{ width: '150px' }}
+                                        style={{ width: '100px' }}
                                     >
                                         Clear
                                     </Button>
                                 </Form.Item>
+                                
                             </div>
                         </div>
                     </Form>
