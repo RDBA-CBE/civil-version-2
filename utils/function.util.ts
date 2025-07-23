@@ -11,7 +11,7 @@ export const useSetState = (initialState: any) => {
     return [state, newSetState];
 };
 
-export const baseUrl = 'http://31.97.206.165';
+export const baseUrl = 'http://31.97.206.165/api';
 
 export const Success = (content: any) => {
     message.open({
