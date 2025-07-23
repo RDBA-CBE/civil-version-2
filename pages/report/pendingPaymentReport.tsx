@@ -5,7 +5,10 @@ import * as FileSaver from 'file-saver';
 import ExcelJS from 'exceljs';
 import router from 'next/router';
 import dayjs from 'dayjs';
-import { baseUrl, roundNumber } from '@/utils/function.util';
+import { baseUrl, ObjIsEmpty, roundNumber, useSetState } from '@/utils/function.util';
+import Models from '@/imports/models.import';
+import Pagination from '@/components/pagination/pagination';
+import IconLoader from '@/components/Icon/IconLoader';
 
 const PendingPaymentReport = () => {
     const { Search } = Input;
@@ -14,6 +17,40 @@ const PendingPaymentReport = () => {
     const [dataSource, setDataSource] = useState([]);
     const [formFields, setFormFields] = useState<any>([]);
     const [loading, setLoading] = useState(false);
+
+    const [state, setState] = useSetState({
+        page: 1,
+        pageSize: 10,
+        total: 0,
+        currentPage: 1,
+        pageNext: null,
+        pagePrev: null,
+        paymentPendingList: [],
+        searchValue: null,
+    });
+
+    useEffect(() => {
+        initialData(1);
+    }, []);
+
+    const initialData = async (page: any) => {
+        try {
+            setState({ loading: true });
+
+            const res: any = await Models.paymentPending.paymentPendingList(page);
+            setState({
+                paymentPendingList: res?.results,
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
+            });
+        } catch (error) {
+            setState({ loading: false });
+            console.log('✌️error --->', error);
+        }
+    };
 
     useEffect(() => {
         axios
@@ -32,6 +69,30 @@ const PendingPaymentReport = () => {
             });
     }, []);
 
+    const bodyData = () => {
+        const body: any = {};
+        if (state.searchValue) {
+            if (state.searchValue?.customer) {
+                body.customer = state.searchValue.customer;
+            }
+            if (state.searchValue?.from_date) {
+                body.from_date = state.searchValue.from_date;
+            }
+
+            if (state.searchValue?.project_name) {
+                body.project_name = state.searchValue.project_name;
+            }
+            if (state.searchValue?.to_date) {
+                body.to_date = state.searchValue.to_date;
+            }
+            if (state.searchValue?.invoice_no) {
+                body.invoice_no = state.searchValue.invoice_no;
+            }
+        }
+
+        return body;
+    };
+
     // Table Datas
     const columns = [
         {
@@ -48,9 +109,12 @@ const PendingPaymentReport = () => {
         },
         {
             title: 'Customer Name',
-            dataIndex: 'customer',
+            // dataIndex: 'customer',
             key: 'customer',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{record.customer.customer_name}</div>;
+            },
         },
         {
             title: 'Project Name',
@@ -132,42 +196,82 @@ const PendingPaymentReport = () => {
 
     // export to excel format
     const exportToExcel = async () => {
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Sheet1');
+        setState({ loading: true });
 
-        // Add header row
-        worksheet.addRow(columns.map((column) => column.title));
+        const body = {
+            project_name: state.searchValue?.project_name ? state.searchValue?.project_name : '',
+            from_date: state.searchValue?.from_date ? dayjs(state.searchValue?.from_date).format('YYYY-MM-DD') : '',
+            to_date: state.searchValue?.to_date ? dayjs(state.searchValue?.to_date).format('YYYY-MM-DD') : '',
+            customer: state.searchValue?.customer ? state.searchValue?.customer : '',
+            invoice_no: state.searchValue?.invoice_no ? state.searchValue?.invoice_no : '',
+        };
 
-        // Add data rows
-        // dataSource.forEach((row: any) => {
-        //     worksheet.addRow(columns.map((column: any) => row[column.dataIndex]));
-        // });
-        dataSource.forEach((row) => {
-            const rowData: any = [];
-            columns.forEach((column) => {
-                if (column.dataIndex === 'invoice_file') {
-                    // Add hyperlink in the specific column
-                    rowData.push({
-                        text: row[column.dataIndex], // Text displayed for the link
-                        hyperlink: row[column.dataIndex], // URL for the link
-                    });
+        console.log('body', body);
+
+        let allData: any[] = [];
+        let currentPage = 1;
+        let hasNext = true;
+
+        try {
+            while (hasNext) {
+                let res: any;
+
+                if (!ObjIsEmpty(bodyData())) {
+                    res = await Models.paymentPending.filter(body, currentPage);
                 } else {
-                    rowData.push(row[column.dataIndex]);
+                    res = await Models.paymentPending.paymentPendingList(currentPage);
                 }
+
+                allData = allData.concat(res?.results || []);
+
+                hasNext = !!res?.next;
+                if (hasNext) currentPage += 1;
+            }
+
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Sheet1');
+
+            // Add header row
+            worksheet.addRow(columns.map((column) => column.title));
+
+            // Add data rows
+            // dataSource.forEach((row: any) => {
+            //     worksheet.addRow(columns.map((column: any) => row[column.dataIndex]));
+            // });
+
+            allData.forEach((row: any) => {
+                const rowData = columns.map((column: any) => {
+                    if (column.dataIndex) {
+                        return row[column.dataIndex];
+                    } else if (column.key === 'customer_name') {
+                        return row.customer?.customer_name || '';
+                    } else if (column.key === 'invoice_file') {
+                        return row.invoice_file;
+                    } else if (column.key === 'advance' || column.key === 'total_amount' || column.key === 'balance') {
+                        return roundNumber(row);
+                    } else {
+                        return ''; // fallback
+                    }
+                });
+                worksheet.addRow(rowData);
             });
-            worksheet.addRow(rowData);
-        });
 
-        // Generate a Blob containing the Excel file
-        const blob = await workbook.xlsx.writeBuffer();
+            // Generate a Blob containing the Excel file
+            const blob = await workbook.xlsx.writeBuffer();
 
-        // Use file-saver to save the Blob as a file
-        FileSaver.saveAs(
-            new Blob([blob], {
-                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            }),
-            'Pending-payment-Report.xlsx'
-        );
+            // Use file-saver to save the Blob as a file
+            FileSaver.saveAs(
+                new Blob([blob], {
+                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                }),
+                'Pending-payment-Report.xlsx'
+            );
+        } catch (error) {
+             console.error('❌ Error exporting Excel:', error);
+        }
+        finally {
+            setState({ loading: false });
+        }
     };
 
     const scrollConfig: any = {
@@ -177,68 +281,49 @@ const PendingPaymentReport = () => {
 
     // search
 
-    useEffect(() => {
-        initialData();
-    }, []);
+    // form submit
+    const onFinish2 = async (values: any, page = 1) => {
+        try {
+            setState({ loading: true });
 
-    const initialData = () => {
-        const Token = localStorage.getItem('token');
-        setLoading(true);
-        const body = {
-            project_name: '',
-            from_date: '',
-            to_date: '',
-            customer: '',
-            invoice_no: '',
-        };
+            const body = {
+                project_name: values.project_name ? values.project_name : '',
+                from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
+                to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
+                customer: values.customer ? values.customer : '',
+                invoice_no: values.invoice_no ? values.invoice_no : '',
+            };
 
-        axios
-            .post(`${baseUrl}/pending_payment/`, body, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res: any) => {
-                console.log(res);
-
-                setDataSource(res?.data?.pending_payments);
-                setLoading(false);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
-                setLoading(false);
+            const res: any = await Models.paymentPending.filter(body, page);
+            setState({
+                paymentPendingList: res?.results,
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
+                searchValue: values,
             });
+        } catch (error) {
+            setState({ loading: false });
+
+            console.log('✌️error --->', error);
+        }
     };
 
-    // form submit
-    const onFinish2 = (values: any) => {
-        const Token = localStorage.getItem('token');
-        console.log(values);
-        const body = {
-            project_name: values.project_name ? values.project_name : '',
-            from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
-            to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
-            customer: values.customer ? values.customer : '',
-            invoice_no: values.invoice_no ? values.invoice_no : '',
-        };
+    const handlePageChange = (number: any) => {
+        setState({ currentPage: number });
+        console.log('number', number);
 
-        axios
-            .post(`${baseUrl}/pending_payment/`, body, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res: any) => {
-                setDataSource(res?.data?.pending_payments);
-            })
-            .catch((error: any) => {
-                if (error?.response?.status === 401) {
-                    router.push('/');
-                }
-            });
-        form.resetFields();
+        const body = bodyData();
+
+        if (!ObjIsEmpty(body)) {
+            onFinish2(state.searchValue, number);
+        } else {
+            initialData(number);
+        }
+
+        return number;
     };
 
     const onFinishFailed2 = (errorInfo: any) => {};
@@ -275,10 +360,23 @@ const PendingPaymentReport = () => {
                                 <DatePicker style={{ width: '100%' }} />
                             </Form.Item>
 
-                            <div style={{ display: 'flex', alignItems: 'end' }}>
+                            <div style={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: '10px' }}>
                                 <Form.Item>
-                                    <Button type="primary" htmlType="submit" style={{ width: '150px' }}>
+                                    <Button type="primary" htmlType="submit" style={{ width: '100px' }}>
                                         Search
+                                    </Button>
+                                </Form.Item>
+
+                                <Form.Item>
+                                    <Button
+                                        type="primary"
+                                        htmlType="submit"
+                                        onClick={() => {
+                                            form.resetFields();
+                                        }}
+                                        style={{ width: '100px' }}
+                                    >
+                                        Clear
                                     </Button>
                                 </Form.Item>
                             </div>
@@ -292,7 +390,7 @@ const PendingPaymentReport = () => {
                     <div>
                         <Space>
                             <Button type="primary" onClick={exportToExcel}>
-                                Export to Excel
+                                {state.loading ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2" /> : 'Export to Excel'}
                             </Button>
                             {/* <Search placeholder="input search text" onChange={inputChange} enterButton className="search-bar" /> */}
                         </Space>
@@ -300,16 +398,32 @@ const PendingPaymentReport = () => {
                 </div>
                 <div className="table-responsive">
                     <Table
-                        dataSource={dataSource}
+                        dataSource={state.paymentPendingList}
                         columns={columns}
                         scroll={scrollConfig}
                         loading={{
-                            spinning: loading, // This enables the loading spinner
+                            spinning: state.loading, // This enables the loading spinner
                             indicator: <Spin size="large" />,
                             tip: 'Loading data...', // Custom text to show while loading
                         }}
                     />
                 </div>
+
+                {state.paymentPendingList?.length > 0 && (
+                    <div>
+                        <div
+                            className="mb-20 "
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <Pagination totalPage={state.total} itemsPerPage={10} currentPages={state.currentPage} activeNumber={handlePageChange} />
+                            {/* <Pagination activeNumber={handlePageChange} totalPages={state.total} currentPages={state.currentPage} /> */}
+                        </div>
+                    </div>
+                )}
             </div>
         </>
     );
