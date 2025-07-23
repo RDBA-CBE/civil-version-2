@@ -781,7 +781,7 @@ export default function Edits() {
         e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ''); // Remove non-numeric characters
     };
 
-    return state.isAdmin ? (
+    return !state.isAdmin ? (
         <InvoiceData data={state.details} taxData={state.taxData} testList={state.testList} paymentList={state.paymentList} checkedItems={state.checkedItems} invoiceId={id} />
     ) : (
         <Spin size="large" spinning={state.loading} delay={500}>
