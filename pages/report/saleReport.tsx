@@ -338,35 +338,38 @@ const SaleReport = () => {
     const exportToExcel = async () => {
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Sheet1');
-
+    
         // Add header row
         worksheet.addRow(columns.map((column) => column.title1));
-
+    
         // Add data rows
-        // dataSource.forEach((row: any) => {
-        //     worksheet.addRow(columns.map((column: any) => row[column.dataIndex]));
-        // });
         dataSource.forEach((row) => {
             const rowData: any = [];
             columns.forEach((column) => {
                 if (column.dataIndex === 'invoice_file') {
                     // Add hyperlink in the specific column
                     rowData.push({
-                        text: row[column.dataIndex], // Text displayed for the link
+                        text: row[column.dataIndex] ? 'Download' : 'No File',
                         hyperlink: row[column.dataIndex], // URL for the link
                     });
                 } else {
-                    rowData.push(row[column.dataIndex]);
+                    // Apply rounding for specific numeric columns
+                    const value = row[column.dataIndex];
+                    if (column.dataIndex === 'balance' || 
+                        column.dataIndex === 'advance' || 
+                        column.dataIndex === 'total_amount') {
+                        rowData.push(roundNumber(value));
+                    } else {
+                        rowData.push(value);
+                    }
                 }
             });
-console.log('✌️columns --->', columns);
-
             worksheet.addRow(rowData);
         });
-
+    
         // Generate a Blob containing the Excel file
         const blob = await workbook.xlsx.writeBuffer();
-
+    
         // Use file-saver to save the Blob as a file
         FileSaver.saveAs(
             new Blob([blob], {
