@@ -5,11 +5,11 @@ import * as FileSaver from 'file-saver';
 import ExcelJS from 'exceljs';
 import router from 'next/router';
 import dayjs from 'dayjs';
-import { baseUrl, ObjIsEmpty, useSetState,roundNumber } from '@/utils/function.util';
+import { baseUrl, ObjIsEmpty, useSetState, roundNumber } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import Models from '@/imports/models.import';
 import paymentPending from '@/models/paymentPending.model';
-
+import IconLoader from '@/components/Icon/IconLoader';
 
 const PendingPayment = () => {
     const { Search } = Input;
@@ -63,9 +63,12 @@ const PendingPayment = () => {
         },
         {
             title: 'Customer Name',
-            dataIndex: 'customer',
-            key: 'customer',
+            // dataIndex: 'customer_name',
+            key: 'customer_name',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{record.customer.customer_name}</div>;
+            },
         },
         {
             title: 'Project Name',
@@ -136,27 +139,75 @@ const PendingPayment = () => {
 
     // export to excel format
     const exportToExcel = async () => {
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Sheet1');
+        setState({ loading: true });
+        const body = {
+            project_name: state.searchValue?.project_name ? state.searchValue?.project_name : '',
+            from_date: state.searchValue?.from_date ? dayjs(state.searchValue?.from_date).format('YYYY-MM-DD') : '',
+            to_date: state.searchValue?.to_date ? dayjs(state.searchValue?.to_date).format('YYYY-MM-DD') : '',
+            customer: state.searchValue?.customer ? state.searchValue?.customer : '',
+            invoice_no: state.searchValue?.invoice_no ? state.searchValue?.invoice_no : '',
+        };
 
-        // Add header row
-        worksheet.addRow(columns.map((column) => column.title));
+        console.log('body', body);
 
-        // Add data rows
-        dataSource.forEach((row: any) => {
-            worksheet.addRow(columns.map((column: any) => row[column.dataIndex]));
-        });
+        let allData: any[] = [];
+        let currentPage = 1;
+        let hasNext = true;
+        try {
+            while (hasNext) {
+                let res: any;
 
-        // Generate a Blob containing the Excel file
-        const blob = await workbook.xlsx.writeBuffer();
+                if (!ObjIsEmpty(bodyData())) {
+                    res = await Models.paymentPending.filter(body, currentPage);
+                } else {
+                    res = await Models.paymentPending.paymentPendingList(currentPage);
+                }
 
-        // Use file-saver to save the Blob as a file
-        FileSaver.saveAs(
-            new Blob([blob], {
-                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            }),
-            'Expense-Report.xlsx'
-        );
+                allData = allData.concat(res?.results || []);
+
+                hasNext = !!res?.next;
+                if (hasNext) currentPage += 1;
+            }
+
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Sheet1');
+
+            // Add header row
+            worksheet.addRow(columns.map((column) => column.title));
+
+            // Add data rows
+            allData.forEach((row: any) => {
+                const rowData = columns.map((column: any) => {
+                    if (column.dataIndex) {
+                        return row[column.dataIndex];
+                    } else if (column.key === 'customer_name') {
+                        return row.customer?.customer_name || '';
+                    } else if (column.key === 'incompleted_test') {
+                        return row.completed;
+                    } else if (column.key === 'advance' || column.key === 'total_amount' || column.key === 'balance') {
+                        return roundNumber(row);
+                    } else {
+                        return ''; // fallback
+                    }
+                });
+                worksheet.addRow(rowData);
+            });
+
+            // Generate a Blob containing the Excel file
+            const blob = await workbook.xlsx.writeBuffer();
+
+            // Use file-saver to save the Blob as a file
+            FileSaver.saveAs(
+                new Blob([blob], {
+                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                }),
+                'Expense-Report.xlsx'
+            );
+        } catch (error) {
+            console.error('❌ Error exporting Excel:', error);
+        } finally {
+            setState({ loading: false });
+        }
     };
 
     const scrollConfig: any = {
@@ -296,9 +347,9 @@ const PendingPayment = () => {
                                 <DatePicker style={{ width: '100%' }} />
                             </Form.Item>
 
-                            <div style={{ display: 'flex', alignItems: 'end' }}>
+                            <div style={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: '10px' }}>
                                 <Form.Item>
-                                    <Button type="primary" htmlType="submit" style={{ width: '150px' }}>
+                                    <Button type="primary" htmlType="submit" style={{ width: '100px' }}>
                                         Search
                                     </Button>
                                 </Form.Item>
@@ -326,7 +377,7 @@ const PendingPayment = () => {
                     <div>
                         <Space>
                             <Button type="primary" onClick={exportToExcel}>
-                                Export to Excel
+                                {state.loading ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2" /> : 'Export to Excel'}
                             </Button>
                             {/* <Search placeholder="input search text" onChange={inputChange} enterButton className="search-bar" /> */}
                         </Space>

@@ -176,6 +176,7 @@ const InvoiceFileUpload = () => {
             dataIndex: 'invoice_no',
             key: 'invoice_no',
             className: 'singleLineCell',
+             render: (text: any, record: any) => (text ? text : 'N/A'),
         },
         {
             title: 'Expense',
@@ -530,9 +531,9 @@ const InvoiceFileUpload = () => {
                                 </Select>
                             </Form.Item> */}
 
-                            <div style={{ display: 'flex', alignItems: 'end' }}>
+                            <div style={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: '10px' }}>
                                 <Form.Item>
-                                    <Button type="primary" htmlType="submit" style={{ width: '150px' }}>
+                                    <Button type="primary" htmlType="submit" style={{ width: '100px' }}>
                                         Search
                                     </Button>
                                 </Form.Item>
@@ -544,7 +545,7 @@ const InvoiceFileUpload = () => {
                                     onClick={() => {
                                         form.resetFields();
                                     }}
-                                    style={{ width: '150px' }}
+                                    style={{ width: '100px' }}
                                 >
                                     Clear
                                 </Button>

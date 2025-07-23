@@ -318,9 +318,9 @@ const TestReport = () => {
                                 <DatePicker style={{ width: '100%' }} />
                             </Form.Item>
 
-                            <div style={{ display: 'flex', alignItems: 'end' }}>
+                            <div style={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: '10px' }}>
                                 <Form.Item>
-                                    <Button type="primary" htmlType="submit" style={{ width: '150px' }}>
+                                    <Button type="primary" htmlType="submit" style={{ width: '100px' }}>
                                         Search
                                     </Button>
                                 </Form.Item>
