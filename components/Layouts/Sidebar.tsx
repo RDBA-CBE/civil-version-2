@@ -56,7 +56,7 @@ const Sidebar = () => {
     };
 
     const dispatch = useDispatch();
-    const { t } = useTranslation<'common'>();
+    const { t } = useTranslation();
 
 
     const { confirm } = Modal;

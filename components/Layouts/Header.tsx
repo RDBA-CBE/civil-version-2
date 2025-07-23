@@ -131,9 +131,7 @@ const Header = () => {
         setNotifications(notifications.filter((user) => user.id !== value));
     };
 
-    // const { t, i18n } = useTranslation();
-
-    const { t } = useTranslation<'common'>();
+    const { t, i18n } = useTranslation();
 
     const { confirm } = Modal;
 
@@ -239,7 +237,7 @@ const Header = () => {
                                     />
                                 </svg>
                                 <span className="px-1">
-                                    <Link href="/dashboard">{t('Dashboard')} </Link>
+                                    <Link href="/dashboard">{t('Dashboard' )} </Link>
                                 </span>
                             </div>
                         </button>

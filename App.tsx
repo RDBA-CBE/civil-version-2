@@ -9,7 +9,7 @@ function App({ children }: PropsWithChildren) {
     const themeConfig = useSelector((state: IRootState) => state.themeConfig);
     const dispatch = useDispatch();
     // const { i18n } = useTranslation();
-    const { i18n } = useTranslation<'translation'>();
+    const { i18n } = useTranslation();
 
 
     useEffect(() => {
