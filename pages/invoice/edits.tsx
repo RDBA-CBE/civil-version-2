@@ -202,6 +202,7 @@ export default function Edits() {
 
             await testList();
             await getInvoice();
+            await invoiceUpdate();
             form1.resetFields();
             setState({
                 isModalOpen: false,
@@ -225,7 +226,7 @@ export default function Edits() {
                 total: Number(values?.total),
             };
             await Models.invoice.updateTest(state.editTestId, body);
-            await Promise.all([testList(), getInvoice()]);
+            await Promise.all([testList(), getInvoice(), invoiceUpdate()]);
             setState({ isOpen: false });
             form.resetFields();
             setState({ testLoading: false });
@@ -264,12 +265,26 @@ export default function Edits() {
         }
     };
 
+    const invoiceUpdate = async () => {
+        try {
+            const body = {
+                date: state.date,
+                completed: state.completed,
+                place_of_testing: state.place_of_testing,
+            };
+            const res = await Models.invoice.editInvoice(id, body);
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
+    };
+
     const handleDelete = async (id: any) => {
         try {
             setState({ testDeleteLoading: true, deletingId: id });
             await Models.invoice.deleteTest(id);
             testList();
             getInvoice();
+            invoiceUpdate();
             messageApi.open({
                 type: 'success',
                 content: 'Test deleted successfully',
@@ -286,6 +301,7 @@ export default function Edits() {
             await Models.invoice.deletePayment(id);
             paymentList();
             getInvoice();
+            invoiceUpdate();
             messageApi.open({
                 type: 'success',
                 content: 'Payment deleted successfully',
@@ -428,6 +444,7 @@ export default function Edits() {
             });
 
             getInvoice();
+            invoiceUpdate();
         } catch (error) {
             console.log('✌️error --->', error);
         }
@@ -641,7 +658,7 @@ export default function Edits() {
             const res = await Models.invoice.addPayment(body);
             paymentList();
             getInvoice();
-
+            invoiceUpdate();
             setState({ paymentLoading: false, isOpenPayment: false, paymentId: null, payment_mode: { value: 'cash', label: 'Cash' }, paymentAmount: '', paymentDate: '' });
         } catch (error: any) {
             if (error?.amount?.length > 0) {
@@ -727,7 +744,6 @@ export default function Edits() {
             setState({ discountLoading: true });
 
             if (state.discountData == undefined) {
-                console.log('✌️ if --->');
                 const discountBody = {
                     discount: values?.discount ? values?.discount : 0,
                     invoice: id,
@@ -735,15 +751,16 @@ export default function Edits() {
 
                 await Models.invoice.createInvoiceDiscount(discountBody);
                 await getInvoice();
+                await invoiceUpdate();
                 setState({ isOpenDiscount: false, discountLoading: false });
             } else {
-                console.log('✌️else --->');
                 const body = {
                     discount: values?.discount ? values?.discount : 0,
                 };
 
                 await Models.invoice.updateInvoiceDiscount(state.discountData.id, body);
                 await getInvoice();
+                await invoiceUpdate();
                 setState({ isOpenDiscount: false, discountLoading: false });
             }
         } catch (error) {
