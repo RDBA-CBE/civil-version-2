@@ -12,6 +12,7 @@ import IconLockDots from '@/components/Icon/IconLockDots';
 import Models from '@/imports/models.import';
 import Pagination from '@/components/pagination/pagination';
 import useDebounce from '@/components/useDebounce/useDebounce';
+import IconLoader from '@/components/Icon/IconLoader';
 
 const Employee = () => {
     const { Search } = Input;
@@ -32,36 +33,32 @@ const Employee = () => {
     const [loading, setLoading] = useState(false);
     const [isUpdatePassword, setIsUpdatePassword] = useState(false);
 
-
     const [errorMessage, setErrorMessage] = useState('');
     const [fileInputData, setFileInputData] = useState<any>({
         signature: null,
     });
 
     const [state, setState] = useSetState({
-            page: 1,
-            pageSize: 10,
-            total: 0,
-            currentPage: 1,
-            pageNext: null,
-            pagePrev: null,
-            search:''
-        });
+        page: 1,
+        pageSize: 10,
+        total: 0,
+        currentPage: 1,
+        pageNext: null,
+        pagePrev: null,
+        search: '',
+    });
 
     useEffect(() => {
         const Admin: any = localStorage.getItem('admin');
         setAdmin(Admin);
     }, []);
 
-    
-
     useEffect(() => {
         getEmployee(1);
     }, []);
-        const debouncedSearch = useDebounce(state.search);
+    const debouncedSearch = useDebounce(state.search);
 
-
-     useEffect(() => {
+    useEffect(() => {
         getEmployee(1);
     }, [debouncedSearch]);
 
@@ -95,31 +92,29 @@ const Employee = () => {
     //         });
     // };
 
-    const getEmployee = async(page: any) => {
+    const getEmployee = async (page: any) => {
+        try {
+            setState({ loading: true });
+            const body = bodyData();
+            const res: any = await Models.customer.employeeList(page, body);
+            console.log('abcd --->', res);
+            setState({
+                // invoiceList: res?.results,
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
+            });
+            setDataSource(res?.results);
+            setFilterData(res?.results);
+        } catch (error) {
+            setState({ loading: false });
+            console.log('✌️error --->', error);
+        }
+    };
 
-         try {
-                    setState({ loading: true });
-                    const body = bodyData();
-                    const res: any = await Models.customer.employeeList(page, body);
-                    console.log('abcd --->', res);
-                    setState({
-                        // invoiceList: res?.results,
-                        currentPage: page,
-                        pageNext: res?.next,
-                        pagePrev: res?.previous,
-                        total: res?.count,
-                        loading: false,
-                    });
-                    setDataSource(res?.results);
-                    setFilterData(res?.results);
-                } catch (error) {
-                    setState({ loading: false });
-                    console.log('✌️error --->', error);
-                }
-
-    }
-
-      const bodyData = () => {
+    const bodyData = () => {
         const body: any = {};
         if (state.search) {
             body.search = state.search;
@@ -213,13 +208,14 @@ const Employee = () => {
     };
 
     const showPasswordDrawer = (record: any) => {
-        setState({ employeeId: record.id, employee_name: record?.employee_name });
+        setState({ employeeId: record.user, employee_name: record?.employee_name });
 
         setIsUpdatePassword(true);
     };
 
     const handleUpdatePassword = async () => {
         try {
+            setState({ btnLoading: true });
             if (!state.new_password) {
                 setState({ newPasswordError: true });
             } else if (!state.confirm_new_password) {
@@ -228,11 +224,12 @@ const Employee = () => {
                 setState({ matchPasswordError: true });
             } else {
                 const body = {
-                    employeeId: state.employeeId,
+                    user_id: state.employeeId,
                     new_password: state.new_password,
                     confirm_new_password: state.confirm_new_password,
                 };
-                // const res = await Models.auth.changeEmployeePassword(body);
+                const res: any = await Models.auth.changeEmployeePassword(body);
+                console.log('✌️res --->', res);
                 setState({
                     confirm_new_password: '',
                     showPassword1: false,
@@ -242,11 +239,22 @@ const Employee = () => {
                     confirmPasswordError: '',
                     newPasswordError: false,
                     matchPasswordError: false,
+                    btnLoading: false,
                 });
-                // setIsUpdatePassword(false);
+                setIsUpdatePassword(false);
+                messageApi.open({
+                    type: 'success',
+                    content: res?.detail,
+                });
             }
-        } catch (error) {
-            console.log('✌️error --->', error);
+        } catch (error: any) {
+            setState({ btnLoading: false });
+            if (error?.detail) {
+                messageApi.open({
+                    type: 'error',
+                    content: error?.detail,
+                });
+            }
         }
     };
 
@@ -631,7 +639,7 @@ const Employee = () => {
                     />
                 </div>
 
-                 {filterData?.length > 0 && (
+                {filterData?.length > 0 && (
                     <div>
                         <div
                             className="mb-20 "
@@ -697,7 +705,7 @@ const Employee = () => {
                             <Input />
                         </Form.Item>
 
-                        <Form.Item label="Joining Date" name="joining_date" required={true} rules={[{ required: true, message: 'Please input DOJ!' }]}>
+                        <Form.Item label="Joining Date" name="joining_date" required={true} rules={[{ required: true, message: 'Please input Joining Date!' }]}>
                             <DatePicker style={{ width: '100%' }} />
                         </Form.Item>
                         {admin === 'true' ? (
@@ -788,6 +796,27 @@ const Employee = () => {
                                     />
                                 </div>
                             </div>
+
+                            {/* <div>
+                                <label htmlFor="Password">Old Password</label>
+                                <div className="relative text-white-dark">
+                                    <input
+                                        required
+                                        id="old_password"
+                                        type={state.showOldPassword ? 'text' : 'password'}
+                                        placeholder="Enter Old Password"
+                                        className="form-input ps-10 placeholder:text-white-dark"
+                                        name="old_password"
+                                        value={state.old_password}
+                                        onChange={(e) => setState({ old_password: e.target.value })}
+                                    />
+
+                                    <span className="absolute start-4 top-1/2 -translate-y-1/2" onClick={() => setState({ showOldPassword: !state.showOldPassword })} style={{ cursor: 'pointer' }}>
+                                        <IconLockDots fill={true} />
+                                    </span>
+                                </div>
+                                {state.oldPasswordError == true && <div style={{ color: 'red', marginTop: '5px' }}>Old Password is required.</div>}
+                            </div> */}
                             <div>
                                 <label htmlFor="Password">New Password</label>
                                 <div className="relative text-white-dark">
@@ -835,7 +864,7 @@ const Employee = () => {
                                     className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]"
                                     onClick={() => handleUpdatePassword()}
                                 >
-                                    Change Password
+                                    {state.btnLoading ? <IconLoader className=" h-4 w-4 animate-spin" /> : 'Change Password'}
                                 </button>
                                 <button
                                     style={{ paddingRight: '10px' }}
@@ -845,11 +874,13 @@ const Employee = () => {
                                             confirm_new_password: '',
                                             showPassword1: false,
                                             new_password: '',
+                                            old_password: '',
                                             showNewPassword: false,
                                             employeeId: '',
                                             confirmPasswordError: '',
                                             newPasswordError: '',
                                             matchPasswordError: false,
+                                            oldPasswordError: false,
                                         });
                                         setIsUpdatePassword(false);
                                     }}
