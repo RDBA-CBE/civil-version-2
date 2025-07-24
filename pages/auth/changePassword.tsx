@@ -3,78 +3,43 @@ import { useRouter } from 'next/router';
 import BlankLayout from '@/components/Layouts/BlankLayout';
 import Link from 'next/link';
 import IconLockDots from '@/components/Icon/IconLockDots';
-import axios from 'axios';
-import { message } from 'antd';
-import { baseUrl } from '@/utils/function.util';
+import { Form, Input, Button, message } from 'antd';
+import Models from '@/imports/models.import';
 
 const ChangePassword = () => {
     const router = useRouter();
-
+    const [form] = Form.useForm();
+    const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showPassword2, setShowPassword2] = useState(false);
     const [showPassword3, setShowPassword3] = useState(false);
-    const [passwordMatchError, setPasswordMatchError] = useState(false);
 
     const togglePasswordVisibility = () => {
-        setShowPassword((prevShowPassword) => !prevShowPassword);
+        setShowPassword((prev) => !prev);
     };
 
     const togglePasswordVisibility2 = () => {
-        setShowPassword2((prevShowPassword) => !prevShowPassword);
+        setShowPassword2((prev) => !prev);
     };
 
     const togglePasswordVisibility3 = () => {
-        setShowPassword3((prevShowPassword) => !prevShowPassword);
+        setShowPassword3((prev) => !prev);
     };
 
-    const [formData, setFormData] = useState({
-        old_password: '',
-        new_password: '',
-        confirm_new_password: '',
-    });
-    const [messageApi, contextHolder] = message.useMessage();
-
-    const submitForm = async (e: any) => {
-        e.preventDefault();
-        console.log('formData', formData);
-
-        if (formData.new_password === formData.confirm_new_password) {
-            // Passwords match, proceed with your logic here
-            console.log('Passwords match!');
-        } else {
-            // Passwords don't match, display error message
-            setPasswordMatchError(true);
+    const onFinish = async (values: any) => {
+        setLoading(true);
+        try {
+            const res = await Models.auth.changePassword(values);
+            message.success('Password changed successfully!');
+            router.back();
+            setLoading(false);
+        } catch (error: any) {
+            if (error?.detail) {
+                message.error(error.detail);
+            }
+            console.log('✌️error --->', error);
+            setLoading(false);
         }
-
-        const Token = localStorage.getItem('token');
-        axios
-            .post(`${baseUrl}/change-password/`, formData, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res) => {
-                () => router.back();
-                messageApi.open({
-                    type: 'success',
-                    content: 'Password Changed',
-                });
-            })
-            .catch((error: any) => {
-                console.log(error.code);
-                messageApi.open({
-                    type: 'error',
-                    content: 'Old password is incorrect',
-                });
-            });
-    };
-
-    const inputChange = (e: any) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value,
-        });
-        setPasswordMatchError(false);
     };
 
     return (
@@ -89,7 +54,7 @@ const ChangePassword = () => {
                 <img src="/assets/images/auth/polygon-object.svg" alt="image" className="absolute bottom-0 end-[28%]" />
                 <div className="relative flex w-full max-w-[1502px] flex-col justify-between overflow-hidden rounded-md bg-white/60 backdrop-blur-lg dark:bg-black/50  lg:flex-row lg:gap-10 xl:gap-0">
                     <div className="relative hidden w-full items-center justify-center bg-[linear-gradient(225deg,rgba(239,18,98,1)_0%,rgba(67,97,238,1)_100%)] p-5 lg:inline-flex lg:max-w-[835px] xl:-ms-28 ltr:xl:skew-x-[14deg] rtl:xl:skew-x-[-14deg]">
-                        <div className="absolute inset-y-0 w-8 from-primary/10 via-transparent to-transparent ltr:-right-10 ltr:bg-gradient-to-r rtl:-left-10 rtl:bg-gradient-to-l xl:w-16 ltr:xl:-right-20 rtl:xl:-left-20"></div>
+                        <div className="absolute inset-y-0 w-8 from-primary/10 via-transparent to-transparent xl:w-16 ltr:-right-10 ltr:bg-gradient-to-r ltr:xl:-right-20 rtl:-left-10 rtl:bg-gradient-to-l rtl:xl:-left-20"></div>
                         <div className="ltr:xl:-skew-x-[14deg] rtl:xl:skew-x-[14deg]">
                             <Link href="/" className="ms-10 block w-48 lg:w-72">
                                 <img src="/assets/images/civil-techno-logo-white.png" alt="logo" />
@@ -106,90 +71,118 @@ const ChangePassword = () => {
                                 <h1 className="text-brown text-3xl font-extrabold uppercase !leading-snug md:text-4xl">Change Password</h1>
                                 <p className="text-base font-bold leading-normal text-white-dark">Enter your Old Password and New password to Change Password</p>
                             </div>
-                            {contextHolder}
-                            <form className="space-y-5 dark:text-white" onSubmit={submitForm}>
-                                <div>
-                                    <label htmlFor="Email">Old Password</label>
-                                    <div className="relative text-white-dark">
-                                        <input
-                                            required
-                                            id="old_password"
-                                            type={showPassword ? 'text' : 'password'}
-                                            placeholder="Enter Old Password"
-                                            className="form-input ps-10 placeholder:text-white-dark"
-                                            name="old_password"
-                                            value={formData?.old_password}
-                                            onChange={inputChange}
-                                        />
-                                        <span className="absolute start-4 top-1/2 -translate-y-1/2" onClick={togglePasswordVisibility}>
-                                            <IconLockDots fill={true} />
-                                        </span>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label htmlFor="Password">New Password</label>
-                                    <div className="relative text-white-dark">
-                                        <input
-                                            required
-                                            id="new_password"
-                                            type={showPassword2 ? 'text' : 'password'}
-                                            placeholder="Enter New Password"
-                                            className="form-input ps-10 placeholder:text-white-dark"
-                                            name="new_password"
-                                            value={formData?.new_password}
-                                            onChange={inputChange}
-                                        />
+                            <Form form={form} name="change-password" onFinish={onFinish} layout="vertical" requiredMark={false}>
+                                <Form.Item name="old_password" label="Old Password" rules={[{ required: true, message: 'Please input your old password!' }]}>
+                                    <Input.Password
+                                        placeholder="Enter Old Password"
+                                        className="form-input ps-10 placeholder:text-white-dark"
+                                        iconRender={(visible) => (
+                                            <span onClick={togglePasswordVisibility} style={{ cursor: 'pointer' }}>
+                                                <IconLockDots fill={true} />
+                                            </span>
+                                        )}
+                                        visibilityToggle={{ visible: showPassword, onVisibleChange: setShowPassword }}
+                                    />
+                                </Form.Item>
 
-                                        <span className="absolute start-4 top-1/2 -translate-y-1/2" onClick={togglePasswordVisibility2} style={{ cursor: 'pointer' }}>
-                                            <IconLockDots fill={true} />
-                                        </span>
-                                    </div>
+                                <Form.Item
+                                    name="new_password"
+                                    label="New Password"
+                                    rules={[
+                                        { required: true, message: 'Please input your new password!' },
+                                        ({ getFieldValue }) => ({
+                                            validator(_, value) {
+                                                if (!value || getFieldValue('old_password') !== value) {
+                                                    return Promise.resolve();
+                                                }
+                                                return Promise.reject(new Error('New password must be different from old password!'));
+                                            },
+                                        }),
+                                    ]}
+                                >
+                                    <Input.Password
+                                        placeholder="Enter New Password"
+                                        className="form-input ps-10 placeholder:text-white-dark"
+                                        iconRender={(visible) => (
+                                            <span onClick={togglePasswordVisibility2} style={{ cursor: 'pointer' }}>
+                                                <IconLockDots fill={true} />
+                                            </span>
+                                        )}
+                                        visibilityToggle={{ visible: showPassword2, onVisibleChange: setShowPassword2 }}
+                                    />
+                                </Form.Item>
+
+                                <Form.Item
+                                    name="confirm_new_password"
+                                    label="Confirm New Password"
+                                    dependencies={['new_password']}
+                                    rules={[
+                                        { required: true, message: 'Please confirm your new password!' },
+                                        ({ getFieldValue }) => ({
+                                            validator(_, value) {
+                                                if (!value || getFieldValue('new_password') === value) {
+                                                    return Promise.resolve();
+                                                }
+                                                return Promise.reject(new Error('The two passwords do not match!'));
+                                            },
+                                        }),
+                                    ]}
+                                >
+                                    <Input.Password
+                                        placeholder="Confirm New Password"
+                                        className="form-input ps-10 placeholder:text-white-dark"
+                                        iconRender={(visible) => (
+                                            <span onClick={togglePasswordVisibility3} style={{ cursor: 'pointer' }}>
+                                                <IconLockDots fill={true} />
+                                            </span>
+                                        )}
+                                        visibilityToggle={{ visible: showPassword3, onVisibleChange: setShowPassword3 }}
+                                    />
+                                </Form.Item>
+
+                                <div style={{ display: 'flex', width: '100%', gap: '10px' }}>
+                                    <Form.Item style={{ width: '50%' }}>
+                                        <Button
+                                            type="default"
+                                            htmlType="submit"
+                                            loading={loading}
+                                            className="btn btn-gradient !mt-4 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]"
+                                            style={{
+                                                background: 'transparent',
+                                                border: 'none',
+                                                width: '100%',
+                                            }}
+                                        >
+                                            Change Password
+                                        </Button>
+                                    </Form.Item>
+                                    <Form.Item style={{ width: '50%' }}>
+                                        <Button
+                                            type="default"
+                                            onClick={() => router.back()}
+                                            className="btn btn-gradient !mt-4 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]"
+                                            style={{
+                                                background: 'transparent',
+                                                border: 'none',
+                                                width: '100%',
+                                            }}
+                                        >
+                                            Cancel
+                                        </Button>
+                                    </Form.Item>
                                 </div>
-                                <div>
-                                    <label htmlFor="Password">Confirm New Password</label>
-                                    <div className="relative text-white-dark">
-                                        <input
-                                            required
-                                            id="confirm_new_password"
-                                            type={showPassword3 ? 'text' : 'password'}
-                                            placeholder="Enter Confirm Password"
-                                            className="form-input ps-10 placeholder:text-white-dark"
-                                            name="confirm_new_password"
-                                            value={formData?.confirm_new_password}
-                                            onChange={inputChange}
-                                        />
-                                        <span className="absolute start-4 top-1/2 -translate-y-1/2" onClick={togglePasswordVisibility3} style={{ cursor: 'pointer' }}>
-                                            <IconLockDots fill={true} />
-                                        </span>
-                                    </div>
-                                    {passwordMatchError && <div style={{ color: 'red', marginTop: '5px' }}>Passwords do not match. Please try again.</div>}
-                                </div>
-                                <div style={{ display: 'flex' }}>
-                                    <button type="submit" className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]">
-                                        Change Password
-                                    </button>
-                                    <button
-                                        style={{ paddingRight: '10px' }}
-                                        type="button"
-                                        onClick={() => router.back()}
-                                        className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]"
-                                    >
-                                        cancel
-                                    </button>
-                                </div>
-                            </form>
+                            </Form>
                         </div>
-                        <p className="absolute bottom-6 w-full text-center dark:text-white">
-                            ©{/* {new Date().getFullYear()} */}
-                            2024.Covai Civil Lab Private Limited. All Rights Reserved.
-                        </p>
+                        <p className="absolute bottom-6 w-full text-center dark:text-white">©2024.Covai Civil Lab Private Limited. All Rights Reserved.</p>
                     </div>
                 </div>
             </div>
         </div>
     );
 };
+
 ChangePassword.getLayout = (page: any) => {
     return <BlankLayout>{page}</BlankLayout>;
 };
+
 export default ChangePassword;

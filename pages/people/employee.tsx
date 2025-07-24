@@ -12,6 +12,7 @@ import IconLockDots from '@/components/Icon/IconLockDots';
 import Models from '@/imports/models.import';
 import Pagination from '@/components/pagination/pagination';
 import useDebounce from '@/components/useDebounce/useDebounce';
+import IconLoader from '@/components/Icon/IconLoader';
 
 const Employee = () => {
     const { Search } = Input;
@@ -207,16 +208,15 @@ const Employee = () => {
     };
 
     const showPasswordDrawer = (record: any) => {
-        setState({ employeeId: record.id, employee_name: record?.employee_name });
+        setState({ employeeId: record.user, employee_name: record?.employee_name });
 
         setIsUpdatePassword(true);
     };
 
     const handleUpdatePassword = async () => {
         try {
-            if (!state.old_password) {
-                setState({ oldPasswordError: true });
-            } else if (!state.new_password) {
+            setState({ btnLoading: true });
+            if (!state.new_password) {
                 setState({ newPasswordError: true });
             } else if (!state.confirm_new_password) {
                 setState({ confirmPasswordError: true });
@@ -224,12 +224,11 @@ const Employee = () => {
                 setState({ matchPasswordError: true });
             } else {
                 const body = {
-                    old_password: state.old_password,
-                    employeeId: state.employeeId,
+                    user_id: state.employeeId,
                     new_password: state.new_password,
                     confirm_new_password: state.confirm_new_password,
                 };
-                const res = await Models.auth.changeEmployeePassword(body);
+                const res: any = await Models.auth.changeEmployeePassword(body);
                 console.log('✌️res --->', res);
                 setState({
                     confirm_new_password: '',
@@ -240,17 +239,22 @@ const Employee = () => {
                     confirmPasswordError: '',
                     newPasswordError: false,
                     matchPasswordError: false,
+                    btnLoading: false,
                 });
-                // setIsUpdatePassword(false);
+                setIsUpdatePassword(false);
+                messageApi.open({
+                    type: 'success',
+                    content: res?.detail,
+                });
             }
         } catch (error: any) {
+            setState({ btnLoading: false });
             if (error?.detail) {
                 messageApi.open({
                     type: 'error',
                     content: error?.detail,
                 });
             }
-            console.log('✌️error --->', error);
         }
     };
 
@@ -294,7 +298,7 @@ const Employee = () => {
                     {localStorage.getItem('admin') === 'true' ? (
                         <>
                             <EditOutlined style={{ cursor: 'pointer' }} onClick={() => showDrawer(record)} className="edit-icon" rev={undefined} />
-                            {/* <IconMenuAuthentication style={{ cursor: 'pointer' }} onClick={() => showPasswordDrawer(record)} className="edit-icon" /> */}
+                            <IconMenuAuthentication style={{ cursor: 'pointer' }} onClick={() => showPasswordDrawer(record)} className="edit-icon" />
                         </>
                     ) : (
                         <EditOutlined style={{ cursor: 'pointer', display: 'none' }} onClick={() => showDrawer(record)} className="edit-icon" rev={undefined} />
@@ -793,7 +797,7 @@ const Employee = () => {
                                 </div>
                             </div>
 
-                            <div>
+                            {/* <div>
                                 <label htmlFor="Password">Old Password</label>
                                 <div className="relative text-white-dark">
                                     <input
@@ -812,7 +816,7 @@ const Employee = () => {
                                     </span>
                                 </div>
                                 {state.oldPasswordError == true && <div style={{ color: 'red', marginTop: '5px' }}>Old Password is required.</div>}
-                            </div>
+                            </div> */}
                             <div>
                                 <label htmlFor="Password">New Password</label>
                                 <div className="relative text-white-dark">
@@ -860,7 +864,7 @@ const Employee = () => {
                                     className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]"
                                     onClick={() => handleUpdatePassword()}
                                 >
-                                    Change Password
+                                    {state.btnLoading ? <IconLoader className=" h-4 w-4 animate-spin" /> : 'Change Password'}
                                 </button>
                                 <button
                                     style={{ paddingRight: '10px' }}
