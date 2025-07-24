@@ -50,6 +50,7 @@ const InvoiceReport = () => {
                 },
             })
             .then((res) => {
+                console.log('✌️res --->', res);
                 const sampleObj = {
                     id: 1,
                     employee_name: 'Select employee ',
@@ -65,8 +66,9 @@ const InvoiceReport = () => {
                 };
 
                 setInvoiceReport(resData);
-
-                setEditor(res.data.invoice_test.report_template);
+                if (res.data.invoice_test.report_template) {
+                    setEditor(res.data.invoice_test.report_template);
+                }
                 setSelectedId(1);
                 if (res.data.invoice_test.signature == null) {
                     setFormData({
