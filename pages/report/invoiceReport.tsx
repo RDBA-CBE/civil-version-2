@@ -118,7 +118,6 @@ const InvoiceReport = () => {
                 return <div>{roundNumber(record.invoice.advance)}</div>;
             },
         },
-        
 
         {
             title: 'Total Amount',
@@ -158,7 +157,7 @@ const InvoiceReport = () => {
                 console.log('✌️record --->', record?.invoice.invoice_file);
                 return (
                     <>
-                        {record?.invoice_file ? (
+                        {record?.invoice?.invoice_file ? (
                             <a href={record.invoice.invoice_file} target="_blank" rel="noopener noreferrer">
                                 Download
                             </a>
@@ -169,7 +168,7 @@ const InvoiceReport = () => {
                 );
             },
         },
-        
+
         {
             title: 'Completed',
             // dataIndex: 'completed',
@@ -179,44 +178,40 @@ const InvoiceReport = () => {
                 return <div>{record.invoice.completed}</div>;
             },
         },
-        
     ];
 
     // export to excel format
 
+    const exportToExcel = async (values: any) => {
+        console.log('✌️values --->', values);
 
-const exportToExcel = async (values: any) => {
-    setState({ loading: true });
+        setState({ loading: true });
 
-    const selectedDate = values.month;
-    const year = selectedDate?.year();
+        const selectedDate = values.month;
+        const year = selectedDate?.year();
 
-    const fromDate = dayjs(`${year}-04-01`);
-    const toDate = dayjs(`${year + 1}-03-31`);
-
-    // Filter body for API
+        // Construct the body object with the selected year and month
     
-      const body = {
-                from_date: state.searchValue?.start_date ? dayjs(state.searchValue?.start_date).format('YYYY-MM-DD') : '',
-                to_date: state.searchValue?.end_date ? dayjs(state.searchValue?.end_date).format('YYYY-MM-DD') : '',
-                invoice_no: state.searchValue?.invoice_no ? state.searchValue?.invoice_no : '',
-                project_name: state.searchValue?.project_name ? state.searchValue?.project_name : '',
-                customer: state.searchValue?.customer ? state.searchValue?.customer : '',
-            };
 
-    let allData: any[] = [];
-    let currentPage = 1;
-    let hasNext = true;
+        const fromDate = dayjs(`${year}-04-01`).format('YYYY-MM-DD');
+        const toDate = dayjs(`${year + 1}-03-31`).format('YYYY-MM-DD');
 
-    try {
+        const body = {
+            from_date: fromDate ,
+                    to_date: toDate,
+        };
+
+        console.log("fromDate", fromDate , toDate);
+        
+
+        let allData: any[] = [];
+        let currentPage = 1;
+        let hasNext = true;
+
         while (hasNext) {
             let res: any;
-            if (!ObjIsEmpty(bodyData())) {
-                res = await Models.invoiceReport.filter(body, currentPage);
-            } else {
-                res = await Models.invoiceReport.invoiceReportList(currentPage);
-                
-            }
+
+             res = await Models.invoiceReport.filter(body, currentPage);
 
             allData = allData.concat(res?.results || []);
 
@@ -227,39 +222,22 @@ const exportToExcel = async (values: any) => {
             }
         }
 
-        // Filter again by FY year range (in case backend didn't use date filter)
-        const filteredData = allData.filter((item: any) => {
-            const rawDate = item?.invoice?.date;
-            if (!rawDate) return false;
+        // const filteredData = allData.filter((item: any) => {
+        //     if (!item.date) return false;
+        //     const itemDate = dayjs(item.date);
+        //     return itemDate.isAfter(fromDate.subtract(1, 'day')) && itemDate.isBefore(toDate.add(1, 'day'));
+        // });
 
-            const itemDate = dayjs(rawDate);
-            return (
-                itemDate.isAfter(fromDate.subtract(1, 'day')) &&
-                itemDate.isBefore(toDate.add(1, 'day'))
-            );
-        });
-
-        console.log("filteredData",filteredData);
-        
+        console.log('filteredData', allData);
 
         const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Invoice Report');
+        const worksheet = workbook.addWorksheet('Sheet1');
 
         // Header row
-        worksheet.addRow([
-            'Invoice No',
-            'Customer',
-            'Project Name',
-            'Advance',
-            'Total Amount',
-            'Balance',
-            'Date',
-            'File',
-            'Completed',
-        ]);
+        worksheet.addRow(['Invoice No', 'Customer', 'Project Name', 'Advance', 'Total Amount', 'Balance', 'Date', 'File', 'Completed']);
 
         // Data rows
-        filteredData.forEach((row: any) => {
+        allData.forEach((row: any) => {
             worksheet.addRow([
                 row.invoice.invoice_no,
                 row.invoice.customer,
@@ -276,23 +254,126 @@ const exportToExcel = async (values: any) => {
             ]);
         });
 
-        // Save
+        // Generate a Blob containing the Excel file
         const blob = await workbook.xlsx.writeBuffer();
+
+        // Use file-saver to save the Blob as a file
         FileSaver.saveAs(
             new Blob([blob], {
                 type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             }),
             `Invoice-Report-${year}.xlsx`
         );
-    } catch (error) {
-        console.error('❌ Error exporting Excel:', error);
-    } finally {
+
         setState({ loading: false });
-        setIsModalOpen(false)
-    }
-};
+        setIsModalOpen(false);
+    };
 
+    // const exportToExcel = async (values: any) => {
+    //     setState({ loading: true });
 
+    //     const selectedDate = values.month;
+    //     const year = selectedDate?.year();
+
+    //     const fromDate = dayjs(`${year}-04-01`);
+    //     const toDate = dayjs(`${year + 1}-03-31`);
+
+    //     // Filter body for API
+
+    //       const body = {
+    //                 from_date: state.searchValue?.start_date ? dayjs(state.searchValue?.start_date).format('YYYY-MM-DD') : '',
+    //                 to_date: state.searchValue?.end_date ? dayjs(state.searchValue?.end_date).format('YYYY-MM-DD') : '',
+    //                 invoice_no: state.searchValue?.invoice_no ? state.searchValue?.invoice_no : '',
+    //                 project_name: state.searchValue?.project_name ? state.searchValue?.project_name : '',
+    //                 customer: state.searchValue?.customer ? state.searchValue?.customer : '',
+    //             };
+
+    //     let allData: any[] = [];
+    //     let currentPage = 1;
+    //     let hasNext = true;
+
+    //     try {
+    //         while (hasNext) {
+    //             let res: any;
+    //             if (!ObjIsEmpty(bodyData())) {
+    //                 res = await Models.invoiceReport.filter(body, currentPage);
+    //             } else {
+    //                 res = await Models.invoiceReport.invoiceReportList(currentPage);
+
+    //             }
+
+    //             allData = allData.concat(res?.results || []);
+
+    //             if (res?.next) {
+    //                 currentPage += 1;
+    //             } else {
+    //                 hasNext = false;
+    //             }
+    //         }
+
+    //         // Filter again by FY year range (in case backend didn't use date filter)
+    //         const filteredData = allData.filter((item: any) => {
+    //             const rawDate = item?.invoice?.date;
+    //             if (!rawDate) return false;
+
+    //             const itemDate = dayjs(rawDate);
+    //             return (
+    //                 itemDate.isAfter(fromDate.subtract(1, 'day')) &&
+    //                 itemDate.isBefore(toDate.add(1, 'day'))
+    //             );
+    //         });
+
+    //         console.log("filteredData",filteredData);
+
+    //         const workbook = new ExcelJS.Workbook();
+    //         const worksheet = workbook.addWorksheet('Invoice Report');
+
+    //         // Header row
+    //         worksheet.addRow([
+    //             'Invoice No',
+    //             'Customer',
+    //             'Project Name',
+    //             'Advance',
+    //             'Total Amount',
+    //             'Balance',
+    //             'Date',
+    //             'File',
+    //             'Completed',
+    //         ]);
+
+    //         // Data rows
+    //         filteredData.forEach((row: any) => {
+    //             worksheet.addRow([
+    //                 row.invoice.invoice_no,
+    //                 row.invoice.customer,
+    //                 row.invoice.project_name,
+    //                 roundNumber(row.invoice.advance),
+    //                 roundNumber(row.invoice.total_amount),
+    //                 roundNumber(row.invoice.balance),
+    //                 row.invoice.date,
+    //                 {
+    //                     text: 'Download',
+    //                     hyperlink: row.invoice.invoice_file,
+    //                 },
+    //                 row.invoice.completed,
+    //             ]);
+    //         });
+
+    //         // Save
+    //         const blob = await workbook.xlsx.writeBuffer();
+    //         FileSaver.saveAs(
+    //             new Blob([blob], {
+    //                 type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    //             }),
+    //             `Invoice-Report-${year}.xlsx`
+    //         );
+    //     } catch (error) {
+    //         console.error('❌ Error exporting Excel:', error);
+    //     } finally {
+    //         setState({ loading: false });
+    //         setIsModalOpen(false)
+    //     }
+    // };
 
     const onFinishFailedZip = (errorInfo: any) => {
         console.log('Failed:', errorInfo);
@@ -412,6 +493,8 @@ const exportToExcel = async (values: any) => {
             project_name: searchValue?.project_name || '',
             customer: searchValue?.customer || '',
         };
+        console.log("body", body);
+        
 
         let allData: any[] = [];
         let currentPage = 1;
@@ -421,14 +504,13 @@ const exportToExcel = async (values: any) => {
         while (hasNext) {
             let res: any;
 
-            if (!ObjIsEmpty(body)) {
+            if (!ObjIsEmpty(bodyData())) {
                 res = await Models.invoiceReport.filter(body, currentPage);
             } else {
                 res = await Models.invoiceReport.invoiceReportList(currentPage);
             }
 
             allData = allData.concat(res?.results || []);
-           
 
             if (res?.next) {
                 currentPage += 1;
@@ -437,7 +519,7 @@ const exportToExcel = async (values: any) => {
             }
         }
 
-         setState({ loading: false });
+        setState({ loading: false });
 
         const doc: any = new jsPDF();
         doc.text('Invoice Report', 14, 16);
@@ -492,7 +574,7 @@ const exportToExcel = async (values: any) => {
     const showModal = () => {
         setIsModalOpen(true);
 
-        form.resetFields();
+        // form.resetFields();
     };
 
     const handleOk = () => {
@@ -573,9 +655,9 @@ const exportToExcel = async (values: any) => {
                                 </Select>
                             </Form.Item> */}
 
-                            <div style={{ display: 'flex', alignItems: 'end' }}>
+                            <div style={{ display: 'flex', alignItems: 'end',  justifyContent: 'space-between', gap: '10px' }}>
                                 <Form.Item>
-                                    <Button type="primary" htmlType="submit" style={{ width: '200px' }}>
+                                    <Button type="primary" htmlType="submit" style={{ width: '100px' }}>
                                         Search
                                     </Button>
                                 </Form.Item>
@@ -661,7 +743,6 @@ const exportToExcel = async (values: any) => {
                                 </Button>
                                 <Button type="primary" htmlType="submit">
                                     {state.loading ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2 " /> : 'Submit'}
-                                    
                                 </Button>
                             </Space>
                         </div>

@@ -29,7 +29,7 @@ const TestReport = () => {
 
     useEffect(() => {
         axios
-            .get(`${baseUrl}/test-list/`, {
+            .get(`${baseUrl}/test/`, {
                 headers: {
                     Authorization: `Token ${localStorage.getItem('token')}`,
                 },

@@ -5,9 +5,13 @@ import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import dayjs from 'dayjs';
 import router from 'next/router';
-import { baseUrl, roundNumber } from '@/utils/function.util';
+import { baseUrl, ObjIsEmpty, roundNumber, useSetState } from '@/utils/function.util';
 import { saveAs } from 'file-saver';
 import { message } from 'antd';
+import Models from '@/imports/models.import';
+import Pagination from '@/components/pagination/pagination';
+import IconLoader from '@/components/Icon/IconLoader';
+
 const SaleReport = () => {
     const [form] = Form.useForm();
     const [dataSource, setDataSource] = useState([]);
@@ -15,6 +19,19 @@ const SaleReport = () => {
     const [loading, setLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [messageApi, contextHolder] = message.useMessage();
+
+    const [state, setState] = useSetState({
+        page: 1,
+        pageSize: 10,
+        total: 0,
+        currentPage: 1,
+        pageNext: null,
+        pagePrev: null,
+        invoiceList: [],
+        discount: 0,
+        searchValue: null,
+    });
+
     useEffect(() => {
         axios
             .get(`${baseUrl}/sale_report/`, {
@@ -32,6 +49,50 @@ const SaleReport = () => {
             });
     }, []);
 
+    useEffect(() => {
+        initialData(1);
+    }, []);
+
+    const initialData = async (page: any) => {
+        try {
+            setState({ loading: true });
+
+            const res: any = await Models.invoice.invoiceList(page);
+            setState({
+                invoiceList: res?.results,
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
+            });
+        } catch (error) {
+            setState({ loading: false });
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const bodyData = () => {
+        const body: any = {};
+        if (state.searchValue) {
+            if (state.searchValue?.customer) {
+                body.customer = state.searchValue.customer;
+            }
+            if (state.searchValue?.from_date) {
+                body.from_date = state.searchValue.from_date;
+            }
+
+            if (state.searchValue?.project_name) {
+                body.project_name = state.searchValue.project_name;
+            }
+            if (state.searchValue?.to_date) {
+                body.to_date = state.searchValue.to_date;
+            }
+        }
+
+        return body;
+    };
+
     // Table Datas
     const columns = [
         {
@@ -41,8 +102,8 @@ const SaleReport = () => {
                 </Tooltip>
             ),
             title1: 'Date',
-            dataIndex: 'export_date',
-            key: 'export_date',
+            dataIndex: 'date',
+            key: 'date',
             className: 'singleLineCell',
         },
         {
@@ -64,9 +125,12 @@ const SaleReport = () => {
                 </Tooltip>
             ),
             title1: 'Customer Name',
-            dataIndex: 'customer_name',
+            // dataIndex: 'customer_name',
             key: 'customer_name',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{record.customer.customer_name}</div>;
+            },
         },
         {
             title: (
@@ -86,9 +150,12 @@ const SaleReport = () => {
                 </Tooltip>
             ),
             title1: 'Customer GST No',
-            dataIndex: 'customer_gst_no',
+            // dataIndex: 'customer_gst_no',
             key: 'customer_gst_no',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{record.customer.gstin_no}</div>;
+            },
         },
         {
             title: (
@@ -143,10 +210,11 @@ const SaleReport = () => {
             ),
 
             title1: 'Cheque No',
-            dataIndex: 'cheque_neft',
-            key: 'cheque_neft',
+            dataIndex: 'cheque_number',
+            key: 'cheque_number',
             className: 'singleLineCell',
             width: 120,
+            render: (text: any, record: any) => (text ? text : 'N/A'),
         },
 
         {
@@ -161,6 +229,7 @@ const SaleReport = () => {
             key: 'upi',
             className: 'singleLineCell',
             width: 100,
+            render: (text: any, record: any) => (text ? text : 'N/A'),
         },
         {
             title: (
@@ -170,10 +239,11 @@ const SaleReport = () => {
             ),
 
             title1: 'Neft',
-            dataIndex: 'neft',
-            key: 'neft',
+            dataIndex: 'bank',
+            key: 'bank',
             className: 'singleLineCell',
             width: 100,
+            render: (text: any, record: any) => (text ? text : 'N/A'),
         },
 
         {
@@ -184,10 +254,11 @@ const SaleReport = () => {
             ),
 
             title1: 'Tds',
-            dataIndex: 'tds',
-            key: 'tgs',
+            dataIndex: 'tds_amount',
+            key: 'tds_amount',
             className: 'singleLineCell',
             width: 100,
+            render: (text: any, record: any) => (text ? text : 'N/A'),
         },
 
         {
@@ -198,10 +269,15 @@ const SaleReport = () => {
             ),
 
             title1: 'CGST Tax',
-            dataIndex: 'cgst_tax',
+            // dataIndex: 'cgst_tax',
             key: 'cgst_tax',
             className: 'singleLineCell',
             width: 100,
+
+            render: (record: any) => {
+                const cgstTax = record.tax.find((item: any) => item.tax_name === 'CGST');
+                return <div>{cgstTax ? `${cgstTax.tax_percentage}%` : '-'}</div>;
+            },
         },
 
         {
@@ -211,10 +287,14 @@ const SaleReport = () => {
                 </Tooltip>
             ),
             title1: 'SGST Tax',
-            dataIndex: 'sgst_tax',
+            // dataIndex: 'sgst_tax',
             key: 'sgst_tax',
             className: 'singleLineCell',
             width: 100,
+            render: (record: any) => {
+                const sgstTax = record.tax.find((item: any) => item.tax_name === 'SGST');
+                return <div>{sgstTax ? `${sgstTax.tax_percentage}%` : '-'}</div>;
+            },
         },
 
         {
@@ -224,13 +304,18 @@ const SaleReport = () => {
                 </Tooltip>
             ),
             title1: 'IGST Tax',
-            dataIndex: 'igst_tax',
+            // dataIndex: 'igst_tax',
             key: 'igst_tax',
             className: 'singleLineCell',
             width: 100,
+            render: (record: any) => {
+                const igstTax = record.tax.find((item: any) => item.tax_name === 'IGST');
+                return <div>{igstTax ? `${igstTax.tax_percentage}%` : '-'}</div>;
+            },
         },
         {
-            title1: 'Invoice File',
+            title: 'Invoice File',
+
             dataIndex: 'invoice_file',
             key: 'invoice_file',
             className: 'singleLineCell',
@@ -268,64 +353,50 @@ const SaleReport = () => {
         },
     ];
 
-    useEffect(() => {
-        const Token = localStorage.getItem('token');
-        setLoading(true);
-
-        const body = {
-            project_name: '',
-            from_date: '',
-            to_date: '',
-            customer: '',
-        };
-
-        axios
-            .post(`${baseUrl}/sale_report/`, body, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res: any) => {
-                setDataSource(res?.data?.reports);
-                setLoading(false);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
-                setLoading(false);
-            });
-    }, []);
-
     // form submit
-    const onFinish = (values: any) => {
-        const Token = localStorage.getItem('token');
+    const onFinish = async (values: any, page = 1) => {
+        try {
+            setState({ loading: true });
 
-        const body = {
-            project_name: values.project_name ? values.project_name : '',
-            from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
-            to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
-            customer: values.customer ? values.customer : '',
-        };
+            const body = {
+                project_name: values.project_name ? values.project_name : '',
+                from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
+                to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
+                customer: values.customer ? values.customer : '',
+            };
 
-        axios
-            .post(`${baseUrl}/sale_report/`, body, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res: any) => {
-                setDataSource(res?.data?.reports);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
+            const res: any = await Models.invoice.filter(body, page);
+            setState({
+                invoiceList: res?.results,
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
+                searchValue: values,
             });
-        form.resetFields();
+        } catch (error) {
+            setState({ loading: false });
+
+            console.log('✌️error --->', error);
+        }
     };
 
     const onFinishFailed = (errorInfo: any) => {};
+
+    const handlePageChange = (number: any) => {
+        setState({ currentPage: number });
+
+        const body = bodyData();
+
+        if (!ObjIsEmpty(body)) {
+            onFinish(state.searchValue, number);
+        } else {
+            initialData(number);
+        }
+
+        return number;
+    };
 
     type FieldType = {
         project_name?: string;
@@ -336,47 +407,104 @@ const SaleReport = () => {
 
     // export to excel format
     const exportToExcel = async () => {
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Sheet1');
-    
-        // Add header row
-        worksheet.addRow(columns.map((column) => column.title1));
-    
-        // Add data rows
-        dataSource.forEach((row) => {
-            const rowData: any = [];
-            columns.forEach((column) => {
-                if (column.dataIndex === 'invoice_file') {
-                    // Add hyperlink in the specific column
-                    rowData.push({
-                        text: row[column.dataIndex] ? 'Download' : 'No File',
-                        hyperlink: row[column.dataIndex], // URL for the link
-                    });
+        setState({ loading: true });
+        const body = {
+            project_name: state.searchValue?.project_name ? state.searchValue?.project_name : '',
+            from_date: state.searchValue?.from_date ? dayjs(state.searchValue?.from_date).format('YYYY-MM-DD') : '',
+            to_date: state.searchValue?.to_date ? dayjs(state.searchValue?.to_date).format('YYYY-MM-DD') : '',
+            customer: state.searchValue?.customer ? state.searchValue?.customer : '',
+        };
+        console.log('body', body);
+
+        let allData: any[] = [];
+        let currentPage = 1;
+        let hasNext = true;
+        try {
+            while (hasNext) {
+                let res: any;
+
+                if (!ObjIsEmpty(bodyData())) {
+                    res = await Models.invoice.filter(body, currentPage);
                 } else {
-                    // Apply rounding for specific numeric columns
-                    const value = row[column.dataIndex];
-                    if (column.dataIndex === 'balance' || 
-                        column.dataIndex === 'advance' || 
-                        column.dataIndex === 'total_amount') {
-                        rowData.push(roundNumber(value));
-                    } else {
-                        rowData.push(value);
-                    }
+                    res = await Models.invoice.invoiceList(currentPage);
                 }
+
+                allData = allData.concat(res?.results || []);
+
+                hasNext = !!res?.next;
+                if (hasNext) currentPage += 1;
+            }
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Sheet1');
+
+            // Add header row
+            worksheet.addRow(columns.map((column) => column.title1));
+            allData.forEach((row: any) => {
+                const rowData = columns.map((column: any) => {
+                    const key = column.key;
+
+                    if (column.dataIndex) {
+                        return row[column.dataIndex] ?? '';
+                    }
+
+                    if (key === 'customer_name') {
+                        return row.customer?.customer_name || '';
+                    }
+                     if (key === 'customer_gst_no') {
+                        return row.customer?.gstin_no || '';
+                    }
+
+                    if (key === 'advance' || key === 'balance' || key === 'total_amount') {
+                        return roundNumber(row[key]);
+                    }
+
+                    if (key === 'invoice_file') {
+                        return row.invoice_file ? 'Download' : 'No File';
+                    }
+
+                    if (key === 'cgst_tax') {
+                        const cgst = row.tax?.find((item: any) => item.tax_name === 'CGST');
+                        return cgst ? `${cgst.tax_percentage}%` : '-';
+                    }
+
+                    if (key === 'sgst_tax') {
+                        const sgst = row.tax?.find((item: any) => item.tax_name === 'SGST');
+                        return sgst ? `${sgst.tax_percentage}%` : '-';
+                    }
+
+                    if (key === 'igst_tax') {
+                        const igst = row.tax?.find((item: any) => item.tax_name === 'IGST');
+                        return igst ? `${igst.tax_percentage}%` : '-';
+                    }
+
+                    if (key === 'cheque_number' || key === 'upi' || key === 'bank' || key === 'tds_amount') {
+                        return row[key] || 'N/A';
+                    }
+
+                    return ''; // fallback
+                });
+
+                worksheet.addRow(rowData);
             });
-            worksheet.addRow(rowData);
-        });
-    
+
+            const blob = await workbook.xlsx.writeBuffer();
+
+            // Use file-saver to save the Blob as a file
+            FileSaver.saveAs(
+                new Blob([blob], {
+                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                }),
+                'Sales-Report.xlsx'
+            );
+        } catch (error) {
+            console.error('❌ Error exporting Excel:', error);
+        } finally {
+            setState({ loading: false });
+        }
+
+        // Add data rows
+
         // Generate a Blob containing the Excel file
-        const blob = await workbook.xlsx.writeBuffer();
-    
-        // Use file-saver to save the Blob as a file
-        FileSaver.saveAs(
-            new Blob([blob], {
-                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            }),
-            'Sales-Report.xlsx'
-        );
     };
 
     const scrollConfig: any = {
@@ -454,6 +582,11 @@ const SaleReport = () => {
             });
     };
 
+
+
+
+
+
     const onFinishFailedZip = (errorInfo: any) => {
         console.log('Failed:', errorInfo);
     };
@@ -487,10 +620,22 @@ const SaleReport = () => {
                                 </Select>
                             </Form.Item>
 
-                            <div style={{ display: 'flex', alignItems: 'end' }}>
+                            <div style={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: '10px' }}>
                                 <Form.Item>
-                                    <Button type="primary" htmlType="submit" style={{ width: '200px' }}>
+                                    <Button type="primary" htmlType="submit" style={{ width: '100px' }}>
                                         Search
+                                    </Button>
+                                </Form.Item>
+                                <Form.Item>
+                                    <Button
+                                        type="primary"
+                                        htmlType="submit"
+                                        onClick={() => {
+                                            form.resetFields();
+                                        }}
+                                        style={{ width: '100px' }}
+                                    >
+                                        Clear
                                     </Button>
                                 </Form.Item>
                             </div>
@@ -507,7 +652,7 @@ const SaleReport = () => {
                                 Export Zip File
                             </Button>
                             <button type="button" onClick={exportToExcel} className="create-button">
-                                Export to Excel
+                               {state.loading  ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2" /> : 'Export to Excel'}
                             </button>
                         </Space>
                     </div>
@@ -515,16 +660,33 @@ const SaleReport = () => {
 
                 <div className="table-responsive">
                     <Table
-                        dataSource={dataSource}
+                        dataSource={state.invoiceList}
                         columns={columns}
                         scroll={scrollConfig}
+                        pagination={false}
                         loading={{
-                            spinning: loading, // This enables the loading spinner
+                            spinning: state.loading, // This enables the loading spinner
                             indicator: <Spin size="large" />,
                             tip: 'Loading data...', // Custom text to show while loading
                         }}
                     />
                 </div>
+
+                {state.invoiceList?.length > 0 && (
+                    <div>
+                        <div
+                            className="mb-20 "
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}
+                        >
+                            <Pagination totalPage={state.total} itemsPerPage={10} currentPages={state.currentPage} activeNumber={handlePageChange} />
+                            {/* <Pagination activeNumber={handlePageChange} totalPages={state.total} currentPages={state.currentPage} /> */}
+                        </div>
+                    </div>
+                )}
             </div>
 
             <Modal title="Export Zip File" open={isModalOpen} onOk={handleOk} onCancel={handleCancel} footer={false}>
