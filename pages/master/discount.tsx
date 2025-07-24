@@ -365,7 +365,7 @@ const Discount = () => {
                                 className=" flex-1"
                                 onChange={(selectedOption: any) => {
                                     form.setFieldsValue({ customer: selectedOption });
-                                    customersList(state.customerCurrentPage);
+                                    customersList(1);
                                 }}
                                 loadMore={() => {
                                     if (state.customerHasNext) {
