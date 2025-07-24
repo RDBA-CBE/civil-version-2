@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Space, Table, Modal } from 'antd';
 import { Button, Drawer } from 'antd';
 import { Form, Input, InputNumber, Select, Spin } from 'antd';
-import { EditOutlined, EyeOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import router from 'next/router';
 import { baseUrl, Dropdown, roundNumber, Success, useSetState } from '@/utils/function.util';
@@ -196,6 +196,16 @@ const Test = () => {
         form.resetFields();
     };
 
+    // const handleDelete = async (item: any) => {
+    //     try {
+    //         const res = await Models.test.delete(item?.id);
+    //         console.log('✌️res --->', res);
+    //         getTest(state.currentPage);
+    //     } catch (error) {
+    //         console.log('✌️error --->', error);
+    //     }
+    // };
+
     const columns = [
         {
             title: 'Test Name',
@@ -234,70 +244,17 @@ const Test = () => {
                     ) : (
                         <EditOutlined style={{ cursor: 'pointer', display: 'none' }} onClick={() => showDrawer(record)} className="edit-icon" rev={undefined} />
                     )}
-
-                    {/* <EditOutlined
-                        style={{ cursor: "pointer" }}
-                        onClick={() => showDrawer(record)}
-                        className='edit-icon' rev={undefined} />
-                    {
-                        localStorage.getItem('admin') === 'true' ? (
-                            <DeleteOutlined
-                                style={{ color: "red", cursor: "pointer" }}
-                                onClick={() => handleDelete(record)}
-                                className='delete-icon'
-                                rev={undefined}
-                            />
-                        ) : (
-                            <DeleteOutlined
-                                style={{ display: "none" }}
-                                onClick={() => handleDelete(record)}
-                                className='delete-icon'
-                                rev={undefined}
-                            />
-                        )
-                    } */}
+                    {/* <DeleteOutlined onClick={() => handleDelete(record)} className="delete-icon" rev={undefined} /> */}
                 </Space>
             ),
         },
     ];
 
-    // const handleDelete = (record: any) => {
-    //     // Implement your delete logic here
-    //     const Token = localStorage.getItem("token")
-
-    //     Modal.confirm({
-    //         title: "Are you sure, you want to delete this TEST record?",
-    //         okText: "Yes",
-    //         okType: "danger",
-    //         onOk: () => {
-    //             axios.delete(`${baseUrl}/delete_test/${record.id}/`,
-    //                 {
-    //                     headers: {
-    //                         "Authorization": `Token ${Token}`
-    //                     }
-    //                 }).then((res) => {
-    //                     console.log(res)
-    //                     getTest()
-    //                 }).catch((err) => {
-    //                     console.log(err)
-    //                 })
-
-    //         },
-
-    //     });
-    // };
+    
 
     const handlePageChange = (number: any) => {
-        console.log('number', number);
         setState({ currentPage: number });
         getTest(number);
-
-        // if (state.searchValue) {
-        //     onFinish2(state.searchValue, number);
-        // } else {
-        //     initialData(number);
-        // }
-
         return number;
     };
 

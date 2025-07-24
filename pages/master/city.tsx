@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Space, Table, Modal, Spin } from 'antd';
 import { Button, Drawer } from 'antd';
 import { Form, Input } from 'antd';
-import { EditOutlined, EyeOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import router from 'next/router';
-import { baseUrl, useSetState } from '@/utils/function.util';
+import { baseUrl, Success, useSetState } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import useDebounce from '@/components/useDebounce/useDebounce';
 import Models from '@/imports/models.import';
@@ -18,10 +18,7 @@ const City = () => {
     const [editRecord, setEditRecord] = useState<any>(null);
     const [drawerTitle, setDrawerTitle] = useState('Create City');
     const [viewRecord, setViewRecord] = useState<any>(null);
-    const [dataSource, setDataSource] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [filterData, setFilterData] = useState(dataSource);
-    const [loading, setLoading] = useState(false);
 
     const [state, setState] = useSetState({
         page: 1,
@@ -34,15 +31,14 @@ const City = () => {
 
     // get Tax datas
     useEffect(() => {
-        GetCityList(1);
+        cityList(1);
     }, []);
 
-     const debouncedSearch = useDebounce(state.search);
+    const debouncedSearch = useDebounce(state.search);
 
     useEffect(() => {
-        GetCityList(1);
+        cityList(1);
     }, [debouncedSearch]);
-
 
     useEffect(() => {
         if (editRecord) {
@@ -52,30 +48,7 @@ const City = () => {
         }
     }, [editRecord, open]);
 
-    // const GetCityList = () => {
-    //     const Token = localStorage.getItem('token');
-    //     setLoading(true);
-
-    //     axios
-    //         .get(`${baseUrl}/city_list/`, {
-    //             headers: {
-    //                 Authorization: `Token ${Token}`,
-    //             },
-    //         })
-    //         .then((res) => {
-    //             setDataSource(res?.data);
-    //             setFilterData(res.data);
-    //             setLoading(false);
-    //         })
-    //         .catch((error: any) => {
-    //             if (error?.response?.status === 401) {
-    //                 router.push('/');
-    //             }
-    //             setLoading(false);
-    //         });
-    // };
-
-    const GetCityList = async (page:any) => {
+    const cityList = async (page: any) => {
         try {
             const body = bodyData();
             setState({ loading: true });
@@ -88,16 +61,15 @@ const City = () => {
                 pagePrev: res?.previous,
                 total: res?.count,
                 loading: false,
+                cityList: res.results,
             });
-            setDataSource(res.results);
-            setFilterData(res.results);
         } catch (error) {
             setState({ loading: false });
             console.log('✌️error --->', error);
         }
     };
 
-     const bodyData = () => {
+    const bodyData = () => {
         const body: any = {};
         if (state.search) {
             body.search = state.search;
@@ -161,122 +133,65 @@ const City = () => {
                         <EditOutlined style={{ cursor: 'pointer', display: 'none' }} onClick={() => showDrawer(record)} className="edit-icon" rev={undefined} />
                     )}
 
-                    {/* <EditOutlined
-            style={{ cursor: "pointer" }}
-            onClick={() => showDrawer(record)}
-            className='edit-icon' rev={undefined} />
-
-
-          {
-            localStorage.getItem('admin') === 'true' ? (
-              <DeleteOutlined
-                style={{ color: "red", cursor: "pointer" }}
-                onClick={() => handleDelete(record)}
-                className='delete-icon'
-                rev={undefined}
-              />
-            ) : (
-              <DeleteOutlined
-                style={{ display: "none" }}
-                onClick={() => handleDelete(record)}
-                className='delete-icon'
-                rev={undefined}
-              />
-            )
-          } */}
+                    {/* <DeleteOutlined onClick={() => handleDelete(record)} className="delete-icon" rev={undefined} /> */}
                 </Space>
             ),
         },
     ];
 
-    // const handleDelete = (record: any,) => {
+    const handleDelete = (record: any) => {
+        const Token = localStorage.getItem('token');
 
-    //   const Token = localStorage.getItem("token")
-
-    //   Modal.confirm({
-    //     title: "Are you sure, you want to delete this TAX record?",
-    //     okText: "Yes",
-    //     okType: "danger",
-    //     onOk: () => {
-    //       axios.delete(`${baseUrl}/delete_tax/${record.id}`, {
-    //         headers: {
-    //           "Authorization": `Token ${Token}`
-    //         }
-    //       }).then((res) => {
-    //         console.log(res)
-    //         GetCityList()
-    //       }).catch((err) => {
-    //         console.log(err)
-    //       })
-
-    //     },
-    //   });
-    // };
-
-    // Search Bar
-    const inputChange = (e: any) => {
-        const searchValue = e.target.value.toLowerCase();
-        const filteredData = dataSource.filter((item: any) => item.name.toLowerCase().includes(searchValue));
-        setFilterData(searchValue ? filteredData : dataSource);
+        Modal.confirm({
+            title: 'Are you sure, you want to delete this City record?',
+            okText: 'Yes',
+            okType: 'danger',
+            onOk: () => {
+                deleteCity(record);
+            },
+        });
     };
 
-     const handlePageChange = (number: any) => {
-        console.log('number', number);
+    const deleteCity = async (record: any) => {
+        try {
+            const res: any = await Models.city.delete(record.id);
+            cityList(state.currentPage);
+            Success('City deleted successfully');
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const handlePageChange = (number: any) => {
         setState({ currentPage: number });
-        GetCityList(number);
-
-        // if (state.searchValue) {
-        //     onFinish2(state.searchValue, number);
-        // } else {
-        //     initialData(number);
-        // }
-
+        cityList(number);
         return number;
     };
 
     // form submit
-    const onFinish = (values: any) => {
-        const Token = localStorage.getItem('token');
-
-        if (editRecord) {
-            axios
-                .put(`${baseUrl}/edit_city/${editRecord.id}/`, values, {
-                    headers: {
-                        Authorization: `Token ${Token}`,
-                    },
-                })
-                .then((res: any) => {
-                    GetCityList(1);
-                    setOpen(false);
-                })
-                .catch((error: any) => {
-                    if (error.response.status === 401) {
-                        router.push('/');
-                    }
-                });
-        } else {
-            axios
-                .post(`${baseUrl}/create_city/`, values, {
-                    headers: {
-                        Authorization: `Token ${Token}`,
-                    },
-                })
-                .then((res: any) => {
-                    GetCityList(1);
-                    setOpen(false);
-                })
-                .catch((error: any) => {
-                    if (error.response.status === 401) {
-                        router.push('/');
-                    }
-                });
-
+    const onFinish = async (values: any) => {
+        try {
+            setState({ btnLoading: true });
+            if (editRecord) {
+                const res = await Models.city.update(editRecord.id, values);
+                cityList(state.currentPage);
+                setState({ btnLoading: false });
+                setOpen(false);
+                Success('City updated successfully');
+            } else {
+                const res = await Models.city.create(values);
+                cityList(state.currentPage);
+                setState({ btnLoading: false });
+                setOpen(false);
+                Success('City created successfully');
+            }
             form.resetFields();
-        }
-        onClose();
-    };
+        } catch (error) {
+            setState({ btnLoading: false });
 
-    const onFinishFailed = (errorInfo: any) => {};
+            console.log('✌️error --->', error);
+        }
+    };
 
     type FieldType = {
         name?: string;
@@ -286,13 +201,13 @@ const City = () => {
     const modalData = () => {
         const formatDate = (dateString: any) => {
             if (!dateString) {
-                return 'N/A'; // or handle it according to your requirements
+                return 'N/A';
             }
 
             const date = new Date(dateString);
 
             if (isNaN(date.getTime())) {
-                return 'Invalid Date'; // or handle it according to your requirements
+                return 'Invalid Date';
             }
 
             return new Intl.DateTimeFormat('en-US', {
@@ -348,7 +263,7 @@ const City = () => {
                 </div>
                 <div className="table-responsive">
                     <Table
-                        dataSource={filterData}
+                        dataSource={state.cityList}
                         columns={columns}
                         pagination={false}
                         scroll={scrollConfig}
@@ -360,7 +275,7 @@ const City = () => {
                     />
                 </div>
 
-                {filterData?.length > 0 && (
+                {state.cityList?.length > 0 && (
                     <div>
                         <div
                             className="mb-20 "
@@ -376,7 +291,7 @@ const City = () => {
                 )}
 
                 <Drawer title={drawerTitle} placement="right" width={600} onClose={onClose} open={open}>
-                    <Form name="basic" layout="vertical" form={form} initialValues={{ remember: true }} onFinish={onFinish} onFinishFailed={onFinishFailed} autoComplete="off">
+                    <Form name="basic" layout="vertical" form={form} initialValues={{ remember: true }} onFinish={onFinish} autoComplete="off">
                         <Form.Item<FieldType> label="City Name" name="name" required={true} rules={[{ required: true, message: 'City Name field is required.' }]}>
                             <Input />
                         </Form.Item>
@@ -387,7 +302,7 @@ const City = () => {
                                     <Button danger htmlType="submit" onClick={() => onClose()}>
                                         Cancel
                                     </Button>
-                                    <Button type="primary" htmlType="submit">
+                                    <Button type="primary" htmlType="submit" loading={state.btnLoading}>
                                         Submit
                                     </Button>
                                 </Space>

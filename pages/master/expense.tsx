@@ -6,7 +6,7 @@ import { DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import moment from 'moment';
 import router from 'next/router';
-import { baseUrl, useSetState } from '@/utils/function.util';
+import { baseUrl, Success, useSetState } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import useDebounce from '@/components/useDebounce/useDebounce';
 import Models from '@/imports/models.import';
@@ -81,6 +81,7 @@ const Expense = () => {
     const deleteExpence = async (record: any) => {
         try {
             const res: any = await Models.expense.delete(record.id);
+            Success('Expense Category deleted successfully');
             getExpense(state.currentPage);
         } catch (error) {
             console.log('✌️error --->', error);
@@ -128,8 +129,6 @@ const Expense = () => {
         form.resetFields();
     };
 
-   
-
     const handlePageChange = (number: any) => {
         setState({ currentPage: number });
         getExpense(number);
@@ -145,11 +144,13 @@ const Expense = () => {
                 getExpense(state.currentPage);
                 setOpen(false);
                 setState({ btnLoading: false });
+                Success('Expense Category updated successfully');
             } else {
                 const res = await Models.expense.create(values);
                 getExpense(state.currentPage);
                 setOpen(false);
                 setState({ btnLoading: false });
+                Success('Expense Category created successfully');
             }
             form.resetFields();
         } catch (error) {
@@ -246,7 +247,7 @@ const Expense = () => {
                         <EditOutlined style={{ cursor: 'pointer', display: 'none' }} onClick={() => showDrawer(record)} className="edit-icon" rev={undefined} />
                     )}
 
-                    {/* <DeleteOutlined onClick={() => handleDelete(record)} className="delete-icon" rev={undefined} /> */}
+                    <DeleteOutlined onClick={() => handleDelete(record)} className="delete-icon" rev={undefined} />
                 </Space>
             ),
         },
