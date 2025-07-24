@@ -39,6 +39,10 @@ const testReport = {
                 url += `&customer=${encodeURIComponent(body.customer)}`;
             }
 
+            if (body?.invoice_no) {
+                url += `&invoice_no=${encodeURIComponent(body.invoice_no)}`;
+            }
+
             if (body?.test) {
                 url += `&test=${encodeURIComponent(body.test)}`;
             }

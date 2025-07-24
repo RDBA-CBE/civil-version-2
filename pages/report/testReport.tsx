@@ -5,10 +5,11 @@ import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import dayjs from 'dayjs';
 import router from 'next/router';
-import { baseUrl, ObjIsEmpty, useSetState } from '@/utils/function.util';
+import { baseUrl, Dropdown, ObjIsEmpty, useSetState } from '@/utils/function.util';
 import Models from '@/imports/models.import';
 import Pagination from '@/components/pagination/pagination';
 import IconLoader from '@/components/Icon/IconLoader';
+import CustomSelect from '@/components/Select';
 
 const TestReport = () => {
     const [form] = Form.useForm();
@@ -25,30 +26,24 @@ const TestReport = () => {
         testList: [],
         search: '',
         btnLoading: false,
+        customerList: [],
+        customerHasNext: null,
+        customerCurrentPage: null,
+        testHasNext: null,
+        testCurrentPage: 1,
+        filterTestList: [],
+
+        materialHasNext: null,
+        materialCurrentPage: 1,
+        materialList: [],
     });
 
     useEffect(() => {
-        axios
-            .get(`${baseUrl}/test/`, {
-                headers: {
-                    Authorization: `Token ${localStorage.getItem('token')}`,
-                },
-            })
-            .then((res) => {
-                setSaleFormData(res.data);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
-            });
-    }, []);
-
-    useEffect(() => {
+        customersList();
+        testList();
         initialData(1);
+        materialList();
     }, []);
-
-    console.log('saleFormData', saleFormData);
 
     const initialData = async (page: any) => {
         try {
@@ -65,6 +60,103 @@ const TestReport = () => {
             });
         } catch (error) {
             setState({ loading: false });
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const customersList = async (page = 1) => {
+        try {
+            const res: any = await Models.invoice.customerList(page);
+            const dropdown = Dropdown(res?.results, 'customer_name');
+            setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: page });
+        } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const customerSearch = async (text: any) => {
+        try {
+            const res: any = await Models.invoice.customerSearch(text);
+            if (res?.results?.length > 0) {
+                const dropdown = Dropdown(res?.results, 'customer_name');
+                setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: 1 });
+            }
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const customersLoadMore = async (page = 1) => {
+        try {
+            const res: any = await Models.invoice.customerList(page);
+            const dropdown = Dropdown(res?.results, 'customer_name');
+            setState({ customerList: [...state.customerList, ...dropdown], customerHasNext: res?.next, customerCurrentPage: page });
+        } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const testList = async (page = 1) => {
+        try {
+            const res: any = await Models.test.testList(page, null);
+            const dropdown = Dropdown(res?.results, 'test_name');
+            setState({ filterTestList: dropdown, testHasNext: res?.next, testCurrentPage: page });
+        } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const testSearch = async (text: any) => {
+        try {
+            const res: any = await Models.test.testList(1, text);
+            if (res?.results?.length > 0) {
+                const dropdown = Dropdown(res?.results, 'test_name');
+                setState({ filterTestList: dropdown, testHasNext: res?.next, testCurrentPage: 1 });
+            }
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const testLoadMore = async (page = 1) => {
+        try {
+            const res: any = await Models.test.testList(page, null);
+            const dropdown = Dropdown(res?.results, 'test_name');
+            setState({ filterTestList: [...state.filterTestList, ...dropdown], testHasNext: res?.next, testCurrentPage: page });
+        } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const materialList = async (page = 1) => {
+        try {
+            const res: any = await Models.material.materialList(page, null);
+            const dropdown = Dropdown(res?.results, 'material_name');
+            setState({ materialList: dropdown, materialHasNext: res?.next, materialCurrentPage: page });
+        } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const materialSearch = async (text: any) => {
+        try {
+            const res: any = await Models.material.materialList(1, null);
+
+            if (res?.results?.length > 0) {
+                const dropdown = Dropdown(res?.results, 'material_name');
+                setState({ materialList: dropdown, materialHasNext: res?.next, materialCurrentPage: 1 });
+            }
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const materialLoadMore = async (page = 1) => {
+        try {
+            const res: any = await Models.material.materialList(page, null);
+            const dropdown = Dropdown(res?.results, 'material_name');
+            setState({ materialList: [...state.materialList, ...dropdown], materialHasNext: res?.next, materialCurrentPage: page });
+        } catch (error: any) {
             console.log('✌️error --->', error);
         }
     };
@@ -118,6 +210,8 @@ const TestReport = () => {
 
     const bodyData = () => {
         const body: any = {};
+        console.log('✌️state.searchValue --->', state.searchValue);
+
         if (state.searchValue) {
             if (state.searchValue?.customer) {
                 body.customer = state.searchValue.customer;
@@ -140,19 +234,17 @@ const TestReport = () => {
         return body;
     };
 
-    console.log("bodyData",bodyData());
-    
-
     // form submit
     const onFinish = async (values: any, page = 1) => {
         try {
             setState({ loading: true });
             const body = {
-                test: values.test ? values.test : '',
+                test: values.test ? values.test?.value : '',
                 from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
                 to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
-                customer: values.customer ? values.customer : '',
-                material: values.material ? values.material : '',
+                customer: values.customer ? values.customer?.value : '',
+                material: values.material ? values.material?.value : '',
+                invoice_no: values.invoice_no ? values.invoice_no : '',
             };
 
             const res: any = await Models.testReport.filter(body, page);
@@ -183,36 +275,27 @@ const TestReport = () => {
 
     // export to excel format
     const exportToExcel = async () => {
-        setState({ loading: true });
+        setState({ btnLoading: true });
 
         const body = {
-            test: state.searchValue.test ? state.searchValue.test : '',
+            test: state.searchValue?.test ? state.searchValue.test : '',
             from_date: state.searchValue?.from_date ? dayjs(state.searchValue?.from_date).format('YYYY-MM-DD') : '',
             to_date: state.searchValue?.to_date ? dayjs(state.searchValue?.to_date).format('YYYY-MM-DD') : '',
-            customer: state.searchValue.customer ? state.searchValue.customer : '',
-            material: state.searchValue.material ? state.searchValue.material : '',
+            customer: state.searchValue?.customer ? state.searchValue.customer : '',
+            material: state.searchValue?.material ? state.searchValue.material : '',
         };
 
         let allData: any[] = [];
         let currentPage = 1;
         let hasNext = true;
 
-        console.log("body", body);
-        
-
         try {
             while (hasNext) {
                 let res: any;
 
                 if (!ObjIsEmpty(bodyData())) {
-                    console.log(!ObjIsEmpty(bodyData));
-                    
-                    console.log("filter");
-                    
                     res = await Models.testReport.filter(body, currentPage);
                 } else {
-                    console.log(!ObjIsEmpty(bodyData));
-                     console.log("No filter");
                     res = await Models.testReport.testReportList(currentPage);
                 }
 
@@ -223,36 +306,34 @@ const TestReport = () => {
             }
 
             const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Sheet1');
+            const worksheet = workbook.addWorksheet('Sheet1');
 
-        // Add header row
-        worksheet.addRow(columns.map((column) => column.title));
+            // Add header row
+            worksheet.addRow(columns.map((column) => column.title));
 
-        // Add data rows
-        allData.forEach((row: any) => {
-            worksheet.addRow(columns.map((column: any) => row[column.dataIndex]));
-        });
+            // Add data rows
+            allData.forEach((row: any) => {
+                worksheet.addRow(columns.map((column: any) => row[column.dataIndex]));
+            });
 
-        // Generate a Blob containing the Excel file
-        const blob = await workbook.xlsx.writeBuffer();
+            // Generate a Blob containing the Excel file
+            const blob = await workbook.xlsx.writeBuffer();
 
-        // Use file-saver to save the Blob as a file
-        FileSaver.saveAs(
-            new Blob([blob], {
-                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            }),
-            'Test-Report.xlsx'
-        );
-
+            // Use file-saver to save the Blob as a file
+            FileSaver.saveAs(
+                new Blob([blob], {
+                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                }),
+                'Test-Report.xlsx'
+            );
+            setState({ btnLoading: false });
         } catch (error) {
+            setState({ btnLoading: false });
+
             console.error('❌ Error exporting Excel:', error);
+        } finally {
+            setState({ btnLoading: false });
         }
-
-        finally {
-            setState({ loading: false });
-        }
-
-        
     };
 
     const handlePageChange = (number: any) => {
@@ -279,43 +360,84 @@ const TestReport = () => {
             <div className="panel">
                 <div>
                     <Form name="basic" layout="vertical" form={form} initialValues={{ remember: true }} onFinish={onFinish} onFinishFailed={onFinishFailed} autoComplete="off">
-                        <div className="sale_report_inputs">
+                        <div className="sale_report_inputs gap-4">
+                            <Form.Item label="Invoice No" name="invoice_no" style={{ width: '250px' }}>
+                                <Input
+                                    placeholder="Enter Invoice No"
+                                    style={{
+                                        height: '38px',
+                                    }}
+                                    onChange={(e) => {
+                                        form.setFieldsValue({ invoice_no: e.target.value });
+                                    }}
+                                />
+                            </Form.Item>
                             <Form.Item label="Test" name="test" style={{ width: '250px' }}>
-                                <Select showSearch filterOption={(input: any, option: any) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}>
-                                    {saleFormData?.tests?.map((value: any) => (
-                                        <Select.Option key={value.id} value={value.id}>
-                                            {value.test_name}
-                                        </Select.Option>
-                                    ))}
-                                </Select>
+                                <CustomSelect
+                                    onSearch={(data: any) => testSearch(data)}
+                                    value={state.test}
+                                    options={state.filterTestList}
+                                    className=" flex-1"
+                                    onChange={(selectedOption: any) => {
+                                        form.setFieldsValue({ test: selectedOption });
+                                        testList(1);
+                                    }}
+                                    loadMore={() => {
+                                        if (state.testHasNext) {
+                                            testLoadMore(state.testCurrentPage + 1);
+                                        }
+                                    }}
+                                    isSearchable
+                                    filterOption={(input: string, option: any) => option.label.toLowerCase().includes(input.toLowerCase())}
+                                />
                             </Form.Item>
 
                             <Form.Item label="Customer" name="customer" style={{ width: '250px' }}>
-                                <Select showSearch filterOption={(input: any, option: any) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}>
-                                    {saleFormData?.customers?.map((value: any) => (
-                                        <Select.Option key={value.id} value={value.id}>
-                                            {value.customer_name}
-                                        </Select.Option>
-                                    ))}
-                                </Select>
+                                <CustomSelect
+                                    onSearch={(data: any) => customerSearch(data)}
+                                    value={state.customer}
+                                    options={state.customerList}
+                                    className=" flex-1"
+                                    onChange={(selectedOption: any) => {
+                                        form.setFieldsValue({ customer: selectedOption });
+                                        customersList(1);
+                                    }}
+                                    loadMore={() => {
+                                        if (state.customerHasNext) {
+                                            customersLoadMore(state.customerCurrentPage + 1);
+                                        }
+                                    }}
+                                    isSearchable
+                                    filterOption={(input: string, option: any) => option.label.toLowerCase().includes(input.toLowerCase())}
+                                />
                             </Form.Item>
 
                             <Form.Item label="Material" name="material" style={{ width: '250px' }}>
-                                <Select showSearch filterOption={(input: any, option: any) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}>
-                                    {saleFormData?.materials?.map((value: any) => (
-                                        <Select.Option key={value.id} value={value.id}>
-                                            {value.material_name}
-                                        </Select.Option>
-                                    ))}
-                                </Select>
+                                <CustomSelect
+                                    onSearch={(data: any) => materialSearch(data)}
+                                    value={state.material}
+                                    options={state.materialList}
+                                    className=" flex-1"
+                                    onChange={(selectedOption: any) => {
+                                        form.setFieldsValue({ material: selectedOption });
+                                        materialList(1);
+                                    }}
+                                    loadMore={() => {
+                                        if (state.materialHasNext) {
+                                            materialLoadMore(state.materialCurrentPage + 1);
+                                        }
+                                    }}
+                                    isSearchable
+                                    filterOption={(input: string, option: any) => option.label.toLowerCase().includes(input.toLowerCase())}
+                                />
                             </Form.Item>
 
                             <Form.Item label="From Date" name="from_date" style={{ width: '250px' }}>
-                                <DatePicker style={{ width: '100%' }} />
+                                <DatePicker style={{ width: '100%', height: '39px' }} />
                             </Form.Item>
 
                             <Form.Item label="To Date" name="to_date" style={{ width: '250px' }}>
-                                <DatePicker style={{ width: '100%' }} />
+                                <DatePicker style={{ width: '100%', height: '39px' }} />
                             </Form.Item>
 
                             <div style={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: '10px' }}>
@@ -346,7 +468,7 @@ const TestReport = () => {
                     </div>
                     <div>
                         <button type="button" onClick={exportToExcel} className="create-button">
-                            {state.loading ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2" /> : 'Export to Excel'}
+                            {state.btnLoading ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2" /> : 'Export to Excel'}
                         </button>
                     </div>
                 </div>

@@ -177,10 +177,10 @@ const Preview = () => {
                                                     <b>Name:</b> Covai Civil Lab Private Limited
                                                 </td>
 
-                                                {state.invoiceData?.discount > 0 ? (
+                                                {state.invoiceData?.invoice_discounts?.length > 0 &&state.invoiceData?.invoice_discounts[0]?.discount>0  ? (
                                                     <>
                                                         <td style={{ textAlign: 'right' }}>Discount (%) </td>
-                                                        <td style={{ textAlign: 'right' }}>{roundNumber(state.invoiceData?.discount)}</td>
+                                                        <td style={{ textAlign: 'right' }}>{roundNumber(state.invoiceData?.invoice_discounts[0]?.discount)}</td>
                                                     </>
                                                 ) : null}
                                             </>
