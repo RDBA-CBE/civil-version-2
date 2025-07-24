@@ -6,14 +6,45 @@ import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import dayjs from 'dayjs';
 import router from 'next/router';
-import { baseUrl, roundNumber } from '@/utils/function.util';
+import { baseUrl, ObjIsEmpty, roundNumber, useSetState } from '@/utils/function.util';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
+import Models from '@/imports/models.import';
+import Pagination from '@/components/pagination/pagination';
 
 const ExpenseFileReport = () => {
     const [form] = Form.useForm();
     const [dataSource, setDataSource] = useState([]);
     const [loading, setLoading] = useState(false);
+
+    const [state, setState] = useSetState({
+        expenceList: [],
+        hasNext: null,
+        currentPage: 1,
+    });
+
+    useEffect(() => {
+        getData(1);
+    }, []);
+
+    const getData = async (page: number) => {
+        try {
+            setState({ loading: true });
+            const body = bodyData();
+            const res: any = await Models.expense.expenseFileReport(page, body);
+            console.log('getData --->', res);
+            setState({
+                expenceList: res?.results || [],
+                currentPage: page,
+                total: res?.count,
+                loading: false,
+            });
+        } catch (error) {
+            setState({ loading: false });
+
+            console.log('✌️error --->', error);
+        }
+    };
 
     // Table Headers
     const columns = [
@@ -25,8 +56,8 @@ const ExpenseFileReport = () => {
         },
         {
             title: 'Expense Amount',
-            dataIndex: 'expense_amount',
-            key: 'expense_amount',
+            dataIndex: 'expence_amount',
+            key: 'expence_amount',
             className: 'singleLineCell',
             render: (record: any) => {
                 return <div>{roundNumber(record)}</div>;
@@ -34,116 +65,105 @@ const ExpenseFileReport = () => {
         },
         {
             title: 'File',
-            dataIndex: 'file',
-            key: 'file',
+            dataIndex: 'file_url',
+            key: 'file_url',
             className: 'singleLineCell',
             render: (text: any, record: any) => (
-                <a href={record.file} target="_blank" rel="noopener noreferrer">
+                <a href={record.file_url} target="_blank" rel="noopener noreferrer">
                     Download
                 </a>
             ),
         },
         {
             title: 'Expense Date',
-            dataIndex: 'expense_date',
-            key: 'expense_date',
+            dataIndex: 'created_date',
+            key: 'created_date',
             className: 'singleLineCell',
+            render: (text: any, record: any) => <div>{record?.created_date ? dayjs(record?.created_date).format('DD-MM-YYYY') : 'N/A'}</div>,
         },
     ];
 
-    // export to excel format
     const exportToExcel = async () => {
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Sheet1');
+        setState({ excelBtnLoading: true });
 
-        // Add header row
-        worksheet.addRow(columns.map((column) => column.title));
+        const body = bodyData();
 
-        // Add data rows
-        // Add data rows
-        dataSource.forEach((row) => {
-            const rowData: any = [];
-            columns.forEach((column) => {
-                if (column.dataIndex === 'file') {
-                    // Add hyperlink in the specific column
-                    rowData.push({
-                        text: row[column.dataIndex], // Text displayed for the link
-                        hyperlink: row[column.dataIndex], // URL for the link
-                    });
-                } else {
-                    rowData.push(row[column.dataIndex]);
-                }
+        let allData: any[] = [];
+        let currentPage = 1;
+        let hasNext = true;
+
+        try {
+            while (hasNext) {
+
+                const res: any = await Models.expense.expenseFileReport(currentPage, body);
+
+                allData = allData.concat(res?.results || []);
+
+                hasNext = !!res?.next;
+                if (hasNext) currentPage += 1;
+            }
+
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Sheet1');
+
+            // Add header row
+            worksheet.addRow(columns.map((column) => column.title));
+
+            // Add data rows
+            allData.forEach((row: any) => {
+                worksheet.addRow(columns.map((column: any) => row[column.dataIndex]));
             });
-            worksheet.addRow(rowData);
-        });
 
-        // Generate a Blob containing the Excel file
-        const blob = await workbook.xlsx.writeBuffer();
+            // Generate a Blob containing the Excel file
+            const blob = await workbook.xlsx.writeBuffer();
 
-        // Use file-saver to save the Blob as a file
-        FileSaver.saveAs(
-            new Blob([blob], {
-                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            }),
-            'Expense-File-Report.xlsx'
-        );
+            // Use file-saver to save the Blob as a file
+            FileSaver.saveAs(
+                new Blob([blob], {
+                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                }),
+                'Expense-File-Report.xlsx'
+            );
+            setState({ excelBtnLoading: false });
+        } catch (error) {
+            setState({ excelBtnLoading: false });
+
+            console.error('❌ Error exporting Excel:', error);
+        } finally {
+            setState({ excelBtnLoading: false });
+        }
     };
 
-    useEffect(() => {
-        const Token = localStorage.getItem('token');
-        setLoading(true);
-        const body = {
-            // expense_user: '',
-            from_date: '',
-            to_date: '',
-            // expense_category: '',
-        };
-
-        axios
-            .post(`${baseUrl}/expense_file_report/`, body, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res: any) => {
-                console.log('✌️res --->', res);
-                setDataSource(res?.data?.reports);
-                setLoading(false);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
-                setLoading(false);
-            });
-    }, []);
 
     // form submit
-    const onFinish = (values: any) => {
-        const Token = localStorage.getItem('token');
-
-        const body = {
-            // expense_user: values.expense_user ? values.expense_user : '',
-            from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
-            to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
-            // expense_category: values.expense_category ? values.expense_category : '',
-        };
-
-        axios
-            .post(`${baseUrl}/expense_file_report/`, body, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res: any) => {
-                setDataSource(res?.data?.reports);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
+    const onFinish = async (values: any) => {
+        try {
+            setState({ loading: true });
+            const body = {
+                from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
+                to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
+            };
+            const res: any = await Models.expense.expenseFileReport(1, body);
+            setState({
+                expenceList: res?.results || [],
+                currentPage: 1,
+                total: res?.count,
+                loading: false,
             });
-        form.resetFields();
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const bodyData = () => {
+        let body: any = {};
+        if (form.getFieldValue('from_date')) {
+            body.from_date = dayjs(form.getFieldValue('from_date')).format('YYYY-MM-DD');
+        }
+        if (form.getFieldValue('to_date')) {
+            body.to_date = dayjs(form.getFieldValue('to_date')).format('YYYY-MM-DD');
+        }
+        return body;
     };
 
     const onFinishFailed = (errorInfo: any) => {};
@@ -153,58 +173,78 @@ const ExpenseFileReport = () => {
         y: 300,
     };
 
-    const handleDownloadAll = () => {
-        console.log('dataSource', dataSource);
+    const handleDownloadAll = async () => {
+        setState({ loading: true });
+        const { searchValue } = state;
+        const body = bodyData();
 
-        // Create a new jsPDF instance
+        let allData: any[] = [];
+        let currentPage = 1;
+        let hasNext = true;
+
+        // Fetch all paginated data
+        while (hasNext) {
+            let res: any;
+
+            res = await Models.expense.expenseFileReport(currentPage, body);
+
+            allData = allData.concat(res?.results || []);
+
+            if (res?.next) {
+                currentPage += 1;
+            } else {
+                hasNext = false;
+            }
+        }
+
+        setState({ loading: false });
+
         const doc: any = new jsPDF();
-
-        // Adding a title to the PDF
         doc.text('Expense File Report', 14, 16);
 
-        // Define the column headers
-        const headers = ['ID', 'Expense User', 'Expense Amount', 'Expense Date', 'File'];
+        const headers = ['Expense User', 'Expense Amount', 'Expense Date', 'File'];
 
-        // Map the data into the table format
-        const tableData = dataSource.map((item: any) => [
-            item.id, // ID
-            item.expense_user, // Expense User
-            item.expense_amount, // Expense Amount
-            dayjs(item.expense_date).format('DD-MM-YYYY'), // Expense Date (formatted)
-            item.file, // File (this will be the clickable link)
-        ]);
+        const tableData = allData.map((item: any) => {
+            return [
+                item.expense_user, // Expense User
+                item.expence_amount, // Expense Amount
+                dayjs(item.expense_date).format('DD-MM-YYYY'), // Expense Date (formatted)
+                item.file_url,
+            ];
+        });
 
-        // Use the autoTable plugin to generate the table in the PDF
         doc.autoTable({
-            head: [headers], // Table header
-            body: tableData, // Table rows
-            startY: 20, // Starting Y position for the table
-            margin: { horizontal: 10 },
+            head: [headers],
+            body: tableData,
+            startY: 20,
+            margin: { horizontal: 1 },
             theme: 'striped',
             columnStyles: {
-                0: { cellWidth: 20 }, // Column 1 (ID) - small width
-                1: { cellWidth: 40 }, // Column 2 (Expense User) - wider
-                2: { cellWidth: 30 }, // Column 3 (Expense Amount) - medium width
-                3: { cellWidth: 30 }, // Column 4 (Expense Date) - medium width
-                4: { cellWidth: 150 }, // Column 5 (File) - wide width for the link column
+                0: { cellWidth: 50 },
+                1: { cellWidth: 40 },
+                2: { cellWidth: 30 },
+                3: { cellWidth: 150 },
             },
             didDrawCell: (data: any) => {
-                // Check if the current cell is in the "File" column (index 4)
-                if (data.column.index === 4) {
-                    const fileUrl = data.cell.raw; // The file URL that should be clickable
-
+                if (data.column.index === 7) {
+                    const fileUrl = data.cell.raw;
                     if (fileUrl) {
-                        // Positioning and drawing the clickable link
-                        doc.setTextColor(0, 0, 255); // Optional: Make the link text blue
-                        // doc.text('View File', data.cell.x + 2, data.cell.y + 5);  // Position text within the cell
-                        doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url: fileUrl }); // Make the entire cell a clickable link
+                        doc.setTextColor(0, 0, 255);
+                        doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url: fileUrl });
                     }
                 }
             },
         });
 
-        // Save the PDF with the name "Expense_File_Report.pdf"
         doc.save('Expense_File_Report.pdf');
+    };
+
+    const handlePageChange = (number: any) => {
+        setState({ currentPage: number });
+
+        getData(number);
+
+        return number;
     };
 
     return (
@@ -236,10 +276,22 @@ const ExpenseFileReport = () => {
                                 </Select>
                             </Form.Item> */}
 
-                            <div style={{ display: 'flex', alignItems: 'end' }}>
+                            <div style={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: '10px' }}>
                                 <Form.Item>
-                                    <Button type="primary" htmlType="submit" style={{ width: '200px' }}>
+                                    <Button type="primary" htmlType="submit" style={{ width: '100px' }}>
                                         Search
+                                    </Button>
+                                </Form.Item>
+                                <Form.Item>
+                                    <Button
+                                        type="primary"
+                                        htmlType="submit"
+                                        onClick={() => {
+                                            form.resetFields();
+                                        }}
+                                        style={{ width: '100px' }}
+                                    >
+                                        Clear
                                     </Button>
                                 </Form.Item>
                             </div>
@@ -252,7 +304,7 @@ const ExpenseFileReport = () => {
                     </div>
                     <div>
                         <Space>
-                            <Button type="primary" onClick={exportToExcel}>
+                            <Button type="primary" onClick={exportToExcel} loading={state.excelBtnLoading}>
                                 Export to Excel
                             </Button>
                             <Button type="primary" onClick={handleDownloadAll}>
@@ -264,16 +316,31 @@ const ExpenseFileReport = () => {
                 </div>
                 <div className="table-responsive">
                     <Table
-                        dataSource={dataSource}
+                        dataSource={state.expenceList}
                         columns={columns}
                         pagination={false}
                         scroll={scrollConfig}
                         loading={{
-                            spinning: loading, // This enables the loading spinner
+                            spinning: state.loading, // This enables the loading spinner
                             indicator: <Spin size="large" />,
                             tip: 'Loading data...', // Custom text to show while loading
                         }}
                     />
+                    {state.expenceList?.length > 0 && (
+                        <div>
+                            <div
+                                className="mb-20 "
+                                style={{
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                }}
+                            >
+                                <Pagination totalPage={state.total} itemsPerPage={10} currentPages={state.currentPage} activeNumber={handlePageChange} />
+                                {/* <Pagination activeNumber={handlePageChange} totalPages={state.total} currentPages={state.currentPage} /> */}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </>
