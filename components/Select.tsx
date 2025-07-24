@@ -2,24 +2,7 @@ import React, { useRef, useState } from 'react';
 import Select from 'react-select';
 
 const CustomSelect = (props: any) => {
-    const {
-        name,
-        borderRadius,
-        disabled,
-        options,
-        value,
-        onChange,
-        placeholder = 'Select...',
-        title,
-        isSearchable = true,
-        className,
-        error,
-        isMulti,
-        required,
-        loadMore,
-        menuOpen,
-        onSearch,
-    } = props;
+    const { name, borderRadius, disabled, options, value, onChange, placeholder = 'Select...', title, isSearchable = true, className, error, isMulti, required, loadMore, menuOpen, onSearch } = props;
 
     const customStyles = {
         control: (provided: any) => ({
@@ -56,7 +39,7 @@ const CustomSelect = (props: any) => {
 
     const handleInputChange = (newValue: string) => {
         setInputValue(newValue);
-        if (newValue && onSearch) {
+        if (onSearch) {
             onSearch(newValue);
         }
     };

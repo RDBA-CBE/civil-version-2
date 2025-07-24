@@ -5,13 +5,14 @@ import { Form, Input } from 'antd';
 import { EditOutlined, EyeOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import router from 'next/router';
-import { baseUrl, Failure, Success, useSetState } from '@/utils/function.util';
+import { baseUrl, Dropdown, Failure, Success, useSetState } from '@/utils/function.util';
 import Models from '@/imports/models.import';
 import Pagination from '@/components/pagination/pagination';
 import useDebounce from '@/components/useDebounce/useDebounce';
 import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import IconLoader from '@/components/Icon/IconLoader';
+import CustomSelect from '@/components/Select';
 
 const Discount = () => {
     const { Search } = Input;
@@ -25,7 +26,6 @@ const Discount = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [filterData, setFilterData] = useState(dataSource);
     const [loading, setLoading] = useState(false);
-    const [customerList, setCustomerList] = useState([]);
     const [selectedCustomerId, setSelectedCustomerId] = useState(null);
 
     const [state, setState] = useSetState({
@@ -39,12 +39,15 @@ const Discount = () => {
         search: '',
         btnLoading: false,
         excelLoading: false,
+        customerCurrentPage: 1,
+        customerHasNext: null,
+        customerList: [],
     });
 
     // get Tax datas
     useEffect(() => {
         getCustomerDiscount(state.currentPage);
-        customersList();
+        customersList(1);
         role();
     }, []);
 
@@ -86,8 +89,6 @@ const Discount = () => {
         try {
             setState({ loading: true });
             const data = localStorage.getItem('admin');
-            console.log('Admin data from localStorage:', data);
-
             let isAdmin = false;
             if (data) {
                 try {
@@ -98,23 +99,30 @@ const Discount = () => {
                     isAdmin = false;
                 }
             }
-            console.log('✌️isAdmin --->', isAdmin);
             setState({ isAdmin, loading: false });
         } catch (error) {
             setState({ loading: false });
         }
     };
 
-    const customersList = async () => {
+    const customersList = async (page = 1) => {
         try {
-            // setState({ loading: true });
-
-            const res: any = await Models.discount.customerList();
-            setCustomerList(res?.customer);
-            // setState({ loading: false });
+            const res: any = await Models.invoice.customerList(page);
+            const dropdown = Dropdown(res?.results, 'customer_name');
+            setState({ customerList: [...state.customerList, ...dropdown], customerHasNext: res?.next, customerCurrentPage: page });
         } catch (error: any) {
-            // setState({ loading: false });
+            console.log('✌️error --->', error);
+        }
+    };
 
+    const customerSearch = async (text: any) => {
+        try {
+            const res: any = await Models.invoice.customerSearch(text);
+            if (res?.results?.length > 0) {
+                const dropdown = Dropdown(res?.results, 'customer_name');
+                setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: 1 });
+            }
+        } catch (error) {
             console.log('✌️error --->', error);
         }
     };
@@ -127,46 +135,18 @@ const Discount = () => {
         return body;
     };
 
-    const handleSelectChange = async (customerId: any) => {
-        try {
-            // const res = await Models.discount.details(customerId);
-            // console.log('customer --->', res);
-            setSelectedCustomerId(customerId);
-        } catch (error) {
-            console.log('✌️error --->', error);
-        }
-    };
-
-    // Model
-    const showModal = (record: any) => {
-        setIsModalOpen(true);
-        setViewRecord(record);
-        modalData();
-    };
-
-    const handleOk = () => {
-        setIsModalOpen(false);
-    };
-
-    const handleCancel = () => {
-        setIsModalOpen(false);
-    };
-
     // drawer
     const showDrawer = async (record: any) => {
-        console.log('✌️record --->', record);
         try {
             if (record) {
                 const body = {
-                    customer: record?.customer?.id,
+                    customer: { value: record?.customer?.id, label: record?.customer?.customer_name },
                     id: record?.id,
                     discount: record?.discount,
                 };
-                // const res = await Models.discount.details(record.id);
-                // console.log('✌️res --->', res);
 
                 setEditRecord(body);
-                form.setFieldsValue(body); // Set form values for editing
+                form.setFieldsValue(body);
             } else {
                 setEditRecord(null);
                 form.resetFields();
@@ -214,14 +194,12 @@ const Discount = () => {
             : []),
     ];
 
-    // Table Datas
-
     // form submit
     const onFinish = async (values: any) => {
         try {
             setState({ btnLoading: true });
             const body = {
-                customer: values.customer,
+                customer: values.customer?.value,
                 discount: Number(values.discount),
             };
             if (editRecord) {
@@ -253,63 +231,12 @@ const Discount = () => {
 
     const onFinishFailed = (errorInfo: any) => {};
 
-    type FieldType = {
-        name?: string;
-    };
-
-    // Model Data
-    const modalData = () => {
-        const formatDate = (dateString: any) => {
-            if (!dateString) {
-                return 'N/A'; // or handle it according to your requirements
-            }
-
-            const date = new Date(dateString);
-
-            if (isNaN(date.getTime())) {
-                return 'Invalid Date'; // or handle it according to your requirements
-            }
-
-            return new Intl.DateTimeFormat('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-            }).format(date);
-        };
-
-        const data = [
-            {
-                label: 'City Name:',
-                value: viewRecord?.name || 'N/A',
-            },
-            {
-                label: 'Created By:',
-                value: viewRecord?.created_by || 'N/A',
-            },
-            {
-                label: 'Created Date:',
-                value: formatDate(viewRecord?.created_date),
-            },
-            {
-                label: 'Modified By:',
-                value: viewRecord?.modified_by || 'N/A',
-            },
-            {
-                label: 'Modified Date:',
-                value: formatDate(viewRecord?.modified_date),
-            },
-        ];
-        return data;
-    };
-
     const scrollConfig: any = {
         x: true,
         y: 300,
     };
 
     const handlePageChange = (number: any) => {
-        console.log('✌️number --->', number);
-
         getCustomerDiscount(number);
         setState({ currentPage: number });
 
@@ -391,9 +318,9 @@ const Discount = () => {
                         pagination={false}
                         scroll={scrollConfig}
                         loading={{
-                            spinning: state.loading, // This enables the loading spinner
+                            spinning: state.loading,
                             indicator: <Spin size="large" />,
-                            tip: 'Loading data...', // Custom text to show while loading
+                            tip: 'Loading data...',
                         }}
                     />
                     {state.discountList?.length > 0 && (
@@ -407,7 +334,6 @@ const Discount = () => {
                                 }}
                             >
                                 <Pagination totalPage={state.total} itemsPerPage={10} currentPages={state.currentPage} activeNumber={handlePageChange} />
-                                {/* <Pagination activeNumber={handlePageChange} totalPages={state.total} currentPages={state.currentPage} /> */}
                             </div>
                         </div>
                     )}
@@ -416,7 +342,7 @@ const Discount = () => {
                 <Drawer title={drawerTitle} placement="right" width={600} onClose={onClose} open={open}>
                     <Form name="basic-form" layout="vertical" initialValues={{ remember: true }} onFinish={onFinish} onFinishFailed={onFinishFailed} autoComplete="off" form={form}>
                         <Form.Item label="Customer Name" name="customer" required={false} rules={[{ required: true, message: 'Please select customer name!' }]}>
-                            <Select
+                            {/* <Select
                                 onChange={handleSelectChange}
                                 placeholder="Select a customer"
                                 value={selectedCustomerId}
@@ -430,19 +356,32 @@ const Discount = () => {
                                         {val.customer_name} - {val.phone_no}
                                     </Select.Option>
                                 ))}
-                            </Select>
-                        </Form.Item>
+                            </Select> */}
 
-                        {/* <Form.Item>
-                            <Input.TextArea rows={4} value={customerAddress} />
-                        </Form.Item> */}
+                            <CustomSelect
+                                onSearch={(data: any) => customerSearch(data)}
+                                value={state.customer}
+                                options={state.customerList}
+                                className=" flex-1"
+                                onChange={(selectedOption: any) => {
+                                    form.setFieldsValue({ customer: selectedOption });
+                                    customersList(state.customerCurrentPage);
+                                }}
+                                loadMore={() => {
+                                    if (state.customerHasNext) {
+                                        customersList(state.customerCurrentPage + 1);
+                                    }
+                                }}
+                                isSearchable
+                                filterOption={(input: string, option: any) => option.label.toLowerCase().includes(input.toLowerCase())}
+                            />
+                        </Form.Item>
 
                         <Form.Item label="Discount (%)" name="discount" required={false} rules={[{ required: true, message: 'Please enter discount !' }]}>
                             <Input type="number" placeholder="Discount" />
                         </Form.Item>
 
                         <Form.Item>
-                            {/* <Space> */}
                             <div className="form-btn-main">
                                 <Space>
                                     <Button danger htmlType="submit" onClick={() => onClose()}>
@@ -453,28 +392,9 @@ const Discount = () => {
                                     </Button>
                                 </Space>
                             </div>
-                            {/* <Button htmlType="submit" style={{ borderColor: "blue", color: "blue" }}>
-                                        Add Invoice Test
-                                    </Button> */}
-                            {/* </Space> */}
                         </Form.Item>
-                        {/* </div> */}
                     </Form>
                 </Drawer>
-
-                {/* Modal */}
-                <Modal title="View Tax" open={isModalOpen} onOk={handleOk} onCancel={handleCancel} footer={false}>
-                    {modalData()?.map((value: any) => {
-                        return (
-                            <>
-                                <div className="content-main">
-                                    <p className="content-1">{value?.label}</p>
-                                    <p className="content-2">{value?.value}</p>
-                                </div>
-                            </>
-                        );
-                    })}
-                </Modal>
             </div>
         </>
     );
