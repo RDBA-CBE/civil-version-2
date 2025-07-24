@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Space, Table, Modal, Spin } from 'antd';
 import { Button, Drawer } from 'antd';
 import { Form, Input } from 'antd';
-import { EditOutlined, EyeOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import moment from 'moment';
 import router from 'next/router';
@@ -44,36 +44,12 @@ const Expense = () => {
         getExpense(1);
     }, [debouncedSearch]);
 
-    // const getExpense = () => {
-    //     const Token = localStorage.getItem('token');
-    //     setLoading(true)
-
-    //     axios
-    //         .get(`${baseUrl}/expense_list/`, {
-    //             headers: {
-    //                 Authorization: `Token ${Token}`,
-    //             },
-    //         })
-    //         .then((res) => {
-    //             setDataSource(res.data);
-    //             setFilterData(res.data);
-    //             setLoading(false);
-    //         })
-    //         .catch((error: any) => {
-    //             if (error.response.status === 401) {
-    //                 router.push('/');
-    //             }
-    //             setLoading(false)
-    //         });
-    // };
-
     const getExpense = async (page: any) => {
         try {
             const body = bodyData();
             setState({ loading: true });
 
             const res: any = await Models.expense.expenseList(page, body);
-            console.log('abcd --->', res);
             setState({
                 currentPage: page,
                 pageNext: res?.next,
@@ -85,6 +61,28 @@ const Expense = () => {
             setFilterData(res?.results);
         } catch (error) {
             setState({ loading: false });
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const handleDelete = (record: any) => {
+        // Implement your delete logic here
+
+        Modal.confirm({
+            title: 'Are you sure, you want to delete this EXPENSE record?',
+            okText: 'Yes',
+            okType: 'danger',
+            onOk: () => {
+                deleteExpence(record);
+            },
+        });
+    };
+
+    const deleteExpence = async (record: any) => {
+        try {
+            const res: any = await Models.expense.delete(record.id);
+            getExpense(state.currentPage);
+        } catch (error) {
             console.log('✌️error --->', error);
         }
     };
@@ -130,144 +128,35 @@ const Expense = () => {
         form.resetFields();
     };
 
-    const columns = [
-        {
-            title: 'Expense Name',
-            dataIndex: 'expense_name',
-            key: 'expense_name',
-            className: 'singleLineCell',
-        },
-        {
-            title: 'Created At',
-            dataIndex: 'created_date',
-            key: 'created_date',
-            className: 'singleLineCell',
-            render: (text: any) => {
-                const formattedDate = moment(text, 'YYYY-MM-DD').isValid() ? moment(text).format('DD-MM-YYYY') : ''; // Empty string for invalid dates
-                return formattedDate;
-            },
-        },
-        {
-            title: 'Actions',
-            key: 'actions',
-            render: (text: any, record: any) => (
-                <Space size="middle">
-                    <EyeOutlined style={{ cursor: 'pointer' }} onClick={() => showModal(record)} className="view-icon" rev={undefined} />
-
-                    {localStorage.getItem('admin') === 'true' ? (
-                        <EditOutlined style={{ cursor: 'pointer' }} onClick={() => showDrawer(record)} className="edit-icon" rev={undefined} />
-                    ) : (
-                        <EditOutlined style={{ cursor: 'pointer', display: 'none' }} onClick={() => showDrawer(record)} className="edit-icon" rev={undefined} />
-                    )}
-
-                    {/* <EditOutlined
-            style={{ cursor: "pointer" }}
-            onClick={() => showDrawer(record)}
-            className='edit-icon' rev={undefined} />
-          {
-            localStorage.getItem('admin') === 'true' ? (
-              <DeleteOutlined
-                style={{ color: "red", cursor: "pointer" }}
-                onClick={() => handleDelete(record)}
-                className='delete-icon'
-                rev={undefined}
-              />
-            ) : (
-              <DeleteOutlined
-                style={{ display: "none" }}
-                onClick={() => handleDelete(record)}
-                className='delete-icon'
-                rev={undefined}
-              />
-            )
-          }
-
- */}
-                </Space>
-            ),
-        },
-    ];
-
-    // const handleDelete = (record: any) => {
-    //   // Implement your delete logic here
-    //   const Token = localStorage.getItem("token")
-
-    //   Modal.confirm({
-    //     title: "Are you sure, you want to delete this EXPENSE record?",
-    //     okText: "Yes",
-    //     okType: "danger",
-    //     onOk: () => {
-    //       axios.delete(`${baseUrl}/delete_expense/${record.id}/`, {
-    //         headers: {
-    //           "Authorization": `Token ${Token}`
-    //         }
-    //       }).then((res) => {
-    //         console.log(res)
-    //         getExpense()
-    //       }).catch((err) => {
-    //         console.log(err)
-    //       })
-
-    //     },
-    //   });
-    // };
-
-    const inputChange = (e: any) => {
-        const searchValue = e.target.value.toLowerCase();
-        const filteredData = dataSource.filter((item: any) => item?.expense_name?.toLowerCase().includes(searchValue));
-        setFilterData(searchValue ? filteredData : dataSource);
-    };
+   
 
     const handlePageChange = (number: any) => {
-        console.log('number', number);
         setState({ currentPage: number });
         getExpense(number);
-
-        // if (state.searchValue) {
-        //     onFinish2(state.searchValue, number);
-        // } else {
-        //     initialData(number);
-        // }
-
         return number;
     };
 
     // form submit
-    const onFinish = (values: any) => {
-        if (editRecord) {
-            axios
-                .put(`${baseUrl}/edit_expense/${editRecord.id}/`, values, {
-                    headers: {
-                        Authorization: `Token ${localStorage.getItem('token')}`,
-                    },
-                })
-                .then((res) => {
-                    getExpense(1);
-                    setOpen(false);
-                })
-                .catch((error: any) => {
-                    if (error.response.status === 401) {
-                        router.push('/');
-                    }
-                });
-        } else {
-            axios
-                .post(`${baseUrl}/create_expense/`, values, {
-                    headers: {
-                        Authorization: `Token ${localStorage.getItem('token')}`,
-                    },
-                })
-                .then((res) => {
-                    getExpense(1);
-                    setOpen(false);
-                })
-                .catch((error) => {
-                    if (error.response.status === 401) {
-                        router.push('/');
-                    }
-                });
+    const onFinish = async (values: any) => {
+        try {
+            setState({ btnLoading: true });
+            if (editRecord) {
+                const res = await Models.expense.update(editRecord.id, values);
+                getExpense(state.currentPage);
+                setOpen(false);
+                setState({ btnLoading: false });
+            } else {
+                const res = await Models.expense.create(values);
+                getExpense(state.currentPage);
+                setOpen(false);
+                setState({ btnLoading: false });
+            }
+            form.resetFields();
+        } catch (error) {
+            setState({ btnLoading: false });
+
+            console.log('✌️error --->', error);
         }
-        form.resetFields();
     };
 
     const onFinishFailed = (errorInfo: any) => {};
@@ -327,6 +216,42 @@ const Expense = () => {
         y: 300,
     };
 
+    const columns = [
+        {
+            title: 'Expense Name',
+            dataIndex: 'expense_name',
+            key: 'expense_name',
+            className: 'singleLineCell',
+        },
+        {
+            title: 'Created At',
+            dataIndex: 'created_date',
+            key: 'created_date',
+            className: 'singleLineCell',
+            render: (text: any) => {
+                const formattedDate = moment(text, 'YYYY-MM-DD').isValid() ? moment(text).format('DD-MM-YYYY') : ''; // Empty string for invalid dates
+                return formattedDate;
+            },
+        },
+        {
+            title: 'Actions',
+            key: 'actions',
+            render: (text: any, record: any) => (
+                <Space size="middle">
+                    <EyeOutlined style={{ cursor: 'pointer' }} onClick={() => showModal(record)} className="view-icon" rev={undefined} />
+
+                    {localStorage.getItem('admin') === 'true' ? (
+                        <EditOutlined style={{ cursor: 'pointer' }} onClick={() => showDrawer(record)} className="edit-icon" rev={undefined} />
+                    ) : (
+                        <EditOutlined style={{ cursor: 'pointer', display: 'none' }} onClick={() => showDrawer(record)} className="edit-icon" rev={undefined} />
+                    )}
+
+                    {/* <DeleteOutlined onClick={() => handleDelete(record)} className="delete-icon" rev={undefined} /> */}
+                </Space>
+            ),
+        },
+    ];
+
     return (
         <>
             <div className="panel">
@@ -382,7 +307,7 @@ const Expense = () => {
                                     <Button danger htmlType="submit" onClick={() => onClose()}>
                                         Cancel
                                     </Button>
-                                    <Button type="primary" htmlType="submit">
+                                    <Button type="primary" htmlType="submit" loading={state.btnLoading}>
                                         Submit
                                     </Button>
                                 </Space>
