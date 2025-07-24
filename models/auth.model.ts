@@ -43,7 +43,7 @@ const auth = {
 
     changeEmployeePassword: (data:any) => {
         let promise = new Promise((resolve, reject) => {
-            let url = `login/`;
+            let url = `admin-password-change/`;
             instance()
                 .post(url, data)
                 .then((res) => {
@@ -52,8 +52,30 @@ const auth = {
                 .catch((error) => {
                     console.log('errorsss: ', error);
                     if (error.response) {
-                        reject(error.response.data.error);
+                        reject(error.response.data);
                     } else {
+                        reject(error);
+                    }
+                });
+        });
+        return promise;
+    },
+
+    changePassword: (data:any) => {
+        let promise = new Promise((resolve, reject) => {
+            let url = `employee-password-change/`;
+            instance()
+                .post(url, data)
+                .then((res) => {
+                    resolve(res.data);
+                })
+                .catch((error) => {
+                    console.log('errorsss: ', error.response.data);
+                    if (error.response) {
+console.log('✌️ if --->',  );
+                        reject(error.response.data);
+                    } else {
+console.log('✌️else --->', );
                         reject(error);
                     }
                 });
