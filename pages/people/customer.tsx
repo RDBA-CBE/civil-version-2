@@ -437,7 +437,7 @@ const Customer = () => {
 
     const scrollConfig: any = {
         x: true,
-        y: 300,
+        y: 450,
     };
 
     return (
@@ -460,6 +460,7 @@ const Customer = () => {
                         columns={columns}
                         pagination={false}
                         scroll={scrollConfig}
+                        
                         loading={{
                             spinning: state.loading, // This enables the loading spinner
                             indicator: <Spin size="large" />,

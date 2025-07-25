@@ -1507,16 +1507,16 @@ border: 1px solid #972e25 !important;
 }
 
 .pagination-container {
-    display: flex;
+   display: flex;
     justify-content: center;
     align-items: center;
-    height: 64px;
+    height: 40px;
     border: 1px solid #972e25;
     padding: 20px 80px;
     position: relative;
     margin: 30px;
-    border-radius: 20px;
-    width: auto; /* Added to avoid invalid media query trying to change width without default */
+    border-radius: 10px;
+    width: auto;
   }
   
   @media (max-width: 500px) {
@@ -1538,7 +1538,7 @@ border: 1px solid #972e25 !important;
   transform: translateY(-50%);
   background-color: transparent;
   border: none;
-  font-size: 16px;
+  font-size: 14px;
   padding: 10px;
 }
 
@@ -1572,7 +1572,7 @@ border: 1px solid #972e25 !important;
     background-color: transparent;
     border: none;
     cursor: pointer;
-    padding: 5px 10px;
+    /* padding: 5px 10px; */
     font-size: 16px;
   
    
@@ -1587,5 +1587,6 @@ border: 1px solid #972e25 !important;
     color: white;
     background-color: #972e25;
     border-radius: 5px;
-    padding: 5px 16px;
+    /* padding: 5px 16px; */
+    padding: 1px 8px;
   }
