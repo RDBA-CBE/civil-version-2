@@ -83,55 +83,47 @@ const ExpenseFileReport = () => {
         },
     ];
 
-    const exportToExcel = async () => {
+    const exportToExcel = async (values: any) => {
         setState({ excelBtnLoading: true });
-
-        const body = bodyData();
 
         let allData: any[] = [];
         let currentPage = 1;
         let hasNext = true;
 
-        try {
-            while (hasNext) {
+        while (hasNext) {
+            const body = bodyData();
+            const res: any = await Models.expense.expenseFileReport(currentPage, body);
 
-                const res: any = await Models.expense.expenseFileReport(currentPage, body);
+            allData = allData.concat(res?.results || []);
 
-                allData = allData.concat(res?.results || []);
-
-                hasNext = !!res?.next;
-                if (hasNext) currentPage += 1;
+            if (res?.next) {
+                currentPage += 1;
+            } else {
+                hasNext = false;
             }
-
-            const workbook = new ExcelJS.Workbook();
-            const worksheet = workbook.addWorksheet('Sheet1');
-
-            // Add header row
-            worksheet.addRow(columns.map((column) => column.title));
-
-            // Add data rows
-            allData.forEach((row: any) => {
-                worksheet.addRow(columns.map((column: any) => row[column.dataIndex]));
-            });
-
-            // Generate a Blob containing the Excel file
-            const blob = await workbook.xlsx.writeBuffer();
-
-            // Use file-saver to save the Blob as a file
-            FileSaver.saveAs(
-                new Blob([blob], {
-                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                }),
-                'Expense-File-Report.xlsx'
-            );
-            setState({ excelBtnLoading: false });
-        } catch (error) {
-            setState({ excelBtnLoading: false });
-
-            console.error('❌ Error exporting Excel:', error);
-        } finally {
-            setState({ excelBtnLoading: false });
         }
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Sheet1');
+
+        worksheet.addRow(['Expense User', 'Expense Amount', 'Expense Date', 'File']);
+
+        allData.forEach((item: any) => {
+            worksheet.addRow([item.expense_user, item.expence_amount, dayjs(item.created_date).format('DD-MM-YYYY'), item.file_url]);
+        });
+
+        // Generate a Blob containing the Excel file
+        const blob = await workbook.xlsx.writeBuffer();
+
+        // Use file-saver to save the Blob as a file
+        FileSaver.saveAs(
+            new Blob([blob], {
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            }),
+            `Invoice-File-Report.xlsx`
+        );
+
+        setState({ excelBtnLoading: false });
     };
 
 
@@ -174,7 +166,7 @@ const ExpenseFileReport = () => {
     };
 
     const handleDownloadAll = async () => {
-        setState({ loading: true });
+        setState({ pdfLoading: true });
         const { searchValue } = state;
         const body = bodyData();
 
@@ -197,7 +189,7 @@ const ExpenseFileReport = () => {
             }
         }
 
-        setState({ loading: false });
+        setState({ pdfLoading: false });
 
         const doc: any = new jsPDF();
         doc.text('Expense File Report', 14, 16);
@@ -208,7 +200,7 @@ const ExpenseFileReport = () => {
             return [
                 item.expense_user, // Expense User
                 item.expence_amount, // Expense Amount
-                dayjs(item.expense_date).format('DD-MM-YYYY'), // Expense Date (formatted)
+                dayjs(item.created_date).format('DD-MM-YYYY'), // Expense Date (formatted)
                 item.file_url,
             ];
         });
@@ -307,7 +299,7 @@ const ExpenseFileReport = () => {
                             <Button type="primary" onClick={exportToExcel} loading={state.excelBtnLoading}>
                                 Export to Excel
                             </Button>
-                            <Button type="primary" onClick={handleDownloadAll}>
+                            <Button type="primary" onClick={handleDownloadAll} loading={state.pdfLoading}>
                                 Download PDF
                             </Button>
                             {/* <Search placeholder="input search text" onChange={inputChange} enterButton className='search-bar' /> */}

@@ -6,57 +6,69 @@ import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import dayjs from 'dayjs';
 import router from 'next/router';
-import { baseUrl, roundNumber } from '@/utils/function.util';
+import { baseUrl, Dropdown, roundNumber, useSetState } from '@/utils/function.util';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import Models from '@/imports/models.import';
+import CustomSelect from '@/components/Select';
 
 const InvoiceFileReport = () => {
     const [form] = Form.useForm();
     const [dataSource, setDataSource] = useState([]);
-    const [saleFormData, setSaleFormData] = useState([]);
-    const [loading, setLoading] = useState(false);
     const [formFields, setFormFields] = useState<any>([]);
 
-    // get GetExpenseReport datas
+    const [state, setState] = useSetState({
+        invoiceList: [],
+        hasNext: null,
+        currentPage: 1,
+        loading: false,
+        customerCurrentPage: 1,
+        customerHasNext: null,
+        customerList: [],
+    });
+
     useEffect(() => {
-        GetExpenseReport();
+        getData(1);
     }, []);
 
-    const GetExpenseReport = () => {
-        const Token = localStorage.getItem('token');
-
-        axios
-            .get(`${baseUrl}/expense_report/`, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res) => {
-                setSaleFormData(res.data?.expense_category);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
+    const getData = async (page: number) => {
+        try {
+            setState({ loading: true });
+            const res: any = await Models.expense.invoiceFileReport(page, null);
+            setState({
+                invoiceList: res?.results || [],
+                currentPage: page,
+                total: res?.count,
+                loading: false,
             });
+        } catch (error) {
+            setState({ loading: false });
+
+            console.log('✌️error --->', error);
+        }
     };
 
-    useEffect(() => {
-        axios
-            .get(`${baseUrl}/create_invoice/`, {
-                headers: {
-                    Authorization: `Token ${localStorage.getItem('token')}`,
-                },
-            })
-            .then((res) => {
-                setFormFields(res.data);
-            })
-            .catch((error: any) => {
-                if (error.response?.status === 401) {
-                    router.push('/');
-                }
-            });
-    }, []);
+    const customersList = async (page = 1) => {
+        try {
+            const res: any = await Models.invoice.customerList(page);
+            const dropdown = Dropdown(res?.results, 'customer_name');
+            setState({ customerList: [...state.customerList, ...dropdown], customerHasNext: res?.next, customerCurrentPage: page });
+        } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const customerSearch = async (text: any) => {
+        try {
+            const res: any = await Models.invoice.customerSearch(text);
+            if (res?.results?.length > 0) {
+                const dropdown = Dropdown(res?.results, 'customer_name');
+                setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: 1 });
+            }
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
+    };
 
     // Table Headers
     const columns = [
@@ -67,10 +79,11 @@ const InvoiceFileReport = () => {
             className: 'singleLineCell',
             width: 150,
         },
+
         {
             title: 'Customer Name',
-            dataIndex: 'invoice_customer',
-            key: 'invoice_customer',
+            dataIndex: 'customer',
+            key: 'customer',
             className: 'singleLineCell',
         },
         {
@@ -93,11 +106,11 @@ const InvoiceFileReport = () => {
 
         {
             title: 'File',
-            dataIndex: 'file',
-            key: 'file',
+            dataIndex: 'file_url',
+            key: 'file_url',
             className: 'singleLineCell',
             render: (text: any, record: any) => (
-                <a href={record.file} target="_blank" rel="noopener noreferrer">
+                <a href={record.file_url} target="_blank" rel="noopener noreferrer">
                     Download
                 </a>
             ),
@@ -107,33 +120,109 @@ const InvoiceFileReport = () => {
             dataIndex: 'invoice_date',
             key: 'invoice_date',
             className: 'singleLineCell',
+            render: (text: any, record: any) => <div>{record?.created_date ? dayjs(record?.created_date).format('DD-MM-YYYY') : 'N/A'}</div>,
         },
     ];
 
     // export to excel format
-    const exportToExcel = async () => {
+    // const exportToExcel = async () => {
+    //     const workbook = new ExcelJS.Workbook();
+    //     const worksheet = workbook.addWorksheet('Sheet1');
+
+    //     // Add header row
+    //     worksheet.addRow(columns.map((column) => column.title));
+
+    //     // Add data rows
+
+    //     dataSource.forEach((row) => {
+    //         const rowData: any = [];
+    //         columns.forEach((column) => {
+    //             if (column.dataIndex === 'file') {
+    //                 // Add hyperlink in the specific column
+    //                 rowData.push({
+    //                     text: row[column.dataIndex], // Text displayed for the link
+    //                     hyperlink: row[column.dataIndex], // URL for the link
+    //                 });
+    //             } else {
+    //                 rowData.push(row[column.dataIndex]);
+    //             }
+    //         });
+    //         worksheet.addRow(rowData);
+    //     });
+
+    //     // Generate a Blob containing the Excel file
+    //     const blob = await workbook.xlsx.writeBuffer();
+
+    //     // Use file-saver to save the Blob as a file
+    //     FileSaver.saveAs(
+    //         new Blob([blob], {
+    //             type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    //         }),
+    //         'Invoice-File-Report.xlsx'
+    //     );
+    // };
+
+    const bodyData = () => {
+        let body: any = {};
+        if (form.getFieldValue('from_date')) {
+            body.from_date = dayjs(form.getFieldValue('from_date')).format('YYYY-MM-DD');
+        }
+        if (form.getFieldValue('to_date')) {
+            body.to_date = dayjs(form.getFieldValue('to_date')).format('YYYY-MM-DD');
+        }
+        if (form.getFieldValue('customer')) {
+            body.customer = form.getFieldValue('customer')?.value;
+        }
+        if (form.getFieldValue('invoice_no')) {
+            body.invoice_no = form.getFieldValue('invoice_no');
+        }
+        if (form.getFieldValue('project_name')) {
+            body.project_name = form.getFieldValue('project_name');
+        }
+        console.log('✌️body --->', body);
+
+        return body;
+    };
+
+    const exportToExcel = async (values: any) => {
+        console.log('✌️values --->', values);
+
+        setState({ excelBtnLoading: true });
+
+        let allData: any[] = [];
+        let currentPage = 1;
+        let hasNext = true;
+
+        while (hasNext) {
+            const body = bodyData();
+            const res: any = await Models.expense.invoiceFileReport(currentPage, body);
+
+            allData = allData.concat(res?.results || []);
+
+            if (res?.next) {
+                currentPage += 1;
+            } else {
+                hasNext = false;
+            }
+        }
+
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Sheet1');
 
-        // Add header row
-        worksheet.addRow(columns.map((column) => column.title));
+        worksheet.addRow(['Invoice No', 'Project Name', 'Customer', 'Invoice Amount', 'Invoice Date', 'File']);
 
-        // Add data rows
-
-        dataSource.forEach((row) => {
-            const rowData: any = [];
-            columns.forEach((column) => {
-                if (column.dataIndex === 'file') {
-                    // Add hyperlink in the specific column
-                    rowData.push({
-                        text: row[column.dataIndex], // Text displayed for the link
-                        hyperlink: row[column.dataIndex], // URL for the link
-                    });
-                } else {
-                    rowData.push(row[column.dataIndex]);
-                }
-            });
-            worksheet.addRow(rowData);
+        allData.forEach((item: any) => {
+            worksheet.addRow([
+                item.invoice_no,
+                item.project_name,
+                item.customer,
+                item.invoice_amount,
+                dayjs(item.created_date).format('DD-MM-YYYY'),
+                {
+                    text: 'Download',
+                    hyperlink: item.file_url,
+                },
+            ]);
         });
 
         // Generate a Blob containing the Excel file
@@ -144,71 +233,32 @@ const InvoiceFileReport = () => {
             new Blob([blob], {
                 type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             }),
-            'Invoice-File-Report.xlsx'
+            `Invoice-File-Report.xlsx`
         );
+
+        setState({ excelBtnLoading: false });
     };
 
-    useEffect(() => {
-        const Token = localStorage.getItem('token');
-        setLoading(true);
-        const body = {
-            // expense_user: '',
-            from_date: '',
-            to_date: '',
-            customer: '',
-            invoice_no: '',
-            project_name: '',
-            // expense_category: '',
-        };
-
-        axios
-            .post(`${baseUrl}/invoice_file_report/`, body, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res: any) => {
-                console.log('✌️res --->', res);
-                setDataSource(res?.data?.reports);
-                setLoading(false);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
-                setLoading(false);
-            });
-    }, []);
-
     // form submit
-    const onFinish = (values: any) => {
-        const Token = localStorage.getItem('token');
-
+    const onFinish = async (values: any) => {
+        setState({ loading: true });
         const body = {
-            // expense_user: values.expense_user ? values.expense_user : '',
             from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
             to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
-            customer: values.customer ? values.customer : '',
+            customer: values.customer ? values.customer?.value : '',
             invoice_no: values.invoice_no ? values.invoice_no : '',
             project_name: values.project_name ? values.project_name : '',
-            // expense_category: values.expense_category ? values.expense_category : '',
+            category_name: 2,
         };
 
-        axios
-            .post(`${baseUrl}/invoice_file_report/`, body, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res: any) => {
-                setDataSource(res?.data?.reports);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
-            });
-        form.resetFields();
+        const res: any = await Models.invoiceFile.filter(body, 1);
+
+        setState({
+            invoiceList: res?.results || [],
+            currentPage: 1,
+            total: res?.count,
+            loading: false,
+        });
     };
 
     const onFinishFailed = (errorInfo: any) => {};
@@ -218,94 +268,65 @@ const InvoiceFileReport = () => {
         y: 300,
     };
 
-    // download
-    // const handleDownloadAll = () => {
-    //     // Recursive function to download files one by one
-    //     const downloadFile = (index: any) => {
-    //         // Check if there are still files to download
-    //         if (index < dataSource.length) {
-    //             // Get the current file object
-    //             const item: any = dataSource[index];
+    const handleDownloadAll = async () => {
+        setState({ pdfLoading: true });
+        const { searchValue } = state;
+        const body = bodyData();
 
-    //             // Log the file name for debugging purposes
-    //             console.log('Downloading file:', item.name);
+        let allData: any[] = [];
+        let currentPage = 1;
+        let hasNext = true;
 
-    //             // Create a temporary anchor element to trigger the download
-    //             const link = document.createElement('a');
-    //             link.href = item.file;
-    //             link.download = item.name;
+        // Fetch all paginated data
+        while (hasNext) {
+            const res: any = await Models.expense.invoiceFileReport(currentPage, body);
 
-    //             // Append the anchor element to the body to trigger the download
-    //             document.body.appendChild(link);
-    //             link.click();
+            allData = allData.concat(res?.results || []);
 
-    //             // Remove the anchor element from the body
-    //             document.body.removeChild(link);
+            if (res?.next) {
+                currentPage += 1;
+            } else {
+                hasNext = false;
+            }
+        }
 
-    //             // Recursively call the downloadFile function to download the next file
-    //             setTimeout(() => {
-    //                 downloadFile(index + 1);
-    //             }, 1000); // Adjust the delay time as needed
-    //         }
-    //     };
+        setState({ pdfLoading: false });
 
-    //     // Start downloading the files from the first index
-    //     downloadFile(0);
-    // };
-
-    const handleDownloadAll = () => {
-        console.log('dataSource', dataSource);
-
-        // Create a new jsPDF instance
         const doc: any = new jsPDF();
-
-        // Adding a title to the PDF
         doc.text('Invoice File Report', 14, 16);
 
-        // Define the column headers
         const headers = ['Invoice No', 'Project Name', 'Customer', 'Invoice Amount', 'Invoice Date', 'File'];
 
-        // Map the data into the table format
-        const tableData = dataSource.map((item: any) => [
-            item.invoice_no, // ID
-            item.project_name, // Expense User
-            item.invoice_customer, // Invoice User
-            item.invoice_amount, // Invoice Amount
-            dayjs(item.invoice_date).format('DD-MM-YYYY'), // Invoice Date (formatted)
-            item.file, // File URL
-        ]);
+        const tableData = allData.map((item: any) => {
+            return [item.invoice_no, item.project_name, item.customer, item.invoice_amount, dayjs(item.created_date).format('DD-MM-YYYY'), item.file_url];
+        });
 
-        // Use the autoTable plugin to generate the table in the PDF
         doc.autoTable({
-            head: [headers], // Table header
-            body: tableData, // Table rows
-            startY: 20, // Starting Y position for the table
-            margin: { horizontal: 10 },
+            head: [headers],
+            body: tableData,
+            startY: 20,
+            margin: { horizontal: 1 },
             theme: 'striped',
             columnStyles: {
-                0: { cellWidth: 20 }, // Column 1 (ID) - small width
-                1: { cellWidth: 30 }, // Column 2 (Expense User) - wider
-                2: { cellWidth: 50 }, // Column 2 (Expense User) - wider
-                3: { cellWidth: 40 }, // Column 3 (Expense Amount) - medium width
-                4: { cellWidth: 30 }, // Column 4 (Expense Date) - medium width
-                5: { cellWidth: 150 }, // Column 5 (File) - wide width for the link column
+                0: { cellWidth: 20 },
+                1: { cellWidth: 40 },
+                2: { cellWidth: 40 },
+                3: { cellWidth: 40 },
+                4: { cellWidth: 30 },
+                5: { cellWidth: 30 },
+                6: { cellWidth: 60 },
             },
             didDrawCell: (data: any) => {
-                // Check if the current cell is in the "File" column (index 4)
-                if (data.column.index === 5) {
-                    const fileUrl = data.cell.raw; // The file URL that should be clickable
-
+                if (data.column.index === 7) {
+                    const fileUrl = data.cell.raw;
                     if (fileUrl) {
-                        // Positioning and drawing the clickable link
-                        doc.setTextColor(0, 0, 255); // Optional: Make the link text blue
-                        // doc.text('View File', data.cell.x + 2, data.cell.y + 5);  // Position text within the cell
-                        doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url: fileUrl }); // Make the entire cell a clickable link
+                        doc.setTextColor(0, 0, 255);
+                        doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url: fileUrl });
                     }
                 }
             },
         });
 
-        // Save the PDF with the name "Expense_File_Report.pdf"
         doc.save('Invoice_File_Report.pdf');
     };
 
@@ -316,35 +337,65 @@ const InvoiceFileReport = () => {
                     <Form name="basic" layout="vertical" form={form} initialValues={{ remember: true }} onFinish={onFinish} onFinishFailed={onFinishFailed} autoComplete="off">
                         <div className="sale_report_inputs">
                             <Form.Item label="Invoice No" name="invoice_no" style={{ width: '200px' }}>
-                                <Input />
+                                <Input
+                                    style={{
+                                        height: '39px',
+                                    }}
+                                />
                             </Form.Item>
 
                             <Form.Item label="Project Name" name="project_name" style={{ width: '200px' }}>
-                                <Input />
+                                <Input
+                                    style={{
+                                        height: '39px',
+                                    }}
+                                />
                             </Form.Item>
 
                             <Form.Item label="Customer" name="customer" style={{ width: '250px' }}>
-                                <Select showSearch filterOption={(input: any, option: any) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}>
-                                    {formFields?.customer?.map((value: any) => (
-                                        <Select.Option key={value.id} value={value.id}>
-                                            {value.customer_name}
-                                        </Select.Option>
-                                    ))}
-                                </Select>
+                                <CustomSelect
+                                    onSearch={(data: any) => customerSearch(data)}
+                                    value={state.customer}
+                                    options={state.customerList}
+                                    className=" flex-1"
+                                    onChange={(selectedOption: any) => {
+                                        form.setFieldsValue({ customer: selectedOption });
+                                        customersList(1);
+                                    }}
+                                    loadMore={() => {
+                                        if (state.customerHasNext) {
+                                            customersList(state.customerCurrentPage + 1);
+                                        }
+                                    }}
+                                    isSearchable
+                                    filterOption={(input: string, option: any) => option.label.toLowerCase().includes(input.toLowerCase())}
+                                />
                             </Form.Item>
 
                             <Form.Item label="From Date" name="from_date" style={{ width: '200px' }}>
-                                <DatePicker style={{ width: '100%' }} />
+                                <DatePicker style={{ width: '100%', height: '39px' }} />
                             </Form.Item>
 
                             <Form.Item label="To Date" name="to_date" style={{ width: '200px' }}>
-                                <DatePicker style={{ width: '100%' }} />
+                                <DatePicker style={{ width: '100%', height: '39px' }} />
                             </Form.Item>
 
-                            <div style={{ display: 'flex', alignItems: 'end' }}>
+                            <div style={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: '10px' }}>
                                 <Form.Item>
-                                    <Button type="primary" htmlType="submit" style={{ width: '150px' }}>
+                                    <Button type="primary" htmlType="submit" style={{ width: '100px' }}>
                                         Search
+                                    </Button>
+                                </Form.Item>
+                                <Form.Item>
+                                    <Button
+                                        type="primary"
+                                        htmlType="submit"
+                                        onClick={() => {
+                                            form.resetFields();
+                                        }}
+                                        style={{ width: '100px' }}
+                                    >
+                                        Clear
                                     </Button>
                                 </Form.Item>
                             </div>
@@ -357,10 +408,10 @@ const InvoiceFileReport = () => {
                     </div>
                     <div>
                         <Space>
-                            <Button type="primary" onClick={exportToExcel}>
+                            <Button type="primary" onClick={exportToExcel} loading={state.excelBtnLoading}>
                                 Export to Excel
                             </Button>
-                            <Button type="primary" onClick={handleDownloadAll}>
+                            <Button type="primary" onClick={handleDownloadAll} loading={state.pdfLoading}>
                                 Download PDF
                             </Button>
                             {/* <Search placeholder="input search text" onChange={inputChange} enterButton className='search-bar' /> */}
@@ -369,12 +420,12 @@ const InvoiceFileReport = () => {
                 </div>
                 <div className="table-responsive">
                     <Table
-                        dataSource={dataSource}
+                        dataSource={state.invoiceList}
                         columns={columns}
                         pagination={false}
                         scroll={scrollConfig}
                         loading={{
-                            spinning: loading, // This enables the loading spinner
+                            spinning: state.loading, // This enables the loading spinner
                             indicator: <Spin size="large" />,
                             tip: 'Loading data...', // Custom text to show while loading
                         }}
