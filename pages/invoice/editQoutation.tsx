@@ -169,7 +169,7 @@ const Edit = () => {
                 setAfterTax(Math.round(afterTax));
 
                 // Calculate advance payment
-                const totalAmount = response.payments.reduce((accumulator: number, current: any) => {
+                const totalAmount = response?.payments?.reduce((accumulator: number, current: any) => {
                     return accumulator + parseFloat(current.amount);
                 }, 0);
                 setAdvance(totalAmount);

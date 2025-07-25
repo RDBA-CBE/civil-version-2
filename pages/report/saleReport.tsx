@@ -314,9 +314,14 @@ const SaleReport = () => {
             },
         },
         {
-            title: 'Invoice File',
+             title: (
+                <Tooltip title="Total Amount">
+                    <span>Invoice File</span>
+                </Tooltip>
+            ),
+            title1: 'Invoice File',
 
-            dataIndex: 'invoice_file',
+            // dataIndex: 'invoice_file',
             key: 'invoice_file',
             className: 'singleLineCell',
             width: 150,
@@ -324,8 +329,8 @@ const SaleReport = () => {
                 console.log('✌️record --->', record);
                 return (
                     <>
-                        {record?.invoice_file ? (
-                            <a href={record.invoice_file} target="_blank" rel="noopener noreferrer">
+                        {record?.invoice_image ? (
+                            <a href={record.invoice_image} target="_blank" rel="noopener noreferrer">
                                 Download
                             </a>
                         ) : (
@@ -459,7 +464,7 @@ const SaleReport = () => {
                     }
 
                     if (key === 'invoice_file') {
-                        return row.invoice_file ? 'Download' : 'No File';
+                        return row.invoice_image ? 'Download' : 'No File';
                     }
 
                     if (key === 'cgst_tax') {
