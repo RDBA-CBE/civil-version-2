@@ -2,40 +2,56 @@ import React, { useRef, useState } from 'react';
 import Select from 'react-select';
 
 const CustomSelect = (props: any) => {
-    const { name, borderRadius, disabled, options, value, onChange, placeholder = 'Select...', title, isSearchable = true, className, error, isMulti, required, loadMore, menuOpen, onSearch } = props;
+    const { 
+        name, 
+        borderRadius, 
+        disabled, 
+        options, 
+        value, 
+        onChange, 
+        placeholder = 'Select...', 
+        title, 
+        isSearchable = true, 
+        className, 
+        error, 
+        isMulti, 
+        required, 
+        loadMore, 
+        menuOpen, 
+        onSearch,
+        height = '33px' // New prop for controlling height
+    } = props;
 
     const customStyles = {
-        control: (provided: any) => ({
+        control: (provided: any, state: any) => ({
             ...provided,
-            borderColor: error ? 'red' : provided.borderColor,
-            boxShadow: error ? '0 0 0 0.1 red' : provided.boxShadow,
+            minHeight: height,
+            height: height,
+            borderColor: error ? 'red' : state.isFocused ? '#2684FF' : provided.borderColor,
+            boxShadow: error ? '0 0 0 1px red' : state.isFocused ? '0 0 0 1px #2684FF' : provided.boxShadow,
             '&:hover': {
-                borderColor: error ? 'red' : provided.borderColor,
+                borderColor: error ? 'red' : state.isFocused ? '#2684FF' : provided.borderColor,
             },
             borderRadius: borderRadius ? borderRadius : '5px',
+        }),
+        valueContainer: (provided: any) => ({
+            ...provided,
+            height: `calc(${height} - 2px)`,
+            padding: '0 8px',
+        }),
+        input: (provided: any) => ({
+            ...provided,
+            margin: '0px',
+        }),
+        indicatorsContainer: (provided: any) => ({
+            ...provided,
+            height: `calc(${height} - 2px)`,
         }),
         menuPortal: (base: any) => ({ ...base, zIndex: 9999 }),
         menu: (base: any) => ({ ...base, zIndex: 9999 }),
     };
 
     const [inputValue, setInputValue] = useState('');
-
-    // const handleSearchChange = (inputValue: string) => {
-    //     setSearchTerm(inputValue);
-
-    //     if (onSearch && inputValue.length >= 2) {
-    //         // Only search if 2+ characters
-    //         clearTimeout(debounceRef.current);
-    //         debounceRef.current = setTimeout(async () => {
-    //             setIsSearching(true);
-    //             try {
-    //                 await onSearch(inputValue);
-    //             } finally {
-    //                 setIsSearching(false);
-    //             }
-    //         }, debounceTimeout);
-    //     }
-    // };
 
     const handleInputChange = (newValue: string) => {
         setInputValue(newValue);
@@ -71,9 +87,6 @@ const CustomSelect = (props: any) => {
                     onMenuScrollToBottom={loadMore}
                     inputValue={inputValue}
                     onInputChange={handleInputChange}
-                    components={{
-                        DropdownIndicator: null,
-                    }}
                 />
                 {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
             </div>

@@ -338,21 +338,6 @@ const Discount = () => {
                 <Drawer title={drawerTitle} placement="right" width={600} onClose={onClose} open={open}>
                     <Form name="basic-form" layout="vertical" initialValues={{ remember: true }} onFinish={onFinish} onFinishFailed={onFinishFailed} autoComplete="off" form={form}>
                         <Form.Item label="Customer Name" name="customer" required={false} rules={[{ required: true, message: 'Please select customer name!' }]}>
-                            {/* <Select
-                                onChange={handleSelectChange}
-                                placeholder="Select a customer"
-                                value={selectedCustomerId}
-                                showSearch
-                                filterOption={(input, option: any) =>
-                                    option.props.children.toString().toLowerCase().indexOf(input.toLowerCase()) >= 0 || option.props.children.toString().toLowerCase().indexOf(input.toLowerCase()) >= 0
-                                }
-                            >
-                                {customerList?.map((val: any) => (
-                                    <Select.Option key={val.id} value={val.id}>
-                                        {val.customer_name} - {val.phone_no}
-                                    </Select.Option>
-                                ))}
-                            </Select> */}
 
                             <CustomSelect
                                 onSearch={(data: any) => customerSearch(data)}

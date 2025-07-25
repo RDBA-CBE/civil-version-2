@@ -263,7 +263,6 @@ const InvoiceFileReport = () => {
 
     const onFinishFailed = (errorInfo: any) => {};
 
-
     const handleDownloadAll = async () => {
         setState({ pdfLoading: true });
         const { searchValue } = state;
@@ -341,19 +340,11 @@ const InvoiceFileReport = () => {
                     <Form name="basic" layout="vertical" form={form} initialValues={{ remember: true }} onFinish={onFinish} onFinishFailed={onFinishFailed} autoComplete="off">
                         <div className="sale_report_inputs">
                             <Form.Item label="Invoice No" name="invoice_no" style={{ width: '200px' }}>
-                                <Input
-                                    style={{
-                                        height: '39px',
-                                    }}
-                                />
+                                <Input />
                             </Form.Item>
 
                             <Form.Item label="Project Name" name="project_name" style={{ width: '200px' }}>
-                                <Input
-                                    style={{
-                                        height: '39px',
-                                    }}
-                                />
+                                <Input />
                             </Form.Item>
 
                             <Form.Item label="Customer" name="customer" style={{ width: '250px' }}>
@@ -377,11 +368,11 @@ const InvoiceFileReport = () => {
                             </Form.Item>
 
                             <Form.Item label="From Date" name="from_date" style={{ width: '200px' }}>
-                                <DatePicker style={{ width: '100%', height: '39px' }} />
+                                <DatePicker style={{ width: '100%'}} />
                             </Form.Item>
 
                             <Form.Item label="To Date" name="to_date" style={{ width: '200px' }}>
-                                <DatePicker style={{ width: '100%', height: '39px' }} />
+                                <DatePicker style={{ width: '100%'}} />
                             </Form.Item>
 
                             <div style={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: '10px' }}>
@@ -437,7 +428,6 @@ const InvoiceFileReport = () => {
                     {state.invoiceList?.length > 0 && (
                         <div>
                             <div
-                                
                                 style={{
                                     display: 'flex',
                                     justifyContent: 'center',

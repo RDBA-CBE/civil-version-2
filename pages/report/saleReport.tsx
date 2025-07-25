@@ -5,13 +5,14 @@ import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import dayjs from 'dayjs';
 import router from 'next/router';
-import { baseUrl, capitalizeFLetter, ObjIsEmpty, roundNumber, useSetState } from '@/utils/function.util';
+import { baseUrl, capitalizeFLetter, Dropdown, ObjIsEmpty, roundNumber, useSetState } from '@/utils/function.util';
 import { saveAs } from 'file-saver';
 import { message } from 'antd';
 import Models from '@/imports/models.import';
 import Pagination from '@/components/pagination/pagination';
 import IconLoader from '@/components/Icon/IconLoader';
 import { scrollConfig } from '@/utils/constant';
+import CustomSelect from '@/components/Select';
 
 const SaleReport = () => {
     const [form] = Form.useForm();
@@ -74,11 +75,33 @@ const SaleReport = () => {
         }
     };
 
+    const customersList = async (page = 1) => {
+        try {
+            const res: any = await Models.invoice.customerList(page);
+            const dropdown = Dropdown(res?.results, 'customer_name');
+            setState({ customerList: [...state.customerList, ...dropdown], customerHasNext: res?.next, customerCurrentPage: page });
+        } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const customerSearch = async (text: any) => {
+        try {
+            const res: any = await Models.invoice.customerSearch(text);
+            if (res?.results?.length > 0) {
+                const dropdown = Dropdown(res?.results, 'customer_name');
+                setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: 1 });
+            }
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
+    };
+
     const bodyData = () => {
         const body: any = {};
         if (state.searchValue) {
             if (state.searchValue?.customer) {
-                body.customer = state.searchValue.customer;
+                body.customer = state.searchValue.customer?.value;
             }
             if (state.searchValue?.from_date) {
                 body.from_date = state.searchValue.from_date;
@@ -394,7 +417,7 @@ const SaleReport = () => {
                 project_name: values.project_name ? values.project_name : '',
                 from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
                 to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
-                customer: values.customer ? values.customer : '',
+                customer: values.customer ? values.customer?.value : '',
             };
 
             const res: any = await Models.invoice.filter(body, page);
@@ -439,12 +462,12 @@ const SaleReport = () => {
 
     // export to excel format
     const exportToExcel = async () => {
-        setState({ btnloading: true });
+        setState({ exportLoading: true });
         const body = {
             project_name: state.searchValue?.project_name ? state.searchValue?.project_name : '',
             from_date: state.searchValue?.from_date ? dayjs(state.searchValue?.from_date).format('YYYY-MM-DD') : '',
             to_date: state.searchValue?.to_date ? dayjs(state.searchValue?.to_date).format('YYYY-MM-DD') : '',
-            customer: state.searchValue?.customer ? state.searchValue?.customer : '',
+            customer: state.searchValue?.customer ? state.searchValue?.customer?.value : '',
         };
 
         let allData: any[] = [];
@@ -471,6 +494,7 @@ const SaleReport = () => {
             // Add header row
             worksheet.addRow(columns.map((column) => column.title1));
             allData.forEach((row: any) => {
+                console.log('✌️row --->', row);
                 const rowData = columns.map((column: any) => {
                     const key = column.key;
 
@@ -481,6 +505,13 @@ const SaleReport = () => {
                     if (key === 'customer_name') {
                         return row.customer?.customer_name || '';
                     }
+
+                    if (key === 'payment_method') {
+                        return row?.invoice_receipt?.payment_mode ? capitalizeFLetter(row?.invoice_receipt?.payment_mode) : '';
+                    }
+                    if (key === 'last_payment') {
+                        return row?.invoice_receipt?.amount ? roundNumber(row?.invoice_receipt?.amount) : '';
+                    }
                     if (key === 'customer_gst_no') {
                         return row.customer?.gstin_no || '';
                     }
@@ -490,27 +521,16 @@ const SaleReport = () => {
                     }
 
                     if (key === 'invoice_file') {
-                        return row.invoice_image ? 'Download' : 'No File';
-                    }
-
-                    if (key === 'cgst_tax') {
-                        const cgst = row.tax?.find((item: any) => item.tax_name === 'CGST');
-                        return cgst ? `${cgst.tax_percentage}%` : '-';
-                    }
-
-                    if (key === 'sgst_tax') {
-                        const sgst = row.tax?.find((item: any) => item.tax_name === 'SGST');
-                        return sgst ? `${sgst.tax_percentage}%` : '-';
-                    }
-
-                    if (key === 'igst_tax') {
-                        const igst = row.tax?.find((item: any) => item.tax_name === 'IGST');
-                        return igst ? `${igst.tax_percentage}%` : '-';
-                    }
-
-                    if (key === 'cheque_number' || key === 'upi' || key === 'bank' || key === 'tds_amount') {
-                        return row[key] || '';
-                    }
+                        if (row.invoice_file) {
+                          // For Excel hyperlinks
+                          return {
+                            text: 'Download',
+                            hyperlink: row.invoice_file,
+                            tooltip: 'Click to download invoice file'
+                          };
+                        }
+                        return 'No File';
+                      }
 
                     return ''; // fallback
                 });
@@ -527,17 +547,17 @@ const SaleReport = () => {
                 }),
                 'Sales-Report.xlsx'
             );
+            setState({ exportLoading: false });
         } catch (error) {
             console.error('❌ Error exporting Excel:', error);
         } finally {
-            setState({ btnloading: false });
+            setState({ exportLoading: false });
         }
 
         // Add data rows
 
         // Generate a Blob containing the Excel file
     };
-
 
     const showModal = () => {
         setIsModalOpen(true);
@@ -565,7 +585,6 @@ const SaleReport = () => {
             year: year,
             month: month,
         };
-
 
         const Token = localStorage.getItem('token');
         if (!Token) {
@@ -609,8 +628,7 @@ const SaleReport = () => {
             });
     };
 
-    const onFinishFailedZip = (errorInfo: any) => {
-    };
+    const onFinishFailedZip = (errorInfo: any) => {};
 
     return (
         <>
@@ -632,13 +650,31 @@ const SaleReport = () => {
                             </Form.Item>
 
                             <Form.Item label="Customer" name="customer" style={{ width: '300px' }}>
-                                <Select showSearch filterOption={(input: any, option: any) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}>
+                                {/* <Select showSearch filterOption={(input: any, option: any) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}>
                                     {saleFormData?.map((value: any) => (
                                         <Select.Option key={value.id} value={value.id}>
                                             {value.customer_name}
                                         </Select.Option>
                                     ))}
-                                </Select>
+                                </Select> */}
+
+                                <CustomSelect
+                                    onSearch={(data: any) => customerSearch(data)}
+                                    value={state.customer}
+                                    options={state.customerList}
+                                    className=" flex-1"
+                                    onChange={(selectedOption: any) => {
+                                        form.setFieldsValue({ customer: selectedOption });
+                                        customersList(1);
+                                    }}
+                                    loadMore={() => {
+                                        if (state.customerHasNext) {
+                                            customersList(state.customerCurrentPage + 1);
+                                        }
+                                    }}
+                                    isSearchable
+                                    filterOption={(input: string, option: any) => option.label.toLowerCase().includes(input.toLowerCase())}
+                                />
                             </Form.Item>
 
                             <div style={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: '10px' }}>
@@ -673,7 +709,7 @@ const SaleReport = () => {
                                 Export Zip File
                             </Button>
                             <button type="button" onClick={exportToExcel} className="create-button">
-                                {state.btnloading ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2" /> : 'Export to Excel'}
+                                {state.exportLoading ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2" /> : 'Export to Excel'}
                             </button>
                         </Space>
                     </div>
@@ -696,7 +732,6 @@ const SaleReport = () => {
                 {state.invoiceList?.length > 0 && (
                     <div>
                         <div
-                            
                             style={{
                                 display: 'flex',
                                 justifyContent: 'center',
