@@ -278,11 +278,11 @@ const TestReport = () => {
         setState({ btnLoading: true });
 
         const body = {
-            test: state.searchValue?.test ? state.searchValue.test : '',
+            test: state.searchValue?.test ? state.searchValue.test?.value : '',
             from_date: state.searchValue?.from_date ? dayjs(state.searchValue?.from_date).format('YYYY-MM-DD') : '',
             to_date: state.searchValue?.to_date ? dayjs(state.searchValue?.to_date).format('YYYY-MM-DD') : '',
-            customer: state.searchValue?.customer ? state.searchValue.customer : '',
-            material: state.searchValue?.material ? state.searchValue.material : '',
+            customer: state.searchValue?.customer ? state.searchValue.customer?.value : '',
+            material: state.searchValue?.material ? state.searchValue.material?.value : '',
         };
 
         let allData: any[] = [];
