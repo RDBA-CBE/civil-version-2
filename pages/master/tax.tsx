@@ -292,7 +292,6 @@ const Tax = () => {
         y: 300,
     };
 
-    console.log('loading', loading);
 
     return (
         <>

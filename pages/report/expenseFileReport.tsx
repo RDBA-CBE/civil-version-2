@@ -32,7 +32,6 @@ const ExpenseFileReport = () => {
             setState({ loading: true });
             const body = bodyData();
             const res: any = await Models.expense.expenseFileReport(page, body);
-            console.log('getData --->', res);
             setState({
                 expenceList: res?.results || [],
                 currentPage: page,

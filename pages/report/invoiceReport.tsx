@@ -86,8 +86,6 @@ const InvoiceReport = () => {
             key: 'invoice_no',
             className: 'singleLineCell',
             render: (record: any) => {
-                console.log('record', record);
-
                 return <div>{record.invoice.invoice_no}</div>;
             },
         },
@@ -155,7 +153,6 @@ const InvoiceReport = () => {
             className: 'singleLineCell',
             width: 150,
             render: (text: any, record: any) => {
-                console.log('✌️record --->', record?.invoice.invoice_file);
                 return (
                     <>
                         {record?.invoice?.invoice_file ? (
@@ -184,8 +181,6 @@ const InvoiceReport = () => {
     // export to excel format
 
     const exportToExcel = async (values: any) => {
-        console.log('✌️values --->', values);
-
         setState({ btnloading: true });
 
         const selectedDate = values.month;
@@ -200,8 +195,6 @@ const InvoiceReport = () => {
             from_date: fromDate,
             to_date: toDate,
         };
-
-        console.log('fromDate', fromDate, toDate);
 
         let allData: any[] = [];
         let currentPage = 1;
@@ -226,8 +219,6 @@ const InvoiceReport = () => {
         //     const itemDate = dayjs(item.date);
         //     return itemDate.isAfter(fromDate.subtract(1, 'day')) && itemDate.isBefore(toDate.add(1, 'day'));
         // });
-
-        console.log('filteredData', allData);
 
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Sheet1');
@@ -375,7 +366,6 @@ const InvoiceReport = () => {
     // };
 
     const onFinishFailedZip = (errorInfo: any) => {
-        console.log('Failed:', errorInfo);
     };
 
     useEffect(() => {
@@ -402,8 +392,6 @@ const InvoiceReport = () => {
             console.log('✌️error --->', error);
         }
     };
-
-    console.log('data', state.invoiceReportList);
 
     const bodyData = () => {
         const body: any = {};
@@ -492,8 +480,6 @@ const InvoiceReport = () => {
             project_name: searchValue?.project_name || '',
             customer: searchValue?.customer || '',
         };
-        console.log('body', body);
-
         let allData: any[] = [];
         let currentPage = 1;
         let hasNext = true;

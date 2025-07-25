@@ -30,20 +30,17 @@ const Preview = () => {
     const Add_Discount = (TestTotal * printData?.invoice?.discount) / 100;
 
     const BeforeTotal = TestTotal - Add_Discount;
-    console.log('✌️BeforeTotal --->', BeforeTotal);
 
     // Taxs
     const taxIds = printData?.invoice?.tax;
 
     const filteredTaxes = printData?.taxes?.filter((tax: any) => taxIds.includes(tax.id));
-    console.log('✌️filteredTaxes --->', filteredTaxes);
 
     const Discount: any = () => {
         if (filteredTaxes?.length > 0) {
             const percentagesArray = filteredTaxes.map((item: any) => `${parseFloat(item.tax_percentage)}%`);
 
             const sum = percentagesArray.reduce((accumulator: any, currentValue: any) => accumulator + currentValue, 0);
-            console.log('✌️sum --->', sum);
 
             const selectedName = filteredTaxes.map((item: any) => item.tax_name);
             const nameString = selectedName.join(' + ');
@@ -65,7 +62,6 @@ const Preview = () => {
     // after tax
     const After_Tax: any = BeforeTotal + Tax_total;
 
-    console.log('printData', printData?.invoice);
 
     return (
         <>

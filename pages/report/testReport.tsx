@@ -214,7 +214,6 @@ const TestReport = () => {
 
     const bodyData = () => {
         const body: any = {};
-        console.log('✌️state.searchValue --->', state.searchValue);
 
         if (state.searchValue) {
             if (state.searchValue?.customer) {

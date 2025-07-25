@@ -124,7 +124,6 @@ const ExpenseUser = () => {
 
     const handleDelete = (record: any) => {
         // Implement your delete logic here
-        console.log(`Delete record with key ${record}`);
         const Token = localStorage.getItem("token");
 
         Modal.confirm({
@@ -132,13 +131,11 @@ const ExpenseUser = () => {
             okText: "Yes",
             okType: "danger",
             onOk: () => {
-                console.log(record, "values")
                 axios.delete(`${baseUrl}/delete_expense_user/${record.id}/`, {
                     headers: {
                         "Authorization": `Token ${Token}`
                     }
                 }).then((res) => {
-                    console.log(res)
                     getExpenseUser()
                 }).catch((err) => {
                     console.log(err)
@@ -167,7 +164,6 @@ const ExpenseUser = () => {
                     "Authorization": `Token ${localStorage.getItem("token")}`
                 }
             }).then((res) => {
-                console.log(res)
                 getExpenseUser()
                 setOpen(false);
             }).catch((err) => {
@@ -179,7 +175,6 @@ const ExpenseUser = () => {
                     "Authorization": `Token ${localStorage.getItem("token")}`
                 }
             }).then((res) => {
-                console.log(res)
                 getExpenseUser()
                 setOpen(false);
             }).catch((err) => {

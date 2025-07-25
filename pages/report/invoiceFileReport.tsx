@@ -182,14 +182,10 @@ const InvoiceFileReport = () => {
         if (form.getFieldValue('project_name')) {
             body.project_name = form.getFieldValue('project_name');
         }
-        console.log('✌️body --->', body);
-
         return body;
     };
 
     const exportToExcel = async (values: any) => {
-        console.log('✌️values --->', values);
-
         setState({ excelBtnLoading: true });
 
         let allData: any[] = [];

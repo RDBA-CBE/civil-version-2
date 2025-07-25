@@ -79,7 +79,6 @@ const Customer = () => {
             setState({ loading: true });
             const body = bodyData();
             const res: any = await Models.customer.costomerList(page, body);
-            console.log('abcd --->', res);
             setState({
                 // invoiceList: res?.results,
                 currentPage: page,
@@ -95,8 +94,6 @@ const Customer = () => {
             console.log('✌️error --->', error);
         }
     };
-
-    console.log('filterData', filterData);
 
     const getDropDownValues = () => {
         const Token = localStorage.getItem('token');
@@ -126,8 +123,6 @@ const Customer = () => {
     };
 
     const showModal = (record: any) => {
-        console.log('record', record);
-
         setIsModalOpen(true);
         setViewRecord(record);
         modalData();
