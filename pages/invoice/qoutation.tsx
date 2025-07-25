@@ -8,6 +8,7 @@ import { baseUrl, ObjIsEmpty,roundNumber, useSetState } from '@/utils/function.u
 import Pagination from '@/components/pagination/pagination';
 import useDebounce from '@/components/useDebounce/useDebounce';
 import Models from '@/imports/models.import';
+import { scrollConfig } from '@/utils/constant';
 
 const Quotations = () => {
     const { Search } = Input;
@@ -259,24 +260,6 @@ const Quotations = () => {
         setCustomerAddress(selectedCustomer?.address1 || '');
     };
 
-    // Handle checkbox changes
-    // const handleChange = (checkedValues: any) => {
-    //     const updatedCheckedItems: any = { ...checkedItems };
-    //     checkedValues.forEach((id: any) => {
-    //         updatedCheckedItems[id] = true; // Mark as checked
-    //     });
-    //     Object.keys(updatedCheckedItems).forEach((id) => {
-    //         if (!checkedValues.includes(id)) {
-    //             delete updatedCheckedItems[id]; // Uncheck if it's not in the selected values
-    //         }
-    //     });
-    //     setCheckedItems(updatedCheckedItems);
-    // };
-
-    const scrollConfig: any = {
-        x: true,
-        y: 300,
-    };
 
     // search
 
@@ -479,7 +462,7 @@ const Quotations = () => {
                 {state.qoutationList?.length > 0 && (
                     <div>
                         <div
-                            className="mb-20 "
+                            
                             style={{
                                 display: 'flex',
                                 justifyContent: 'center',

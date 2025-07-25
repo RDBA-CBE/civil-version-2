@@ -7,6 +7,7 @@ import router from 'next/router';
 import { baseUrl, roundNumber, ObjIsEmpty, useSetState } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import Models from '@/imports/models.import';
+import { scrollConfig } from '@/utils/constant';
 
 const ExpenseEntry = () => {
     const [form] = Form.useForm();
@@ -315,15 +316,6 @@ const ExpenseEntry = () => {
         return data;
     };
 
-    const scrollConfig: any = {
-        x: true,
-        y: 300,
-    };
-
-    // search
-
- 
-
     const initialData = async (page: any) => {
         try {
             setState({ loading: true });
@@ -487,7 +479,7 @@ const ExpenseEntry = () => {
                 {state.expenseList?.length > 0 && (
                     <div>
                         <div
-                            className="mb-20 "
+                            
                             style={{
                                 display: 'flex',
                                 justifyContent: 'center',

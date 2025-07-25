@@ -10,6 +10,7 @@ import Pagination from '@/components/pagination/pagination';
 import useDebounce from '@/components/useDebounce/useDebounce';
 import Models from '@/imports/models.import';
 import CustomSelect from '@/components/Select';
+import { scrollConfig } from '@/utils/constant';
 
 const Test = () => {
     const { Search } = Input;
@@ -345,10 +346,6 @@ const Test = () => {
         return data;
     };
 
-    const scrollConfig: any = {
-        x: true,
-        y: 300,
-    };
 
     return (
         <>
@@ -381,7 +378,7 @@ const Test = () => {
                 {filterData?.length > 0 && (
                     <div>
                         <div
-                            className="mb-20 "
+                            
                             style={{
                                 display: 'flex',
                                 justifyContent: 'center',

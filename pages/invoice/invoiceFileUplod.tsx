@@ -8,6 +8,7 @@ import dayjs from 'dayjs';
 import { baseUrl, ObjIsEmpty, useSetState } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import Models from '@/imports/models.import';
+import { scrollConfig } from '@/utils/constant';
 
 const InvoiceFileUpload = () => {
     const { Search } = Input;
@@ -349,10 +350,6 @@ const InvoiceFileUpload = () => {
         return data;
     };
 
-    const scrollConfig: any = {
-        x: true,
-        y: 300,
-    };
 
     const removeFile = () => {
         setFileShow('');
@@ -574,7 +571,7 @@ const InvoiceFileUpload = () => {
                 {state.invoiceFileList?.length > 0 && (
                     <div>
                         <div
-                            className="mb-20 "
+                            
                             style={{
                                 display: 'flex',
                                 justifyContent: 'center',

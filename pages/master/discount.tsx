@@ -13,6 +13,7 @@ import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import IconLoader from '@/components/Icon/IconLoader';
 import CustomSelect from '@/components/Select';
+import { scrollConfig } from '@/utils/constant';
 
 const Discount = () => {
     const { Search } = Input;
@@ -231,11 +232,6 @@ const Discount = () => {
 
     const onFinishFailed = (errorInfo: any) => {};
 
-    const scrollConfig: any = {
-        x: true,
-        y: 300,
-    };
-
     const handlePageChange = (number: any) => {
         getCustomerDiscount(number);
         setState({ currentPage: number });
@@ -326,7 +322,7 @@ const Discount = () => {
                     {state.discountList?.length > 0 && (
                         <div>
                             <div
-                                className="mb-20 "
+                                
                                 style={{
                                     display: 'flex',
                                     justifyContent: 'center',

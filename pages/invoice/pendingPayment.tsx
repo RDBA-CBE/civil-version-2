@@ -10,6 +10,7 @@ import Pagination from '@/components/pagination/pagination';
 import Models from '@/imports/models.import';
 import paymentPending from '@/models/paymentPending.model';
 import IconLoader from '@/components/Icon/IconLoader';
+import { scrollConfig } from '@/utils/constant';
 
 const PendingPayment = () => {
     const { Search } = Input;
@@ -208,11 +209,6 @@ const PendingPayment = () => {
         }
     };
 
-    const scrollConfig: any = {
-        x: true,
-        y: 300,
-    };
-
     // search
 
     useEffect(() => {
@@ -393,7 +389,7 @@ const PendingPayment = () => {
                 {state.paymentPendingList?.length > 0 && (
                     <div>
                         <div
-                            className="mb-20 "
+                            
                             style={{
                                 display: 'flex',
                                 justifyContent: 'center',

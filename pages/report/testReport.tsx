@@ -11,6 +11,7 @@ import Pagination from '@/components/pagination/pagination';
 import IconLoader from '@/components/Icon/IconLoader';
 import CustomSelect from '@/components/Select';
 import moment from 'moment';
+import { scrollConfig } from '@/utils/constant';
 
 const TestReport = () => {
     const [form] = Form.useForm();
@@ -353,10 +354,7 @@ const TestReport = () => {
         return number;
     };
 
-    const scrollConfig: any = {
-        x: true,
-        y: 300,
-    };
+  
 
     return (
         <>
@@ -493,7 +491,7 @@ const TestReport = () => {
                 {state.testList?.length > 0 && (
                     <div>
                         <div
-                            className="mb-20 "
+                            
                             style={{
                                 display: 'flex',
                                 justifyContent: 'center',

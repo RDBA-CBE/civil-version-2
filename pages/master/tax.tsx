@@ -6,6 +6,7 @@ import { DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import router from 'next/router';
 import { baseUrl, roundNumber } from '@/utils/function.util';
+import { scrollConfig } from '@/utils/constant';
 
 const Tax = () => {
     const [open, setOpen] = useState(false);
@@ -286,12 +287,6 @@ const Tax = () => {
         ];
         return data;
     };
-
-    const scrollConfig: any = {
-        x: true,
-        y: 300,
-    };
-
 
     return (
         <>

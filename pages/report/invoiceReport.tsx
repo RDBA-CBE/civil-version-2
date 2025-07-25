@@ -16,6 +16,7 @@ import Models from '@/imports/models.import';
 import Pagination from '@/components/pagination/pagination';
 import IconLoader from '@/components/Icon/IconLoader';
 import moment from 'moment';
+import { scrollConfig } from '@/utils/constant';
 
 const InvoiceReport = () => {
     const [form] = Form.useForm();
@@ -463,10 +464,6 @@ const InvoiceReport = () => {
 
     const onFinishFailed = (errorInfo: any) => {};
 
-    const scrollConfig: any = {
-        x: true,
-        y: 300,
-    };
 
     // download
     const handleDownloadAll = async () => {
@@ -699,7 +696,7 @@ const InvoiceReport = () => {
                 {state.invoiceReportList?.length > 0 && (
                     <div>
                         <div
-                            className="mb-20 "
+                            
                             style={{
                                 display: 'flex',
                                 justifyContent: 'center',

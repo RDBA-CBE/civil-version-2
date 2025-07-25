@@ -9,6 +9,7 @@ import { baseUrl, ObjIsEmpty, roundNumber, useSetState } from '@/utils/function.
 import Models from '@/imports/models.import';
 import Pagination from '@/components/pagination/pagination';
 import IconLoader from '@/components/Icon/IconLoader';
+import { scrollConfig } from '@/utils/constant';
 
 const PendingPaymentReport = () => {
     const { Search } = Input;
@@ -272,10 +273,6 @@ const PendingPaymentReport = () => {
         }
     };
 
-    const scrollConfig: any = {
-        x: true,
-        y: 300,
-    };
 
     // search
 
@@ -409,7 +406,7 @@ const PendingPaymentReport = () => {
                 {state.paymentPendingList?.length > 0 && (
                     <div>
                         <div
-                            className="mb-20 "
+                            
                             style={{
                                 display: 'flex',
                                 justifyContent: 'center',

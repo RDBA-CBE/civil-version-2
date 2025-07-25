@@ -6,6 +6,7 @@ import { useSetState } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import { Form, Input, Table, Spin, DatePicker } from 'antd';
 import useDebounce from '@/components/useDebounce/useDebounce';
+import { scrollConfig } from '@/utils/constant';
 
 const Logs = () => {
     const { Search } = Input;
@@ -98,10 +99,6 @@ const Logs = () => {
         },
     ];
 
-    const scrollConfig: any = {
-        x: true,
-        y: 300,
-    };
 
     const handlePageChange = (number: any) => {
         setState({ currentPage: number });
@@ -135,7 +132,7 @@ const Logs = () => {
                     {state.logList?.length > 0 && (
                         <div>
                             <div
-                                className="mb-20 "
+                                
                                 style={{
                                     display: 'flex',
                                     justifyContent: 'center',

@@ -11,6 +11,7 @@ import { message } from 'antd';
 import Models from '@/imports/models.import';
 import Pagination from '@/components/pagination/pagination';
 import IconLoader from '@/components/Icon/IconLoader';
+import { scrollConfig } from '@/utils/constant';
 
 const SaleReport = () => {
     const [form] = Form.useForm();
@@ -536,10 +537,6 @@ const SaleReport = () => {
         // Generate a Blob containing the Excel file
     };
 
-    const scrollConfig: any = {
-        x: true,
-        y: 300,
-    };
 
     const showModal = () => {
         setIsModalOpen(true);
@@ -695,7 +692,7 @@ const SaleReport = () => {
                 {state.invoiceList?.length > 0 && (
                     <div>
                         <div
-                            className="mb-20 "
+                            
                             style={{
                                 display: 'flex',
                                 justifyContent: 'center',

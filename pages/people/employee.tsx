@@ -13,6 +13,7 @@ import Models from '@/imports/models.import';
 import Pagination from '@/components/pagination/pagination';
 import useDebounce from '@/components/useDebounce/useDebounce';
 import IconLoader from '@/components/Icon/IconLoader';
+import { scrollConfig } from '@/utils/constant';
 
 type FieldType = {
     employee_name?: string;
@@ -539,11 +540,6 @@ const Employee = () => {
         return data;
     };
 
-    const scrollConfig: any = {
-        x: true,
-        y: 300,
-    };
-
     return (
         <>
             <div className="panel ">
@@ -576,7 +572,7 @@ const Employee = () => {
                 {filterData?.length > 0 && (
                     <div>
                         <div
-                            className="mb-20 "
+                            
                             style={{
                                 display: 'flex',
                                 justifyContent: 'center',

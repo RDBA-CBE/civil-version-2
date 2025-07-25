@@ -12,6 +12,7 @@ import 'jspdf-autotable';
 import Models from '@/imports/models.import';
 import CustomSelect from '@/components/Select';
 import Pagination from '@/components/pagination/pagination';
+import { scrollConfig } from '@/utils/constant';
 
 const InvoiceFileReport = () => {
     const [form] = Form.useForm();
@@ -262,10 +263,6 @@ const InvoiceFileReport = () => {
 
     const onFinishFailed = (errorInfo: any) => {};
 
-    const scrollConfig: any = {
-        x: true,
-        y: 300,
-    };
 
     const handleDownloadAll = async () => {
         setState({ pdfLoading: true });
@@ -440,7 +437,7 @@ const InvoiceFileReport = () => {
                     {state.invoiceList?.length > 0 && (
                         <div>
                             <div
-                                className="mb-20 "
+                                
                                 style={{
                                     display: 'flex',
                                     justifyContent: 'center',

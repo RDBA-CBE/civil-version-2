@@ -23,3 +23,8 @@ export const TAX = [
         tax_percentage: '9.00',
     },
 ];
+
+export const scrollConfig: any = {
+    x: true,
+    y: 420,
+};

@@ -7,6 +7,7 @@ import dayjs from 'dayjs';
 import { baseUrl, ObjIsEmpty, roundNumber, useSetState } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import Models from '@/imports/models.import';
+import { scrollConfig } from '@/utils/constant';
 
 const Invoice = () => {
     const { Search } = Input;
@@ -288,12 +289,6 @@ const Invoice = () => {
         }
     };
 
-    const scrollConfig: any = {
-        x: true,
-        y: 300,
-    };
-
-    // search
 
     useEffect(() => {
         initialData(1);
@@ -483,7 +478,7 @@ const Invoice = () => {
                 {state.invoiceList?.length > 0 && (
                     <div>
                         <div
-                            className="mb-20 "
+                            
                             style={{
                                 display: 'flex',
                                 justifyContent: 'center',

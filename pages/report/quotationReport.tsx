@@ -14,6 +14,7 @@ import { DownloadOutlined, EyeOutlined } from '@ant-design/icons';
 import Models from '@/imports/models.import';
 import Pagination from '@/components/pagination/pagination';
 import IconLoader from '@/components/Icon/IconLoader';
+import { scrollConfig } from '@/utils/constant';
 
 const QuotationReport = () => {
     const [form] = Form.useForm();
@@ -285,10 +286,6 @@ const QuotationReport = () => {
 
     const onFinishFailed = (errorInfo: any) => {};
 
-    const scrollConfig: any = {
-        x: true,
-        y: 300,
-    };
 
     // download
     const handleDownloadAll = async (item: any) => {
@@ -516,7 +513,7 @@ const QuotationReport = () => {
                 {state.quotationReportList?.length > 0 && (
                     <div>
                         <div
-                            className="mb-20 "
+                            
                             style={{
                                 display: 'flex',
                                 justifyContent: 'center',

@@ -11,6 +11,7 @@ import Models from '@/imports/models.import';
 import Pagination from '@/components/pagination/pagination';
 import IconLoader from '@/components/Icon/IconLoader';
 import moment from 'moment';
+import { scrollConfig } from '@/utils/constant';
 
 const ExpenseReport = () => {
     const [form] = Form.useForm();
@@ -272,10 +273,6 @@ const ExpenseReport = () => {
 
     const onFinishFailed = (errorInfo: any) => {};
 
-    const scrollConfig: any = {
-        x: true,
-        y: 300,
-    };
 
     const handlePageChange = (number: any) => {
         setState({ currentPage: number });
@@ -372,7 +369,7 @@ const ExpenseReport = () => {
                 {state.expenseList?.length > 0 && (
                     <div>
                         <div
-                            className="mb-20 "
+                            
                             style={{
                                 display: 'flex',
                                 justifyContent: 'center',

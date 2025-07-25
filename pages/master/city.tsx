@@ -9,6 +9,7 @@ import { baseUrl, Success, useSetState } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import useDebounce from '@/components/useDebounce/useDebounce';
 import Models from '@/imports/models.import';
+import { scrollConfig } from '@/utils/constant';
 
 const City = () => {
     const { Search } = Input;
@@ -241,10 +242,6 @@ const City = () => {
         return data;
     };
 
-    const scrollConfig: any = {
-        x: true,
-        y: 300,
-    };
 
     return (
         <>
@@ -277,7 +274,7 @@ const City = () => {
                 {state.cityList?.length > 0 && (
                     <div>
                         <div
-                            className="mb-20 "
+                            
                             style={{
                                 display: 'flex',
                                 justifyContent: 'center',

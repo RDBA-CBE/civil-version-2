@@ -11,6 +11,7 @@ import { baseUrl, Failure, Success, useSetState } from '@/utils/function.util';
 import Models from '@/imports/models.import';
 import Pagination from '@/components/pagination/pagination';
 import useDebounce from '@/components/useDebounce/useDebounce';
+import { scrollConfig } from '@/utils/constant';
 
 const Material = () => {
     const editorRef: any = useRef();
@@ -289,11 +290,6 @@ const Material = () => {
         return data;
     };
 
-    const scrollConfig: any = {
-        x: true,
-        y: 300,
-    };
-
     return (
         <>
             <div className="panel">
@@ -325,7 +321,7 @@ const Material = () => {
                 {filterData?.length > 0 && (
                     <div>
                         <div
-                            className="mb-20 "
+                            
                             style={{
                                 display: 'flex',
                                 justifyContent: 'center',
