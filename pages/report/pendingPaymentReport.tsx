@@ -110,7 +110,7 @@ const PendingPaymentReport = () => {
         {
             title: 'Customer Name',
             // dataIndex: 'customer',
-            key: 'customer',
+            key: 'customer_name',
             className: 'singleLineCell',
             render: (record: any) => {
                 return <div>{record.customer.customer_name}</div>;

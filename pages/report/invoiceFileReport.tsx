@@ -11,6 +11,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import Models from '@/imports/models.import';
 import CustomSelect from '@/components/Select';
+import Pagination from '@/components/pagination/pagination';
 
 const InvoiceFileReport = () => {
     const [form] = Form.useForm();
@@ -34,7 +35,9 @@ const InvoiceFileReport = () => {
     const getData = async (page: number) => {
         try {
             setState({ loading: true });
-            const res: any = await Models.expense.invoiceFileReport(page, null);
+            const body = bodyData();
+
+            const res: any = await Models.expense.invoiceFileReport(page, body);
             setState({
                 invoiceList: res?.results || [],
                 currentPage: page,
@@ -330,6 +333,14 @@ const InvoiceFileReport = () => {
         doc.save('Invoice_File_Report.pdf');
     };
 
+    const handlePageChange = (number: any) => {
+        setState({ currentPage: number });
+
+        getData(number);
+
+        return number;
+    };
+
     return (
         <>
             <div className="panel">
@@ -430,6 +441,20 @@ const InvoiceFileReport = () => {
                             tip: 'Loading data...', // Custom text to show while loading
                         }}
                     />
+                    {state.invoiceList?.length > 0 && (
+                        <div>
+                            <div
+                                className="mb-20 "
+                                style={{
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                }}
+                            >
+                                <Pagination totalPage={state.total} itemsPerPage={10} currentPages={state.currentPage} activeNumber={handlePageChange} />
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </>
