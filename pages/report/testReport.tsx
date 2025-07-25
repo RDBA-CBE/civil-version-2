@@ -434,11 +434,11 @@ const TestReport = () => {
                             </Form.Item>
 
                             <Form.Item label="From Date" name="from_date" style={{ width: '250px' }}>
-                                <DatePicker style={{ width: '100%', height: '39px' }} />
+                                <DatePicker style={{ width: '100%' }} />
                             </Form.Item>
 
                             <Form.Item label="To Date" name="to_date" style={{ width: '250px' }}>
-                                <DatePicker style={{ width: '100%', height: '39px' }} />
+                                <DatePicker style={{ width: '100%' }} />
                             </Form.Item>
 
                             <div style={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: '10px' }}>

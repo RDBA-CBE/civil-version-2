@@ -26,5 +26,5 @@ export const TAX = [
 
 export const scrollConfig: any = {
     x: true,
-    y: 420,
+    y: 330,
 };
