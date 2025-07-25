@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { Table } from 'antd';
 import Models from '@/imports/models.import';
 import moment from 'moment';
 import CommonLoader from '@/components/commonLoader';
 import { useSetState } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
-import { Form, Input, Table, Spin } from 'antd';
-import useDebounce from '@/components/useDebounce/useDebounce';
 
-const Logs = () => {
-    const { Search } = Input;
-
+const Software_Logs = () => {
     const [state, setState] = useSetState({
         logList: [],
         currentPage: 1,
@@ -18,42 +15,30 @@ const Logs = () => {
     useEffect(() => {
         getData(state.currentPage);
     }, []);
-    const debouncedSearch = useDebounce(state.search);
-
-    useEffect(() => {
-        getData(state.currentPage);
-    }, [debouncedSearch]);
 
     const getData = async (page: number) => {
         try {
             setState({ loading: true });
-            const body = bodyData();
-            const res = await Models.logs.logList(page, body);
-            tableFormat(res, page);
+            const res = await Models.logs.softwareLogList(page, null);
+            setState({ loading: false });
+
+            // tableFormat(res, page);
         } catch (error) {
             setState({ loading: false });
+
             console.log('error: ', error);
         }
     };
 
-    const bodyData = () => {
-        const body: any = {};
-        if (state.search) {
-            body['search'] = state.search;
-        }
-        return body;
-    };
-
     const tableFormat = (res: any, page: number) => {
-        const data = res?.results?.map((item: any) => ({
+        const data = res?.map((item: any) => ({
             ...item,
             userName: item?.user?.username,
             login_at: moment(item?.login_at).format('YYYY-MM-DD HH:mm:ss a'),
             action: item?.action,
             ip: item?.login_ip,
-            role: item?.user?.groups?.length > 0 ? item?.user?.groups[0]?.name : '',
         }));
-        setState({ logList: data, total: res?.count, currentPage: page, loading: false });
+        setState({ logList: data, total: res?.length, currentPage: page, loading: false });
     };
 
     const columns = [
@@ -63,13 +48,6 @@ const Logs = () => {
             key: 'userName',
             className: 'singleLineCell',
         },
-        {
-            title: 'Role',
-            dataIndex: 'role',
-            key: 'role',
-            className: 'singleLineCell',
-        },
-
         {
             title: 'Login At',
             dataIndex: 'login_at',
@@ -105,17 +83,9 @@ const Logs = () => {
     return (
         <>
             <div className="panel">
-                <div className="tax-heading-main justify-between items-center mb-4 flex">
+                <div className="tax-heading-main">
                     <div>
-                        <h1 className="text-lg font-semibold dark:text-white-light">Logs</h1>
-                    </div>
-                    <div>
-                        <Search placeholder="Search IP Address" value={state.search} onChange={(e) => setState({ search: e.target.value })} enterButton className="search-bar" />
-                        <Search placeholder="Search IP Address" value={state.search} onChange={(e) => setState({ search: e.target.value })} enterButton className="search-bar" />
-                   
-                    </div>
-
-                    <div>
+                        <h1 className="text-lg font-semibold dark:text-white-light">Software Logs</h1>
                     </div>
                 </div>
 
@@ -141,4 +111,4 @@ const Logs = () => {
     );
 };
 
-export default Logs;
+export default Software_Logs;
