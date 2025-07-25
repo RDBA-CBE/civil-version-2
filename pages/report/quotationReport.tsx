@@ -182,7 +182,7 @@ const QuotationReport = () => {
     // export to excel format
 
     const exportToExcel = async (item: any) => {
-        setState({ loading: true, id: item.id });
+        setState({ btnloading: true, id: item.id });
         console.log('searchValue', state.searchValue);
 
         const body = {
@@ -237,7 +237,7 @@ const QuotationReport = () => {
         } catch (error) {
             console.error('❌ Error exporting Excel:', error);
         } finally {
-            setState({ loading: false });
+            setState({ btnloading: false });
         }
     };
 
@@ -295,7 +295,7 @@ const QuotationReport = () => {
 
     // download
     const handleDownloadAll = async (item: any) => {
-        setState({ loading: true, id: item.id });
+        setState({ btnloading: true, id: item.id });
         const { searchValue } = state;
 
         const body = {
@@ -326,7 +326,7 @@ const QuotationReport = () => {
             }
         }
 
-        setState({ loading: false });
+        setState({ btnloading: false });
 
         // Create a new jsPDF instance
         const doc: any = new jsPDF();
@@ -452,7 +452,7 @@ const QuotationReport = () => {
                                 </Select>
                             </Form.Item> */}
 
-                            <div style={{ display: 'flex', alignItems: 'between', justifyContent: 'space-between', gap: '10px' }}>
+                            <div style={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: '10px' }}>
                                 <Form.Item>
                                     <Button type="primary" htmlType="submit" style={{ width: '100px' }}>
                                         Search
@@ -483,7 +483,7 @@ const QuotationReport = () => {
                     <div>
                         <Space>
                             {button.map((item) => {
-                                console.log(state.loading && item.id == state.id);
+                                console.log(state.btnloading && item.id == state.id);
 
                                 return (
                                     <Button
@@ -497,7 +497,7 @@ const QuotationReport = () => {
                                             }
                                         }}
                                     >
-                                        {state.loading && item.id == state.id ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2" /> : item.name}
+                                        {state.btnloading && item.id == state.id ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2" /> : item.name}
                                     </Button>
                                 );
                             })}

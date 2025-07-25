@@ -27,6 +27,7 @@ const PendingPaymentReport = () => {
         pagePrev: null,
         paymentPendingList: [],
         searchValue: null,
+        btnloading:false,
     });
 
     useEffect(() => {
@@ -196,7 +197,7 @@ const PendingPaymentReport = () => {
 
     // export to excel format
     const exportToExcel = async () => {
-        setState({ loading: true });
+        setState({ btnloading: true });
 
         const body = {
             project_name: state.searchValue?.project_name ? state.searchValue?.project_name : '',
@@ -270,7 +271,7 @@ const PendingPaymentReport = () => {
              console.error('❌ Error exporting Excel:', error);
         }
         finally {
-            setState({ loading: false });
+            setState({ btnloading: false });
         }
     };
 
@@ -390,7 +391,7 @@ const PendingPaymentReport = () => {
                     <div>
                         <Space>
                             <Button type="primary" onClick={exportToExcel}>
-                                {state.loading ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2" /> : 'Export to Excel'}
+                                {state.btnloading ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2" /> : 'Export to Excel'}
                             </Button>
                             {/* <Search placeholder="input search text" onChange={inputChange} enterButton className="search-bar" /> */}
                         </Space>
@@ -401,6 +402,7 @@ const PendingPaymentReport = () => {
                         dataSource={state.paymentPendingList}
                         columns={columns}
                         scroll={scrollConfig}
+                        pagination={false}
                         loading={{
                             spinning: state.loading, // This enables the loading spinner
                             indicator: <Spin size="large" />,

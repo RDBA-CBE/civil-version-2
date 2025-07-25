@@ -186,7 +186,7 @@ const InvoiceReport = () => {
     const exportToExcel = async (values: any) => {
         console.log('✌️values --->', values);
 
-        setState({ loading: true });
+        setState({ btnloading: true });
 
         const selectedDate = values.month;
         const year = selectedDate?.year();
@@ -264,7 +264,7 @@ const InvoiceReport = () => {
             `Invoice-Report-${year}.xlsx`
         );
 
-        setState({ loading: false });
+        setState({ btnloading: false });
         setIsModalOpen(false);
     };
 
@@ -482,7 +482,7 @@ const InvoiceReport = () => {
 
     // download
     const handleDownloadAll = async () => {
-        setState({ loading: true });
+        setState({ btnloading: true });
         const { searchValue } = state;
 
         const body = {
@@ -517,7 +517,7 @@ const InvoiceReport = () => {
             }
         }
 
-        setState({ loading: false });
+        setState({ btnloading: false });
 
         const doc: any = new jsPDF();
         doc.text('Invoice Report', 14, 16);
@@ -690,7 +690,7 @@ const InvoiceReport = () => {
                             </Button>
 
                             <Button type="primary" onClick={handleDownloadAll}>
-                                {state.loading ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2 " /> : 'Download PDF'}
+                                {state.btnloading ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2 " /> : 'Download PDF'}
                             </Button>
 
                             {/* <Search placeholder="input search text" onChange={inputChange} enterButton className='search-bar' /> */}

@@ -148,7 +148,7 @@ const ExpenseReport = () => {
 
     // export to excel format
     const exportToExcel = async () => {
-        setState({ loading: true });
+        setState({ btnloading: true });
 
         const body = {
             from_date: state.searchValue?.from_date ? dayjs(state.searchValue.from_date).format('YYYY-MM-DD') : '',
@@ -208,7 +208,7 @@ const ExpenseReport = () => {
         } catch (error) {
             console.error('Error exporting to Excel:', error);
         } finally {
-            setState({ loading: false, id: null });
+            setState({ btnloading: false, id: null });
         }
     };
 
@@ -351,7 +351,7 @@ const ExpenseReport = () => {
                     <div>
                         <Space>
                             <Button type="primary" onClick={exportToExcel}>
-                                {state.loading ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2" /> : 'Export To Excel'}
+                                {state.btnloading ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2" /> : 'Export To Excel'}
                             </Button>
 
                             {/* <Search placeholder="input search text" onChange={inputChange} enterButton className='search-bar' /> */}
