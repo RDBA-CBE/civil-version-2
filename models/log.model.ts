@@ -1,9 +1,9 @@
 import instance from "@/utils/axios.util";
 
 const logs = {
-    logList: () => {
+    logList: (page:number) => {
         let promise = new Promise((resolve, reject) => {
-            let url = `user-logs/`;
+            let url = `user-logs/?page=${page}`;
             instance()
                 .get(url)
                 .then((res) => {

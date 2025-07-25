@@ -6,7 +6,7 @@ import CommonLoader from '@/components/commonLoader';
 import { useSetState } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 
-const Software_Logs = () => {
+const Logs = () => {
     const [state, setState] = useSetState({
         logList: [],
         currentPage: 1,
@@ -116,4 +116,4 @@ const Software_Logs = () => {
     );
 };
 
-export default Software_Logs;
+export default Logs;
