@@ -247,7 +247,7 @@ const Expense = () => {
                         <EditOutlined style={{ cursor: 'pointer', display: 'none' }} onClick={() => showDrawer(record)} className="edit-icon" rev={undefined} />
                     )}
 
-                    <DeleteOutlined onClick={() => handleDelete(record)} className="delete-icon" rev={undefined} />
+                    {/* <DeleteOutlined onClick={() => handleDelete(record)} className="delete-icon" rev={undefined} /> */}
                 </Space>
             ),
         },
