@@ -31,6 +31,7 @@ const SaleReport = () => {
         invoiceList: [],
         discount: 0,
         searchValue: null,
+        btnloading:false
     });
 
     useEffect(() => {
@@ -438,7 +439,7 @@ const SaleReport = () => {
 
     // export to excel format
     const exportToExcel = async () => {
-        setState({ loading: true });
+        setState({ btnloading: true });
         const body = {
             project_name: state.searchValue?.project_name ? state.searchValue?.project_name : '',
             from_date: state.searchValue?.from_date ? dayjs(state.searchValue?.from_date).format('YYYY-MM-DD') : '',
@@ -529,7 +530,7 @@ const SaleReport = () => {
         } catch (error) {
             console.error('❌ Error exporting Excel:', error);
         } finally {
-            setState({ loading: false });
+            setState({ btnloading: false });
         }
 
         // Add data rows
@@ -540,17 +541,19 @@ const SaleReport = () => {
 
     const showModal = () => {
         setIsModalOpen(true);
-        form.resetFields();
+        // form.resetFields();
     };
     const handleOk = () => {
         setIsModalOpen(false);
     };
     const handleCancel = () => {
         setIsModalOpen(false);
-        form.resetFields();
+        // form.resetFields();
     };
 
     const onFinishZip = (values: any) => {
+
+        setState({zipBtnloading:true})
 
         // Get the selected month and year from the DatePicker value
         const selectedDate = values.month; // The value from the DatePicker
@@ -601,7 +604,8 @@ const SaleReport = () => {
                 }
             })
             .finally(() => {
-                form.resetFields(); // Reset the form after completion
+                // form.resetFields(); // Reset the form after completion
+                setState({zipBtnloading:false})
             });
     };
 
@@ -669,7 +673,7 @@ const SaleReport = () => {
                                 Export Zip File
                             </Button>
                             <button type="button" onClick={exportToExcel} className="create-button">
-                                {state.loading ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2" /> : 'Export to Excel'}
+                                {state.btnloading ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2" /> : 'Export to Excel'}
                             </button>
                         </Space>
                     </div>
@@ -719,7 +723,8 @@ const SaleReport = () => {
                                     Cancel
                                 </Button>
                                 <Button type="primary" htmlType="submit">
-                                    Submit
+                                    {state.zipBtnloading ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2" /> : 'Submit'}
+                                    
                                 </Button>
                             </Space>
                         </div>
