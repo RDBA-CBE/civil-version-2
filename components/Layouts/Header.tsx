@@ -237,7 +237,7 @@ const Header = () => {
                                     />
                                 </svg>
                                 <span className="px-1">
-                                    <Link href="/dashboard">{t('Dashboard' )} </Link>
+                                    <Link href="/dashboard" prefetch>{t('Dashboard')} </Link>
                                 </span>
                             </div>
                         </button>
@@ -503,20 +503,30 @@ const Header = () => {
                     </li>
                     {admin === 'true' && (
                         <li className="menu nav-item relative">
-                            <button type="button" className="nav-link" onClick={() => router.push('/logs')}>
-                                <div className="flex items-center" onClick={() => router.push('/logs')}>
+                            <button type="button" className="nav-link">
+                                <div className="flex items-center">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" className="shrink-0">
                                         <path
                                             d="M3 4.5C3 3.67157 3.67157 3 4.5 3H19.5C20.3284 3 21 3.67157 21 4.5V19.5C21 20.3284 20.3284 21 19.5 21H4.5C3.67157 21 3 20.3284 3 19.5V4.5ZM4 5V19H20V5H4ZM6 7H18V9H6V7ZM6 11H18V13H6V11ZM6 15H18V17H6V15Z"
                                             fill="currentColor"
                                         />
                                     </svg>
-                                    <span className="px-1">
-                                        {' '}
-                                        <Link href="/logs">{t('Logs')} </Link>
-                                    </span>
+                                    <span className="px-1">{t('Logs')}</span>
+                                </div>
+                                <div className="right_arrow">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="rotate-90">
+                                        <path d="M9 5L15 12L9 19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
                                 </div>
                             </button>
+                            <ul className="sub-menu">
+                                <li>
+                                    <Link href="/logs/logs">{t('Logs')}</Link>
+                                </li>
+                                <li>
+                                    <Link href="/logs/software_log">{t('Software Logs')}</Link>
+                                </li>
+                            </ul>
                         </li>
                     )}
                 </ul>
