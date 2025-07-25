@@ -15,6 +15,7 @@ import html2canvas from 'html2canvas';
 import Models from '@/imports/models.import';
 import Pagination from '@/components/pagination/pagination';
 import IconLoader from '@/components/Icon/IconLoader';
+import moment from 'moment';
 
 const InvoiceReport = () => {
     const [form] = Form.useForm();
@@ -144,7 +145,7 @@ const InvoiceReport = () => {
             className: 'singleLineCell',
             width: 150,
             render: (record: any) => {
-                return <div>{record.invoice.date}</div>;
+                return <div>{record?.invoice?.date ? moment(record?.invoice?.date).format('DD-MM-YYYY') : ''}</div>;
             },
         },
         {
@@ -191,18 +192,16 @@ const InvoiceReport = () => {
         const year = selectedDate?.year();
 
         // Construct the body object with the selected year and month
-    
 
         const fromDate = dayjs(`${year}-04-01`).format('YYYY-MM-DD');
         const toDate = dayjs(`${year + 1}-03-31`).format('YYYY-MM-DD');
 
         const body = {
-            from_date: fromDate ,
-                    to_date: toDate,
+            from_date: fromDate,
+            to_date: toDate,
         };
 
-        console.log("fromDate", fromDate , toDate);
-        
+        console.log('fromDate', fromDate, toDate);
 
         let allData: any[] = [];
         let currentPage = 1;
@@ -211,7 +210,7 @@ const InvoiceReport = () => {
         while (hasNext) {
             let res: any;
 
-             res = await Models.invoiceReport.filter(body, currentPage);
+            res = await Models.invoiceReport.filter(body, currentPage);
 
             allData = allData.concat(res?.results || []);
 
@@ -493,8 +492,7 @@ const InvoiceReport = () => {
             project_name: searchValue?.project_name || '',
             customer: searchValue?.customer || '',
         };
-        console.log("body", body);
-        
+        console.log('body', body);
 
         let allData: any[] = [];
         let currentPage = 1;
@@ -655,7 +653,7 @@ const InvoiceReport = () => {
                                 </Select>
                             </Form.Item> */}
 
-                            <div style={{ display: 'flex', alignItems: 'end',  justifyContent: 'space-between', gap: '10px' }}>
+                            <div style={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: '10px' }}>
                                 <Form.Item>
                                     <Button type="primary" htmlType="submit" style={{ width: '100px' }}>
                                         Search

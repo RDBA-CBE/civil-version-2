@@ -4,7 +4,7 @@ import moment from 'moment';
 import CommonLoader from '@/components/commonLoader';
 import { useSetState } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
-import { Form, Input, Table, Spin } from 'antd';
+import { Form, Input, Table, Spin, DatePicker } from 'antd';
 import useDebounce from '@/components/useDebounce/useDebounce';
 
 const Logs = () => {
@@ -20,9 +20,11 @@ const Logs = () => {
     }, []);
     const debouncedSearch = useDebounce(state.search);
 
+    const debouncedLogin = useDebounce(state.login_ip);
+
     useEffect(() => {
-        getData(state.currentPage);
-    }, [debouncedSearch]);
+        getData(1);
+    }, [debouncedSearch, debouncedLogin, state.login_at]);
 
     const getData = async (page: number) => {
         try {
@@ -40,6 +42,12 @@ const Logs = () => {
         const body: any = {};
         if (state.search) {
             body['search'] = state.search;
+        }
+        if (state.login_ip) {
+            body['login_ip'] = state.login_ip;
+        }
+        if (state.login_at) {
+            body['login_at'] = state.login_at;
         }
         return body;
     };
@@ -105,17 +113,20 @@ const Logs = () => {
     return (
         <>
             <div className="panel">
-                <div className="tax-heading-main justify-between items-center mb-4 flex">
+                <div className="tax-heading-main mb-4 flex items-center justify-between">
                     <div>
                         <h1 className="text-lg font-semibold dark:text-white-light">Logs</h1>
                     </div>
-                    <div>
-                        <Search placeholder="Search IP Address" value={state.search} onChange={(e) => setState({ search: e.target.value })} enterButton className="search-bar" />
-                        <Search placeholder="Search IP Address" value={state.search} onChange={(e) => setState({ search: e.target.value })} enterButton className="search-bar" />
-                   
-                    </div>
-
-                    <div>
+                    <div className="flex gap-4">
+                        <Search placeholder="Search Name" value={state.search} onChange={(e) => setState({ search: e.target.value })} enterButton className="search-bar" />
+                        <Search placeholder="Search IP Address" value={state.login_ip} onChange={(e) => setState({ login_ip: e.target.value })} enterButton className="search-bar" />
+                        <DatePicker
+                            style={{ width: 200 }}
+                            placeholder="Select Date"
+                            onChange={(date, dateString) => setState({ login_at: dateString })}
+                            className="search-bar"
+                            value={state.login_at ? moment(state.login_at, 'YYYY-MM-DD') : null}
+                        />
                     </div>
                 </div>
 

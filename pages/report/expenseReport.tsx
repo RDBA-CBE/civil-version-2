@@ -10,6 +10,7 @@ import { baseUrl, ObjIsEmpty, roundNumber, useSetState } from '@/utils/function.
 import Models from '@/imports/models.import';
 import Pagination from '@/components/pagination/pagination';
 import IconLoader from '@/components/Icon/IconLoader';
+import moment from 'moment';
 
 const ExpenseReport = () => {
     const [form] = Form.useForm();
@@ -88,6 +89,9 @@ const ExpenseReport = () => {
             dataIndex: 'date',
             key: 'date',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{record ? moment(record).format('DD-MM-YYYY') : ''}</div>;
+            },
         },
     ];
 

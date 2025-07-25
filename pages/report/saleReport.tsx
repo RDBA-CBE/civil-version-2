@@ -5,7 +5,7 @@ import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import dayjs from 'dayjs';
 import router from 'next/router';
-import { baseUrl, ObjIsEmpty, roundNumber, useSetState } from '@/utils/function.util';
+import { baseUrl, capitalizeFLetter, ObjIsEmpty, roundNumber, useSetState } from '@/utils/function.util';
 import { saveAs } from 'file-saver';
 import { message } from 'antd';
 import Models from '@/imports/models.import';
@@ -116,7 +116,6 @@ const SaleReport = () => {
             dataIndex: 'invoice_no',
             key: 'invoice_no',
             className: 'singleLineCell',
-            width: 100,
         },
         {
             title: (
@@ -127,7 +126,7 @@ const SaleReport = () => {
             title1: 'Customer Name',
             // dataIndex: 'customer_name',
             key: 'customer_name',
-            className: 'singleLineCell',
+            className: 'singleLineCell ',
             render: (record: any) => {
                 return <div>{record.customer.customer_name}</div>;
             },
@@ -196,126 +195,153 @@ const SaleReport = () => {
             dataIndex: 'balance',
             key: 'balance',
             className: 'singleLineCell',
-            width: 120,
             render: (record: any) => {
                 return <div>{roundNumber(record)}</div>;
             },
         },
 
+        // {
+        //     title: (
+        //         <Tooltip title="Cheque No">
+        //             <span>Cheque No</span>
+        //         </Tooltip>
+        //     ),
+
+        //     title1: 'Cheque No',
+        //     dataIndex: 'cheque_number',
+        //     key: 'cheque_number',
+        //     className: 'singleLineCell',
+        //     width: 120,
+        //     render: (text: any, record: any) => (text ? text : ''),
+        // },
+
+        // {
+        //     title: (
+        //         <Tooltip title="UPI">
+        //             <span>UPI</span>
+        //         </Tooltip>
+        //     ),
+
+        //     title1: 'UPI',
+        //     dataIndex: 'upi',
+        //     key: 'upi',
+        //     className: 'singleLineCell',
+        //     width: 100,
+        //     render: (text: any, record: any) => (text ? text : ''),
+        // },
+        // {
+        //     title: (
+        //         <Tooltip title="Neft">
+        //             <span>Neft</span>
+        //         </Tooltip>
+        //     ),
+
+        //     title1: 'Neft',
+        //     dataIndex: 'bank',
+        //     key: 'bank',
+        //     className: 'singleLineCell',
+        //     width: 100,
+        //     render: (text: any, record: any) => (text ? text : ''),
+        // },
+
+        // {
+        //     title: (
+        //         <Tooltip title="TDS">
+        //             <span>TDS</span>
+        //         </Tooltip>
+        //     ),
+
+        //     title1: 'Tds',
+        //     dataIndex: 'tds_amount',
+        //     key: 'tds_amount',
+        //     className: 'singleLineCell',
+        //     width: 100,
+        //     render: (text: any, record: any) => (text ? roundNumber(text) : ''),
+        // },
+
         {
             title: (
-                <Tooltip title="Cheque No">
-                    <span>Cheque No</span>
+                <Tooltip title="Payment Info">
+                    <span>Payment Info</span>
                 </Tooltip>
             ),
-
-            title1: 'Cheque No',
-            dataIndex: 'cheque_number',
-            key: 'cheque_number',
+            title1: 'Payment Method',
+            key: 'payment_method',
             className: 'singleLineCell',
-            width: 120,
-            render: (text: any, record: any) => (text ? text : 'N/A'),
+            width: 150,
+            render: (record: any) => <div>{record?.invoice_receipt?.payment_mode ? capitalizeFLetter(record?.invoice_receipt?.payment_mode) : ''}</div>,
         },
 
         {
             title: (
-                <Tooltip title="UPI">
-                    <span>UPI</span>
+                <Tooltip title="Last Payment">
+                    <span>Payment Info</span>
                 </Tooltip>
             ),
-
-            title1: 'UPI',
-            dataIndex: 'upi',
-            key: 'upi',
+            title1: 'Last Payment',
+            key: 'last_payment',
             className: 'singleLineCell',
-            width: 100,
-            render: (text: any, record: any) => (text ? text : 'N/A'),
+            width: 150,
+            render: (record: any) => <div>{record?.invoice_receipt?.amount ? roundNumber(record?.invoice_receipt?.amount) : ''}</div>,
         },
+
+        // {
+        //     title: (
+        //         <Tooltip title="CGST Tax">
+        //             <span>CGST Tax</span>
+        //         </Tooltip>
+        //     ),
+
+        //     title1: 'CGST Tax',
+        //     // dataIndex: 'cgst_tax',
+        //     key: 'cgst_tax',
+        //     className: 'singleLineCell',
+        //     width: 100,
+        //     // render: (record: any) => {
+        //     //     return <div>{roundNumber(record)}</div>;
+        //     // },
+        //     render: (record: any) => {
+        //         const cgstTax = record.tax.find((item: any) => item.tax_name === 'CGST');
+        //         return <div>{cgstTax ? `${roundNumber(cgstTax.tax_percentage)}%` : '-'}</div>;
+        //     },
+        // },
+
+        // {
+        //     title: (
+        //         <Tooltip title="SGST Tax">
+        //             <span>SGST Tax</span>
+        //         </Tooltip>
+        //     ),
+        //     title1: 'SGST Tax',
+        //     // dataIndex: 'sgst_tax',
+        //     key: 'sgst_tax',
+        //     className: 'singleLineCell',
+        //     width: 100,
+        //     render: (record: any) => {
+        //         const sgstTax = record.tax.find((item: any) => item.tax_name === 'SGST');
+        //         return <div>{sgstTax ? `${roundNumber(sgstTax.tax_percentage)}%` : '-'}</div>;
+        //     },
+        // },
+
+        // {
+        //     title: (
+        //         <Tooltip title="IGST Tax">
+        //             <span>IGST Tax</span>
+        //         </Tooltip>
+        //     ),
+        //     title1: 'IGST Tax',
+        //     // dataIndex: 'igst_tax',
+        //     key: 'igst_tax',
+        //     className: 'singleLineCell',
+        //     width: 100,
+        //     render: (record: any) => {
+        //         const igstTax = record.tax.find((item: any) => item.tax_name === 'IGST');
+        //         return <div>{igstTax ? `${roundNumber(igstTax.tax_percentage)}%` : '-'}</div>;
+        //     },
+        // },
         {
             title: (
-                <Tooltip title="Neft">
-                    <span>Neft</span>
-                </Tooltip>
-            ),
-
-            title1: 'Neft',
-            dataIndex: 'bank',
-            key: 'bank',
-            className: 'singleLineCell',
-            width: 100,
-            render: (text: any, record: any) => (text ? text : 'N/A'),
-        },
-
-        {
-            title: (
-                <Tooltip title="TDS">
-                    <span>TDS</span>
-                </Tooltip>
-            ),
-
-            title1: 'Tds',
-            dataIndex: 'tds_amount',
-            key: 'tds_amount',
-            className: 'singleLineCell',
-            width: 100,
-            render: (text: any, record: any) => (text ? text : 'N/A'),
-        },
-
-        {
-            title: (
-                <Tooltip title="CGST Tax">
-                    <span>CGST Tax</span>
-                </Tooltip>
-            ),
-
-            title1: 'CGST Tax',
-            // dataIndex: 'cgst_tax',
-            key: 'cgst_tax',
-            className: 'singleLineCell',
-            width: 100,
-
-            render: (record: any) => {
-                const cgstTax = record.tax.find((item: any) => item.tax_name === 'CGST');
-                return <div>{cgstTax ? `${cgstTax.tax_percentage}%` : '-'}</div>;
-            },
-        },
-
-        {
-            title: (
-                <Tooltip title="SGST Tax">
-                    <span>SGST Tax</span>
-                </Tooltip>
-            ),
-            title1: 'SGST Tax',
-            // dataIndex: 'sgst_tax',
-            key: 'sgst_tax',
-            className: 'singleLineCell',
-            width: 100,
-            render: (record: any) => {
-                const sgstTax = record.tax.find((item: any) => item.tax_name === 'SGST');
-                return <div>{sgstTax ? `${sgstTax.tax_percentage}%` : '-'}</div>;
-            },
-        },
-
-        {
-            title: (
-                <Tooltip title="IGST Tax">
-                    <span>IGST Tax</span>
-                </Tooltip>
-            ),
-            title1: 'IGST Tax',
-            // dataIndex: 'igst_tax',
-            key: 'igst_tax',
-            className: 'singleLineCell',
-            width: 100,
-            render: (record: any) => {
-                const igstTax = record.tax.find((item: any) => item.tax_name === 'IGST');
-                return <div>{igstTax ? `${igstTax.tax_percentage}%` : '-'}</div>;
-            },
-        },
-        {
-             title: (
-                <Tooltip title="Total Amount">
+                <Tooltip title="Invoice File">
                     <span>Invoice File</span>
                 </Tooltip>
             ),
@@ -329,8 +355,8 @@ const SaleReport = () => {
                 console.log('✌️record --->', record);
                 return (
                     <>
-                        {record?.invoice_image ? (
-                            <a href={record.invoice_image} target="_blank" rel="noopener noreferrer">
+                        {record?.invoice_file ? (
+                            <a href={record.invoice_file} target="_blank" rel="noopener noreferrer">
                                 Download
                             </a>
                         ) : (
@@ -455,7 +481,7 @@ const SaleReport = () => {
                     if (key === 'customer_name') {
                         return row.customer?.customer_name || '';
                     }
-                     if (key === 'customer_gst_no') {
+                    if (key === 'customer_gst_no') {
                         return row.customer?.gstin_no || '';
                     }
 
@@ -483,7 +509,7 @@ const SaleReport = () => {
                     }
 
                     if (key === 'cheque_number' || key === 'upi' || key === 'bank' || key === 'tds_amount') {
-                        return row[key] || 'N/A';
+                        return row[key] || '';
                     }
 
                     return ''; // fallback
@@ -587,11 +613,6 @@ const SaleReport = () => {
             });
     };
 
-
-
-
-
-
     const onFinishFailedZip = (errorInfo: any) => {
         console.log('Failed:', errorInfo);
     };
@@ -657,7 +678,7 @@ const SaleReport = () => {
                                 Export Zip File
                             </Button>
                             <button type="button" onClick={exportToExcel} className="create-button">
-                               {state.loading  ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2" /> : 'Export to Excel'}
+                                {state.loading ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2" /> : 'Export to Excel'}
                             </button>
                         </Space>
                     </div>

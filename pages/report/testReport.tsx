@@ -10,6 +10,7 @@ import Models from '@/imports/models.import';
 import Pagination from '@/components/pagination/pagination';
 import IconLoader from '@/components/Icon/IconLoader';
 import CustomSelect from '@/components/Select';
+import moment from 'moment';
 
 const TestReport = () => {
     const [form] = Form.useForm();
@@ -205,6 +206,9 @@ const TestReport = () => {
             dataIndex: 'created_date',
             key: 'created_date',
             className: 'singleLineCell',
+            render: (record: any) => {
+                return <div>{record ? moment(record).format('DD-MM-YYYY') : ''}</div>;
+            },
         },
     ];
 

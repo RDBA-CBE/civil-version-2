@@ -46,17 +46,21 @@ export const ObjIsEmpty = (object: any) => {
     }
 };
 
-
 export const Dropdown = (arr: any, label: string) => {
-    const array = arr?.map((item:any) => ({ value: item?.id, label: item[label] }));
+    const array = arr?.map((item: any) => ({ value: item?.id, label: item[label] }));
     return array;
 };
 
 export const DropdownArrayString = (arr: any) => {
-    const array = arr?.map((item:any) => ({ value: item, label: item }));
+    const array = arr?.map((item: any) => ({ value: item, label: item }));
     return array;
 };
 
-export const roundNumber = (num:any) => {
+export const roundNumber = (num: any) => {
     return Math.round(Number(num));
-  };
+};
+
+export function capitalizeFLetter(text: string): string {
+    if (!text) return '';
+    return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+}

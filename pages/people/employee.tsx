@@ -14,10 +14,27 @@ import Pagination from '@/components/pagination/pagination';
 import useDebounce from '@/components/useDebounce/useDebounce';
 import IconLoader from '@/components/Icon/IconLoader';
 
+type FieldType = {
+    employee_name?: string;
+    username?: string;
+    password?: string;
+    address?: string;
+    mobile_number?: string;
+    dob?: string;
+    gender?: string;
+    qualification?: string;
+    joiningDate?: string;
+    salary?: string;
+    branch_email?: string;
+    role?: string;
+};
+
 const Employee = () => {
     const { Search } = Input;
     const [form] = Form.useForm();
     const { confirm } = Modal;
+
+    const { TextArea } = Input;
 
     const fileInputRef: any = useRef(null);
 
@@ -32,7 +49,7 @@ const Employee = () => {
     const [admin, setAdmin] = useState();
     const [loading, setLoading] = useState(false);
     const [isUpdatePassword, setIsUpdatePassword] = useState(false);
-
+    const [filterData, setFilterData] = useState(dataSource);
     const [errorMessage, setErrorMessage] = useState('');
     const [fileInputData, setFileInputData] = useState<any>({
         signature: null,
@@ -70,34 +87,11 @@ const Employee = () => {
         }
     }, [editRecord, open]);
 
-    // const getEmployee = () => {
-    //     const Token = localStorage.getItem('token');
-    //     setLoading(true);
-    //     axios
-    //         .get(`${baseUrl}/employee_list/`, {
-    //             headers: {
-    //                 Authorization: `Token ${Token}`,
-    //             },
-    //         })
-    //         .then((res) => {
-    //             setDataSource(res.data?.results);
-    //             setFilterData(res.data?.results);
-    //             setLoading(false);
-    //         })
-    //         .catch((error: any) => {
-    //             if (error.response?.status === 401) {
-    //                 router.push('/');
-    //             }
-    //             setLoading(false);
-    //         });
-    // };
-
     const getEmployee = async (page: any) => {
         try {
             setState({ loading: true });
             const body = bodyData();
             const res: any = await Models.customer.employeeList(page, body);
-            console.log('abcd --->', res);
             setState({
                 // invoiceList: res?.results,
                 currentPage: page,
@@ -127,12 +121,6 @@ const Employee = () => {
         setState({ currentPage: number });
         getEmployee(number);
 
-        // if (state.searchValue) {
-        //     onFinish2(state.searchValue, number);
-        // } else {
-        //     initialData(number);
-        // }
-
         return number;
     };
 
@@ -158,26 +146,6 @@ const Employee = () => {
         }
     };
 
-    // Function to fetch a file from URL and convert it to a File object
-    const convertUrlToFile = async (fileUrl: string) => {
-        try {
-            // Fetch the file from the URL
-            const response = await fetch(fileUrl);
-            const blob = await response.blob(); // Convert response to Blob
-
-            // Extract file name from URL (you can adjust this if the URL doesn't contain a file name)
-            const fileName = fileUrl.substring(fileUrl.lastIndexOf('/') + 1);
-
-            // Create a File object from the Blob
-            const file = new File([blob], fileName, { type: blob.type });
-
-            // Set the file into the state
-            setFileInputData(file);
-        } catch (error) {
-            console.error('Error fetching the file:', error);
-        }
-    };
-
     // drawer
     const showDrawer = (record: any) => {
         if (record && record.id !== editRecord?.id) {
@@ -186,9 +154,9 @@ const Employee = () => {
 
         if (record) {
             setFileShow(record.signature);
-            if (record.signature) {
-                convertUrlToFile(record.signature);
-            }
+            // if (record.signature) {
+            //     convertUrlToFile(record.signature);
+            // }
             const bodyData = {
                 ...record,
                 dob: dayjs(record.dob),
@@ -389,20 +357,6 @@ const Employee = () => {
     };
 
     // input search
-    const [filterData, setFilterData] = useState(dataSource);
-
-    const inputChange = (e: any) => {
-        const SearchValue = e.target.value;
-
-        // const filteredData = dataSource.filter((item: any) => {
-        //     return (
-        //         item?.employee_name?.toLowerCase()?.includes(SearchValue?.toLowerCase()) ||
-        //         item?.username?.toLowerCase()?.includes(SearchValue?.toLowerCase()) ||
-        //         item?.mobile_number?.includes(SearchValue)
-        //     );
-        // });
-        // setFilterData(filteredData);
-    };
 
     const selectFileChange = (e: any) => {
         const file = e.target.files[0];
@@ -412,7 +366,7 @@ const Employee = () => {
     };
 
     const url = fileshow;
-    const filenames = url?.substring(url.lastIndexOf('/') + 1); // Extracts the filename from the URL
+    const filenames = url?.substring(url.lastIndexOf('/') + 1);
 
     // form submit
     const onFinish = (values: any) => {
@@ -504,23 +458,6 @@ const Employee = () => {
     };
 
     const onFinishFailed = (errorInfo: any) => {};
-
-    type FieldType = {
-        employee_name?: string;
-        username?: string;
-        password?: string;
-        address?: string;
-        mobile_number?: string;
-        dob?: string;
-        gender?: string;
-        qualification?: string;
-        joiningDate?: string;
-        salary?: string;
-        branch_email?: string;
-        role?: string;
-    };
-
-    const { TextArea } = Input;
 
     // modal data
     const modalData = () => {
@@ -763,7 +700,6 @@ const Employee = () => {
                 <Modal
                     title="Update Password"
                     open={isUpdatePassword}
-                    // onOk={handleUpdatePassword}
                     onCancel={() => {
                         setState({
                             confirm_new_password: '',
@@ -797,26 +733,6 @@ const Employee = () => {
                                 </div>
                             </div>
 
-                            {/* <div>
-                                <label htmlFor="Password">Old Password</label>
-                                <div className="relative text-white-dark">
-                                    <input
-                                        required
-                                        id="old_password"
-                                        type={state.showOldPassword ? 'text' : 'password'}
-                                        placeholder="Enter Old Password"
-                                        className="form-input ps-10 placeholder:text-white-dark"
-                                        name="old_password"
-                                        value={state.old_password}
-                                        onChange={(e) => setState({ old_password: e.target.value })}
-                                    />
-
-                                    <span className="absolute start-4 top-1/2 -translate-y-1/2" onClick={() => setState({ showOldPassword: !state.showOldPassword })} style={{ cursor: 'pointer' }}>
-                                        <IconLockDots fill={true} />
-                                    </span>
-                                </div>
-                                {state.oldPasswordError == true && <div style={{ color: 'red', marginTop: '5px' }}>Old Password is required.</div>}
-                            </div> */}
                             <div>
                                 <label htmlFor="Password">New Password</label>
                                 <div className="relative text-white-dark">
