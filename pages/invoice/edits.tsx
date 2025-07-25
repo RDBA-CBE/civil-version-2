@@ -71,7 +71,6 @@ export default function Edits() {
         try {
             setState({ loading: true });
             const data = localStorage.getItem('admin');
-            console.log('Admin data from localStorage:', data);
 
             let isAdmin = false;
             if (data) {
@@ -84,7 +83,6 @@ export default function Edits() {
                 }
             }
             setState({ isAdmin, loading: false });
-            console.log('✌️isAdmin --->', isAdmin);
         } catch (error) {
             setState({ loading: false });
         }
@@ -131,7 +129,6 @@ export default function Edits() {
         try {
             setState({ loading: true });
             const res: any = await Models.invoice.invoiceDetails(id);
-            console.log('getInvoice --->', res);
             setState({
                 details: res,
                 customerName: { value: res?.customer?.id, label: res?.customer?.customer_name },
@@ -553,7 +550,6 @@ export default function Edits() {
     };
 
     const updateInvoiceCustomer = async (value: any) => {
-        console.log('✌️value --->', value);
         try {
             const body = {
                 customer: value?.value,

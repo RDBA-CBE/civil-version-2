@@ -135,7 +135,6 @@ const QuotationReport = () => {
             className: 'singleLineCell',
             width: 150,
             render: (text: any, record: any) => {
-                console.log('✌️record --->', record?.quotation_file);
                 return (
                     <>
                         {record?.quotation_file ? (
@@ -183,7 +182,6 @@ const QuotationReport = () => {
 
     const exportToExcel = async (item: any) => {
         setState({ btnloading: true, id: item.id });
-        console.log('searchValue', state.searchValue);
 
         const body = {
             from_date: state.searchValue?.start_date ? dayjs(state.searchValue.start_date).format('YYYY-MM-DD') : '',
@@ -191,7 +189,6 @@ const QuotationReport = () => {
             customer: state.searchValue?.customer ? state.searchValue?.customer : '',
         };
 
-        console.log('body', body);
 
         let allData: any[] = [];
         let currentPage = 1;
@@ -353,7 +350,6 @@ const QuotationReport = () => {
 
         // Map the data into the table format
         const tableData = allData.map((item: any) => {
-            console.log(item);
             return [
                 item.quotation.quotation_number,
                 item.quotation.customer, // ID
@@ -373,7 +369,6 @@ const QuotationReport = () => {
                 // }
             ];
         });
-        console.log(tableData);
 
         // Use the autoTable plugin to generate the table in the PDF
         doc.autoTable({
@@ -483,7 +478,6 @@ const QuotationReport = () => {
                     <div>
                         <Space>
                             {button.map((item) => {
-                                console.log(state.btnloading && item.id == state.id);
 
                                 return (
                                     <Button

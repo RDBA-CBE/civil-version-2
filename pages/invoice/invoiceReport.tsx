@@ -50,7 +50,6 @@ const InvoiceReport = () => {
                 },
             })
             .then((res) => {
-                console.log('✌️res --->', res);
                 const sampleObj = {
                     id: 1,
                     employee_name: 'Select employee ',
@@ -192,7 +191,6 @@ const InvoiceReport = () => {
     };
 
     const onFinish1 = (values: any) => {
-        console.log('✌️values --->', values);
 
         if (values?.signature == 'with-signature') {
             setIsModalOpen(false);
@@ -211,7 +209,6 @@ const InvoiceReport = () => {
 
     const onFinishFailed1 = (errorInfo: any) => {};
 
-    console.log('is_authorised_signatory', formData.is_authorised_signatory);
     return (
         <>
             <div className="panel" style={{ margin: '30px' }}>

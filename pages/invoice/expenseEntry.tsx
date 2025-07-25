@@ -366,7 +366,6 @@ const ExpenseEntry = () => {
 
     // form submit
     const onFinish2 = async (values: any, page = 1) => {
-        console.log('values', values);
 
         try {
             setState({ loading: true });
@@ -377,8 +376,6 @@ const ExpenseEntry = () => {
                 expense_user: values.expense_user ? values.expense_user : '',
                 expense_category: values.expense_category ? values.expense_category : '',
             };
-
-            console.log('body', body);
 
             const res: any = await Models.expenseEntry.filter(body, page);
             setState({

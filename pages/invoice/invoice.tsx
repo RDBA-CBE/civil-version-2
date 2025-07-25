@@ -222,7 +222,6 @@ const Invoice = () => {
             };
 
             const res: any = await Models.invoice.createInvoice(body);
-            console.log('✌️res --->', res);
             updateDiscount(res, values);
         } catch (error) {
             setState({ btnLoading: false });

@@ -50,7 +50,6 @@ const Quotations = () => {
                 },
             })
             .then((res) => {
-                console.log('✌️res --->', res);
                 setFormFields(res.data);
             })
             .catch((error: any) => {
@@ -77,25 +76,6 @@ const Quotations = () => {
         }
     };
 
-    // const getInvoice = () => {
-    //     axios
-    //         .get('${baseUrl}/invoice_list/', {
-    //             headers: {
-    //                 Authorization: `Token ${localStorage.getItem('token')}`,
-    //             },
-    //         })
-    //         .then((res) => {
-    //             setDataSource(res?.data);
-    //             // setFilterData(res.data);
-    //         })
-    //         .catch((error: any) => {
-    //             if (error.response.status === 401) {
-    //                 router.push('/');
-    //             }
-    //         });
-    // };
-
-    console.log('formField', formFields);
     // drawer
     const showDrawer = () => {
         setOpen(true);
@@ -222,7 +202,6 @@ const Quotations = () => {
 
     // form submit
     const onFinish = (values: any) => {
-        console.log('✌️values --->', values);
         const Token = localStorage.getItem('token');
 
         axios
@@ -230,7 +209,6 @@ const Quotations = () => {
                 headers: { Authorization: `Token ${Token}` },
             })
             .then((res) => {
-                console.log('✌️res --->', res);
                 CreateQuotations(res.data.id);
                 // initialData();
                 // window.location.href = `/invoice/editQoutation?id=${res?.data?.id}`;
@@ -261,7 +239,6 @@ const Quotations = () => {
                 },
             })
             .then((res) => {
-                console.log('✌️res --->', res);
                 initialData(1);
                 window.location.href = `/invoice/editQoutation?id=${res?.data?.id}`;
                 setOpen(false);
@@ -370,8 +347,6 @@ const Quotations = () => {
     // form submit
     const onFinish2 = async (values: any, page = 1) => {
         try {
-            console.log('✌️values --->', values);
-
             setState({ loading: true });
             const body = {
                 // project_name: values.project_name ? values.project_name : '',
@@ -381,7 +356,6 @@ const Quotations = () => {
                 completed: values.completed == 'Yes' ? true : values.completed == 'No' ? false : '',
             };
 
-            console.log('✌️body --->', body);
             const res: any = await Models.qoutation.filter(body, page);
             setState({
                 qoutationList: res?.results,

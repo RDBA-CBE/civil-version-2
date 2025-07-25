@@ -117,7 +117,6 @@ const Employee = () => {
     };
 
     const handlePageChange = (number: any) => {
-        console.log('number', number);
         setState({ currentPage: number });
         getEmployee(number);
 
@@ -197,7 +196,6 @@ const Employee = () => {
                     confirm_new_password: state.confirm_new_password,
                 };
                 const res: any = await Models.auth.changeEmployeePassword(body);
-                console.log('✌️res --->', res);
                 setState({
                     confirm_new_password: '',
                     showPassword1: false,
@@ -351,7 +349,6 @@ const Employee = () => {
                     });
             },
             onCancel() {
-                console.log('Cancel');
             },
         });
     };

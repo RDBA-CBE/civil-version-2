@@ -352,7 +352,6 @@ const SaleReport = () => {
             className: 'singleLineCell',
             width: 150,
             render: (text: any, record: any) => {
-                console.log('✌️record --->', record);
                 return (
                     <>
                         {record?.invoice_file ? (
@@ -445,7 +444,6 @@ const SaleReport = () => {
             to_date: state.searchValue?.to_date ? dayjs(state.searchValue?.to_date).format('YYYY-MM-DD') : '',
             customer: state.searchValue?.customer ? state.searchValue?.customer : '',
         };
-        console.log('body', body);
 
         let allData: any[] = [];
         let currentPage = 1;
@@ -556,7 +554,6 @@ const SaleReport = () => {
     };
 
     const onFinishZip = (values: any) => {
-        console.log('✌️values --->', values);
 
         // Get the selected month and year from the DatePicker value
         const selectedDate = values.month; // The value from the DatePicker
@@ -569,7 +566,6 @@ const SaleReport = () => {
             month: month,
         };
 
-        console.log('Body for API request:', body);
 
         const Token = localStorage.getItem('token');
         if (!Token) {
@@ -586,7 +582,6 @@ const SaleReport = () => {
                 responseType: 'blob', // Send the year and month as query parameters
             })
             .then((res: any) => {
-                console.log('✌️res --->', res);
                 messageApi.open({
                     type: 'success',
                     content: 'Invoice report generated successfully.',
@@ -614,7 +609,6 @@ const SaleReport = () => {
     };
 
     const onFinishFailedZip = (errorInfo: any) => {
-        console.log('Failed:', errorInfo);
     };
 
     return (

@@ -12,7 +12,6 @@ import { baseUrl, Success } from '@/utils/function.util';
 const Edit = () => {
     const router = useRouter();
     const { id } = router.query;
-    console.log('✌️id --->', id);
 
     const dispatch = useDispatch();
     useEffect(() => {
@@ -88,7 +87,6 @@ const Edit = () => {
         return '';
     };
 
-    console.log('formatTotal', formatTotal());
     const getInvoiceTestData = () => {
         // Fetch invoice data from the API
         axios
@@ -190,7 +188,6 @@ const Edit = () => {
     };
 
     const getInvoiceTestData2 = (isUpdate: String) => {
-        console.log('update');
 
         // Fetch invoice data from the API
         axios
@@ -289,8 +286,6 @@ const Edit = () => {
 
                         completed: formData.completed,
                     };
-                    console.log('✌️body --->', body);
-
                     updateInvoice(body);
                 }
             })
@@ -423,7 +418,6 @@ const Edit = () => {
 
     // modal
     const showModal = () => {
-        console.log('formData.completed', formData.completed);
         if (formData.completed == 'true' || formData.completed == true) {
             messageApi.open({
                 type: 'error',
@@ -757,7 +751,6 @@ const Edit = () => {
                 // total: Number(item.total.toFixed(2)),
             })),
         };
-        console.log('body', body);
         // const FinalBody = {
         //     test : values?.
         // }
@@ -769,7 +762,6 @@ const Edit = () => {
                 },
             })
             .then((res) => {
-                console.log('✌️res --->', res);
                 setIsModalOpen(false);
                 invoiceFormSubmit1();
                 getInvoiceTestData2('update');
@@ -815,12 +807,9 @@ const Edit = () => {
         });
     };
 
-    console.log('invoieFormData', invoiceFormData);
 
     // invoice test edit form onfinish
     const onFinish2 = (values: any) => {
-        console.log('✌️values --->', values);
-        console.log('✌️editRecord --->', editRecord);
         const Body = {
             ...values,
             quotation: id,
@@ -884,7 +873,6 @@ const Edit = () => {
         window.open(url, '_blank');
     };
 
-    console.log('checkedItems', checkedItems);
 
     return (
         <>

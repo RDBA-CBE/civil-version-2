@@ -122,7 +122,6 @@ const Test = () => {
             setState({ loading: true });
 
             const res: any = await Models.test.testList(page, body);
-            console.log('abcd --->', res);
             setState({
                 currentPage: page,
                 pageNext: res?.next,

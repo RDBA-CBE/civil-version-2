@@ -148,8 +148,6 @@ const PendingPayment = () => {
             invoice_no: state.searchValue?.invoice_no ? state.searchValue?.invoice_no : '',
         };
 
-        console.log('body', body);
-
         let allData: any[] = [];
         let currentPage = 1;
         let hasNext = true;
@@ -296,14 +294,9 @@ const PendingPayment = () => {
         }
     };
 
-    console.log('currentPage', state.currentPage);
-
     const handlePageChange = (number: any) => {
         setState({ currentPage: number });
-        console.log('number', number);
-
         const body = bodyData();
-
         if (!ObjIsEmpty(body)) {
             onFinish2(state.searchValue, number);
         } else {

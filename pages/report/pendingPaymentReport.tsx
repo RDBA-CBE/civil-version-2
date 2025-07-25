@@ -130,7 +130,6 @@ const PendingPaymentReport = () => {
             className: 'singleLineCell',
             width: 150,
             render: (text: any, record: any) => {
-                console.log('✌️record --->', record?.invoice_file);
                 return (
                     <>
                         {record?.invoice_file ? (
@@ -206,8 +205,6 @@ const PendingPaymentReport = () => {
             customer: state.searchValue?.customer ? state.searchValue?.customer : '',
             invoice_no: state.searchValue?.invoice_no ? state.searchValue?.invoice_no : '',
         };
-
-        console.log('body', body);
 
         let allData: any[] = [];
         let currentPage = 1;
@@ -314,8 +311,6 @@ const PendingPaymentReport = () => {
 
     const handlePageChange = (number: any) => {
         setState({ currentPage: number });
-        console.log('number', number);
-
         const body = bodyData();
 
         if (!ObjIsEmpty(body)) {

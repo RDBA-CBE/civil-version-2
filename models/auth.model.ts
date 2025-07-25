@@ -1,7 +1,7 @@
-import instance from "@/utils/axios.util";
+import instance from '@/utils/axios.util';
 
 const auth = {
-    login: (data:any) => {
+    login: (data: any) => {
         let promise = new Promise((resolve, reject) => {
             let url = `login/`;
             instance()
@@ -41,7 +41,7 @@ const auth = {
         return promise;
     },
 
-    changeEmployeePassword: (data:any) => {
+    changeEmployeePassword: (data: any) => {
         let promise = new Promise((resolve, reject) => {
             let url = `admin-password-change/`;
             instance()
@@ -61,7 +61,7 @@ const auth = {
         return promise;
     },
 
-    changePassword: (data:any) => {
+    changePassword: (data: any) => {
         let promise = new Promise((resolve, reject) => {
             let url = `employee-password-change/`;
             instance()
@@ -72,18 +72,14 @@ const auth = {
                 .catch((error) => {
                     console.log('errorsss: ', error.response.data);
                     if (error.response) {
-console.log('✌️ if --->',  );
                         reject(error.response.data);
                     } else {
-console.log('✌️else --->', );
                         reject(error);
                     }
                 });
         });
         return promise;
     },
-
-    
 };
 
 export default auth;

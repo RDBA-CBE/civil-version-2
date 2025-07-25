@@ -160,7 +160,6 @@ const Edit = () => {
 
                 setCustomerData(customerData);
 
-                console.log('✌️response --->', response);
                 let mergeArray: any = [response.customer, ...response.customers];
                 const uniqueArray = mergeArray.reduce((acc: any, obj: any) => {
                     const existingObj = acc.find((item: any) => item.id === obj.id);
@@ -901,13 +900,11 @@ const Edit = () => {
                 //     discount: customerData.customer_discount,
                 // });
             } else {
-                console.log('✌️else --->');
                 const body = {
                     customer: customerData?.customerId,
                     discount: Number(customerData.customer_discount),
                 };
                 const create = await Models.discount.createDiscount(body);
-                console.log('✌️create --->', create);
                 // updateCustomer(customerData);
                 updateDiscount(customerData.customer_discount, customerData?.customerId, customerData?.customer_name);
             }
@@ -1469,8 +1466,6 @@ const Edit = () => {
                 getInvoiceTestData2('update');
             })
             .catch((error: any) => {
-                console.log("hello");
-                
                   setLoading(false)
                 if (error?.response?.status === 401) {
                     
@@ -1483,9 +1478,6 @@ const Edit = () => {
 
             
     };
-
-    console.log("loading", loading);
-    
 
     // payment Delete
     const PaymentDelete = (id: any) => {
@@ -1553,8 +1545,6 @@ const Edit = () => {
         // const discount = formData.discount;
 
         const res = customerData;
-        console.log('✌️res --->', res);
-
         form.setFieldsValue({
             customer: customerData?.customerId,
             discount: customerData?.customer_discount,

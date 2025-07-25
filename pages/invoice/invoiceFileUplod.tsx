@@ -60,8 +60,6 @@ const InvoiceFileUpload = () => {
             });
     }, []);
 
-    console.log('formFields', formFields);
-
     useEffect(() => {
         if (editRecord) {
             setDrawerTitle('Edit File Upload');
@@ -69,8 +67,6 @@ const InvoiceFileUpload = () => {
             setDrawerTitle('Create File Upload');
         }
     }, [editRecord, open]);
-
-    console.log('formFields', formFields);
 
     // get Tax datas
     // useEffect(() => {
@@ -120,9 +116,6 @@ const InvoiceFileUpload = () => {
 
     // drawer
     const showDrawer = (record: any) => {
-        console.log('✌️record --->', record);
-        console.log('fileInputData.file', fileInputData?.file);
-
         if (record && record.id !== editRecord?.id) {
             removeFile();
         }
@@ -147,7 +140,6 @@ const InvoiceFileUpload = () => {
         }
         setOpen(true);
     };
-    console.log('File show:', fileshow);
 
     const onClose = () => {
         setOpen(false);
@@ -176,7 +168,7 @@ const InvoiceFileUpload = () => {
             dataIndex: 'invoice_no',
             key: 'invoice_no',
             className: 'singleLineCell',
-             render: (text: any, record: any) => (text ? text : 'N/A'),
+            render: (text: any, record: any) => (text ? text : 'N/A'),
         },
         {
             title: 'Expense',
@@ -239,7 +231,6 @@ const InvoiceFileUpload = () => {
 
     // form submit
     const onFinish = (values: any) => {
-        console.log('✌️values --->', values);
 
         const Token = localStorage.getItem('token');
 
@@ -255,7 +246,6 @@ const InvoiceFileUpload = () => {
             formData.append('expense', values.expense);
         }
 
-        console.log('formData', formData);
 
         if (editRecord) {
             axios
@@ -266,7 +256,6 @@ const InvoiceFileUpload = () => {
                     },
                 })
                 .then((res: any) => {
-                    console.log('✌️res --->', res);
                     initialData(1);
                     setOpen(false);
                     onClose();
@@ -455,7 +444,6 @@ const InvoiceFileUpload = () => {
                 category_name: values.category ? values.category : '',
             };
 
-            console.log('✌️body --->', body);
 
             const res: any = await Models.invoiceFile.filter(body, page);
             setState({
@@ -490,7 +478,6 @@ const InvoiceFileUpload = () => {
 
     const onFinishFailed2 = (errorInfo: any) => {};
 
-    console.log('fileInputData', fileInputData);
 
     return (
         <>
@@ -505,7 +492,6 @@ const InvoiceFileUpload = () => {
                             <Form.Item label="Category" name="category" style={{ width: '250px' }}>
                                 <Select showSearch filterOption={(input: any, option: any) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}>
                                     {formFields?.categories?.map((value: any) => {
-                                        console.log('✌️value --->', value);
 
                                         return (
                                             <Select.Option key={value.id} value={value.id}>
@@ -540,18 +526,16 @@ const InvoiceFileUpload = () => {
 
                                 <Form.Item>
                                     <Button
-                                    type="primary"
-                                    htmlType="submit"
-                                    onClick={() => {
-                                        form.resetFields();
-                                    }}
-                                    style={{ width: '100px' }}
-                                >
-                                    Clear
-                                </Button>
+                                        type="primary"
+                                        htmlType="submit"
+                                        onClick={() => {
+                                            form.resetFields();
+                                        }}
+                                        style={{ width: '100px' }}
+                                    >
+                                        Clear
+                                    </Button>
                                 </Form.Item>
-
-                                
                             </div>
                         </div>
                     </Form>
