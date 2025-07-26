@@ -552,10 +552,13 @@ const SaleReport = () => {
     };
     const handleCancel = () => {
         setIsModalOpen(false);
-        form.resetFields();
+        // form.resetFields();
     };
 
     const onFinishZip = (values: any) => {
+
+        setState({zipBtnloading:true})
+
         // Get the selected month and year from the DatePicker value
         const selectedDate = values.month; // The value from the DatePicker
         const year = selectedDate?.year(); // Get the year from the selected date
@@ -604,7 +607,8 @@ const SaleReport = () => {
                 }
             })
             .finally(() => {
-                form.resetFields(); // Reset the form after completion
+                // form.resetFields(); // Reset the form after completion
+                setState({zipBtnloading:false})
             });
     };
 
@@ -750,7 +754,8 @@ const SaleReport = () => {
                                     Cancel
                                 </Button>
                                 <Button type="primary" htmlType="submit">
-                                    Submit
+                                    {state.zipBtnloading ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2" /> : 'Submit'}
+                                    
                                 </Button>
                             </Space>
                         </div>
