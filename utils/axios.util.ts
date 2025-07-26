@@ -13,6 +13,36 @@ export const instance = () => {
     return config;
   });
 
+  data.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      const originalRequest = error.config;
+      
+      if (error.response?.status === 401 && !originalRequest._retry) {
+        originalRequest._retry = true;
+        
+        try {
+          // Call logout API
+          await axios.post('http://31.97.206.165/api/logout/', {}, {
+            headers: {
+              authorization: `Token ${localStorage.getItem('token')}`
+            }
+          });
+        } catch (logoutError) {
+          console.error('Logout failed:', logoutError);
+        }
+        
+        localStorage.clear();
+        
+        window.location.href = '/';
+        
+        return Promise.reject(error);
+      }
+      
+      return Promise.reject(error);
+    }
+  );
+
   return data;
 };
 

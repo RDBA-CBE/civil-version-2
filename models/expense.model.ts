@@ -86,6 +86,26 @@ const expense = {
         return promise;
     },
 
+    detail: (id: any) => {
+        let promise = new Promise((resolve, reject) => {
+            let url = `expense/${id}/`;
+            instance()
+                .get(url)
+                .then((res) => {
+                    resolve(res.data);
+                })
+                .catch((error) => {
+                    console.log('errorsss: ', error);
+                    if (error.response) {
+                        reject(error.response.data);
+                    } else {
+                        reject(error);
+                    }
+                });
+        });
+        return promise;
+    },
+
     expenseFileReport: (page: number, body: any) => {
         let promise = new Promise((resolve, reject) => {
             let url = `invoice_file/?page=${page}&category=3`;

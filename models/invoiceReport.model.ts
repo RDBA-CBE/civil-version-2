@@ -59,6 +59,34 @@ const invoiceReport = {
         });
         return promise;
     },
+
+
+    downloadZipSalesReport: (body: any, page: any) => {
+        let promise = new Promise((resolve, reject) => {
+            let url = `invoice-reports/?page=${page}`;
+
+            if (body?.customer) {
+                url += `&customer=${encodeURIComponent(body.customer)}`;
+            }
+           
+            instance()
+                .get(url, body)
+                .then((res) => {
+                    resolve(res.data);
+                })
+                .catch((error) => {
+                    console.log('errorsss: ', error);
+                    if (error.response) {
+                        reject(error.response.data.error);
+                    } else {
+                        reject(error);
+                    }
+                });
+        });
+        return promise;
+    },
+
+    
 };
 
 export default invoiceReport;
