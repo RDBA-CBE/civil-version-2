@@ -31,6 +31,7 @@ const InvoiceFileReport = () => {
 
     useEffect(() => {
         getData(1);
+        customersList()
     }, []);
 
     const getData = async (page: number) => {

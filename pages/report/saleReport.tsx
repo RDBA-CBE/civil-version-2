@@ -32,27 +32,12 @@ const SaleReport = () => {
         invoiceList: [],
         discount: 0,
         searchValue: null,
+        customerList:[]
     });
 
     useEffect(() => {
-        axios
-            .get(`${baseUrl}/sale_report/`, {
-                headers: {
-                    Authorization: `Token ${localStorage.getItem('token')}`,
-                },
-            })
-            .then((res) => {
-                setSaleFormData(res.data.reports);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
-            });
-    }, []);
-
-    useEffect(() => {
         initialData(1);
+        customersList()
     }, []);
 
     const initialData = async (page: any) => {
@@ -521,15 +506,15 @@ const SaleReport = () => {
 
                     if (key === 'invoice_file') {
                         if (row.invoice_file) {
-                          // For Excel hyperlinks
-                          return {
-                            text: 'Download',
-                            hyperlink: row.invoice_file,
-                            tooltip: 'Click to download invoice file'
-                          };
+                            // For Excel hyperlinks
+                            return {
+                                text: 'Download',
+                                hyperlink: row.invoice_file,
+                                tooltip: 'Click to download invoice file',
+                            };
                         }
                         return 'No File';
-                      }
+                    }
 
                     return ''; // fallback
                 });
@@ -623,6 +608,25 @@ const SaleReport = () => {
             });
     };
 
+    // const downloadZipFile = async (values: any) => {
+    //     const selectedDate = values.month; // The value from the DatePicker
+    //     const year = selectedDate?.year(); // Get the year from the selected date
+    //     const month = selectedDate?.month() + 1; // Get the month (1-based, so add 1)
+
+    //     // Construct the body object with the selected year and month
+    //     const body = {
+    //         year: year,
+    //         month: month,
+    //     };
+
+    //     const res = await Models.invoiceReport.filter();
+
+    //     try {
+    //     } catch (error) {
+    //         console.log('✌️error --->', error);
+    //     }
+    // };
+
     const onFinishFailedZip = (errorInfo: any) => {};
 
     return (
@@ -645,13 +649,6 @@ const SaleReport = () => {
                             </Form.Item>
 
                             <Form.Item label="Customer" name="customer" style={{ width: '300px' }}>
-                                {/* <Select showSearch filterOption={(input: any, option: any) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}>
-                                    {saleFormData?.map((value: any) => (
-                                        <Select.Option key={value.id} value={value.id}>
-                                            {value.customer_name}
-                                        </Select.Option>
-                                    ))}
-                                </Select> */}
 
                                 <CustomSelect
                                     onSearch={(data: any) => customerSearch(data)}
