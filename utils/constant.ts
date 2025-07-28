@@ -409,8 +409,80 @@ export const invoiceTestData = (viewRecord: any) => {
         //     label: 'Is Authorised Signatory:',
         //     value: viewRecord?.is_authorised_signatory || 'N/A',
         // },
+    ];
 
-        
+    return data;
+};
+
+export const quotationData = (viewRecord: any) => {
+    const data = [
+        {
+            label: 'Quotation Number:',
+            value: viewRecord?.quotation?.quotation_number || 'N/A',
+        },
+
+        {
+            label: 'Quotation Item Name:',
+            value: viewRecord?.test?.test_name || 'N/A',
+        },
+
+        {
+            label: 'Price Per Piece:',
+            value: roundNumber(viewRecord?.price_per_sample) || 'N/A',
+        },
+
+        {
+            label: 'Quantity:',
+            value: roundNumber(viewRecord?.quantity) || 'N/A',
+        },
+
+        {
+            label: 'Total:',
+            value: roundNumber(roundNumber(viewRecord?.price_per_sample) * roundNumber(viewRecord?.quantity)) || 'N/A',
+        },
+        {
+            label: 'Created By:',
+            value: viewRecord?.test?.created_by || 'N/A',
+        },
+
+        {
+            label: 'Created Date:',
+            value: moment(viewRecord?.test?.created_date).format('DD-MM-YYYY') || 'N/A',
+        },
+        {
+            label: 'Modified Data:',
+            value: moment(viewRecord?.modified_date).format('DD-MM-YYYY') || 'N/A',
+        },
+    ];
+
+    return data;
+};
+
+export const userData = (viewRecord: any) => {
+    const data = [
+        {
+            label: 'Name:',
+            value: viewRecord?.employee_name || 'N/A',
+        },
+
+        {
+            label: 'Role:',
+            value: viewRecord?.roles ? 'Admin' : 'Employee',
+        },
+
+        {
+            label: 'Email:',
+            value:viewRecord?.branch_email || viewRecord?.email || 'N/A',
+        },
+
+        {
+            label: 'DOB:',
+            value: viewRecord?.dob ? moment(viewRecord?.dob)?.format('DD-MM-YYYY') : 'N/A',
+        },
+        {
+            label: 'Address:',
+            value: viewRecord?.address || 'N/A',
+        },
     ];
 
     return data;

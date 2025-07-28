@@ -5,18 +5,42 @@ import moment from 'moment';
 import CommonLoader from '@/components/commonLoader';
 import { capitalizeFLetter, roundNumber, useSetState } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
-import { cityData, customerData, discountData, employeeData, expenseCatData, invoiceDisData, invoicePaymentData, invoiceTestData, scrollConfig, testData } from '@/utils/constant';
+import {
+    cityData,
+    customerData,
+    discountData,
+    employeeData,
+    expenseCatData,
+    invoiceDisData,
+    invoicePaymentData,
+    invoiceTestData,
+    quotationData,
+    scrollConfig,
+    testData,
+    userData,
+} from '@/utils/constant';
 import CustomSelect from '@/components/Select';
 import { BellOutlined, EditOutlined, EyeOutlined, InfoCircleFilled, InfoCircleOutlined, MenuFoldOutlined, NotificationOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/router';
 import IconBell from '@/components/Icon/IconBell';
+import IconLoader from '@/components/Icon/IconLoader';
 
-type FieldType = {
-    project_name?: string;
-    from_date?: string;
-    to_date?: string;
-    customer?: string;
-};
+type LogType =
+    | 'employee'
+    | 'customer'
+    | 'city'
+    | 'discount'
+    | 'tax'
+    | 'material'
+    | 'expense-category'
+    | 'test'
+    | 'invoice'
+    | 'invoice-test'
+    | 'invoice-payment'
+    | 'invoice-discount'
+    | 'quotation'
+    | 'quotation-item'
+    | 'change_password';
 
 const Software_Logs = () => {
     const [form] = Form.useForm();
@@ -69,35 +93,101 @@ const Software_Logs = () => {
         inPaymentOpen: false,
         inTestData: null,
         inTestOpen: false,
+        inQuaData: null,
+        inQuaOpen: false,
+        btnLoading: false,
+        selectedrec: null,
+        userData: null,
+        userOpen: false,
     });
 
+    // useEffect(() => {
+    //     if (state.subModule?.value == 'employee') {
+    //         employeeList(1);
+    //     } else if (state.subModule?.value == 'customer') {
+    //         customerList(1);
+    //     } else if (state.subModule?.value == 'city') {
+    //         cityList(1);
+    //     } else if (state.subModule?.value == 'discount') {
+    //         discountList(1);
+    //     } else if (state.subModule?.value == 'tax') {
+    //     } else if (state.subModule?.value == 'material') {
+    //         materialList(1);
+    //     } else if (state.subModule?.value == 'expence_category') {
+    //         expenceCategoryList(1);
+    //     } else if (state.subModule?.value == 'test') {
+    //         testList(1);
+    //     } else if (state.invoiceSubModule?.value == 'invoice') {
+    //         invoiceHistory(1);
+    //     } else if (state.invoiceSubModule?.value == 'invoice_test') {
+    //         invoiceTestList(1);
+    //     } else if (state.invoiceSubModule?.value == 'invoice_payment') {
+    //         invoicePaymentList(1);
+    //     } else if (state.invoiceSubModule?.value == 'invoice_discount') {
+    //         invoiceDiscountList(1);
+    //     } else if (state.invoiceSubModule?.value == 'quotation') {
+    //         quotationList(1);
+    //     } else if (state.invoiceSubModule?.value == 'quotation_item') {
+    //         quotationItemList(1);
+    //     } else if (state.subModule?.value == 'expense_entry') {
+    //         expenseEntryList(1);
+    //     } else if (state.subModule?.value == 'file_upload') {
+    //         fileuploadList(1);
+    //     }
+    //     setState({ editorLoaded: true });
+    // }, [state.subModule, state.invoiceSubModule]);
+
     useEffect(() => {
-        if (state.subModule?.value == 'employee') {
-            employeeList(1);
-        } else if (state.subModule?.value == 'customer') {
-            customerList(1);
-        } else if (state.subModule?.value == 'city') {
-            cityList(1);
-        } else if (state.subModule?.value == 'discount') {
-            discountList(1);
-        } else if (state.subModule?.value == 'tax') {
-        } else if (state.subModule?.value == 'material') {
-            materialList(1);
-        } else if (state.subModule?.value == 'expence_category') {
-            expenceCategoryList(1);
-        } else if (state.subModule?.value == 'test') {
-            testList(1);
-        } else if (state.invoiceSubModule?.value == 'invoice') {
-            invoiceHistory(1);
-        } else if (state.invoiceSubModule?.value == 'invoice_test') {
-            invoiceTestList(1);
-        } else if (state.invoiceSubModule?.value == 'invoice_payment') {
-            invoicePaymentList(1);
-        } else if (state.invoiceSubModule?.value == 'invoice_discount') {
-            invoiceDiscountList(1);
+        if (!state.subModule?.value && !state.invoiceSubModule?.value) {
+            setState({ loading: false, tableData: [], columns: [], currentPage: 1, total: 0, invoiceSubModule: null, subModule: null });
+
+            return;
         }
+
+        const page = 1; // Default page
+        const typeMap: any = {
+            employee: 'employee',
+            customer: 'customer',
+            city: 'city',
+            discount: 'customer-discount',
+            tax: 'tax',
+            material: 'material',
+            expence_category: 'expense',
+            test: 'test',
+            expense_entry: 'expense-entry',
+            file_upload: 'invoice-file',
+            // Invoice sub-modules
+            invoice: 'invoice',
+            invoice_test: 'invoice-test',
+            invoice_payment: 'receipt',
+            invoice_discount: 'invoice-discount',
+            quotation: 'quotation',
+            quotation_item: 'quotation-item',
+            change_password: 'user',
+        };
+
+        const type = state.invoiceSubModule?.value || state.subModule?.value;
+        console.log('✌️type --->', type);
+        if (type && typeMap[type]) {
+            fetchAndFormatLogs(typeMap[type], page);
+        } else {
+            setState({ loading: false, tableData: [], columns: [], currentPage: 1, total: 0 });
+        }
+
         setState({ editorLoaded: true });
     }, [state.subModule, state.invoiceSubModule]);
+
+    const fetchAndFormatLogs = async (type: LogType, page: number) => {
+        try {
+            setState({ loading: true });
+            const res: any = await Models.logs.softwareLogList(type, page, null);
+            tableFormat(res, page, type);
+            setState({ loading: false });
+        } catch (error) {
+            setState({ loading: false });
+            console.log('error: ', error);
+        }
+    };
 
     const employeeList = async (page: number) => {
         try {
@@ -216,6 +306,32 @@ const Software_Logs = () => {
         }
     };
 
+    const quotationList = async (page: number) => {
+        try {
+            setState({ loading: true });
+            const res: any = await Models.logs.softwareLogList('quotation', page, null);
+            tableFormat(res, page, 'quotation');
+            setState({ loading: false });
+        } catch (error) {
+            setState({ loading: false });
+
+            console.log('error: ', error);
+        }
+    };
+
+    const quotationItemList = async (page: number) => {
+        try {
+            setState({ loading: true });
+            const res: any = await Models.logs.softwareLogList('quotation-item', page, null);
+            tableFormat(res, page, 'quotation-item');
+            setState({ loading: false });
+        } catch (error) {
+            setState({ loading: false });
+
+            console.log('error: ', error);
+        }
+    };
+
     const invoicePaymentList = async (page: number) => {
         try {
             setState({ loading: true });
@@ -234,6 +350,32 @@ const Software_Logs = () => {
             setState({ loading: true });
             const res: any = await Models.logs.softwareLogList('invoice-discount', page, null);
             tableFormat(res, page, 'invoice-discount');
+            setState({ loading: false });
+        } catch (error) {
+            setState({ loading: false });
+
+            console.log('error: ', error);
+        }
+    };
+
+    const expenseEntryList = async (page: number) => {
+        try {
+            setState({ loading: true });
+            const res: any = await Models.logs.softwareLogList('expense-entry', page, null);
+            tableFormat(res, page, 'expense-entry');
+            setState({ loading: false });
+        } catch (error) {
+            setState({ loading: false });
+
+            console.log('error: ', error);
+        }
+    };
+
+    const fileuploadList = async (page: number) => {
+        try {
+            setState({ loading: true });
+            const res: any = await Models.logs.softwareLogList('invoice-file', page, null);
+            tableFormat(res, page, 'invoice-file');
             setState({ loading: false });
         } catch (error) {
             setState({ loading: false });
@@ -305,10 +447,19 @@ const Software_Logs = () => {
         }
     };
 
+    const viewUser = async (record: any) => {
+        try {
+            const res:any = await Models.auth.detail(record?.custom_info?.employee_id);
+            console.log('viewUser --->', {...res,roles:record?.is_admin});
+            setState({ userData: {...res,roles:record?.is_admin}, userOpen: true });
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
+    };
+
     const viewInvoiceDiscount = async (record: any) => {
         try {
             const res: any = await Models.invoice.getInvoiceDiscount(record?.id);
-            console.log('viewInvoiceDiscount --->', res);
             setState({ inDisData: res, inDisOpen: true });
         } catch (error) {
             console.log('✌️error --->', error);
@@ -333,6 +484,18 @@ const Software_Logs = () => {
         }
     };
 
+    const viewQuotationItem = async (record: any) => {
+        try {
+            setState({ btnLoading: true });
+            const res = await Models.qoutation.detail(record?.id);
+            setState({ inQuaData: res, inQuaOpen: true, btnLoading: false });
+        } catch (error) {
+            setState({ btnLoading: false });
+
+            console.log('✌️error --->', error);
+        }
+    };
+
     const tableFormat = (res: any, page: number, type: string) => {
         const processedData = res?.results
             .filter((item: any) => item.history_action === 'Created' || item.changes !== null)
@@ -341,7 +504,7 @@ const Software_Logs = () => {
                 changes: item.changes
                     ? Object.entries(item.changes)
                           .filter(([key]) => key !== 'history_type')
-                          .map(([field, change]) => ({
+                          .map(([field, change]: [string, any]) => ({
                               field,
                               from: change.from,
                               to: change.to,
@@ -382,7 +545,7 @@ const Software_Logs = () => {
                             <ul style={{ margin: 0, paddingLeft: 20 }}>
                                 {changes.map((change: any, index: number) => (
                                     <li key={index}>
-                                        <strong>{change.field}:</strong> {change.from || 'Empty'} → {change.to || 'Empty'}
+                                        <strong>{capitalizeFLetter(change.field)}:</strong> {change.from || 'Empty'} → {change.to || 'Empty'}
                                     </li>
                                 ))}
                             </ul>
@@ -398,7 +561,10 @@ const Software_Logs = () => {
                 className: 'singleLineCell',
                 render: (record: any) => (
                     <div className=" flex gap-4">
-                        {(type == 'invoice-test' || type == 'receipt' || type == 'invoice-discount') && (
+                        {(type == 'invoice-test' || type == 'receipt' || type == 'invoice-discount' || type == 'quotation-item') && (
+                            // (state.btnLoading  ? (
+                            //     <IconLoader className=" h-4 w-4 animate-spin" />
+                            // ) : (
                             <InfoCircleOutlined style={{ cursor: 'pointer' }} className="view-icon" rev={undefined} onClick={() => viewInvoiceRecord(type, record)} />
                         )}
                         <EyeOutlined style={{ cursor: 'pointer' }} className="view-icon" rev={undefined} onClick={() => viewRecord(type, record)} />
@@ -410,16 +576,20 @@ const Software_Logs = () => {
     };
 
     const viewInvoiceRecord = (type: string, record: any) => {
+        setState({ selectedrec: record?.id });
         if (type == 'invoice-discount') {
             viewInvoiceDiscount(record);
         } else if (type == 'receipt') {
             viewInvoicePayment(record);
         } else if (type == 'invoice-test') {
             viewInvoiceTest(record);
+        } else if (type == 'quotation-item') {
+            viewQuotationItem(record);
         }
     };
 
     const viewRecord = (type: string, record: any) => {
+        setState({ selectedrec: record?.id });
         if (type == 'discount') {
             viewDiscount(record);
         } else if (type == 'employee') {
@@ -434,10 +604,16 @@ const Software_Logs = () => {
             viewExpenceCategory(record);
         } else if (type == 'test') {
             viewTest(record);
+        } else if (type == 'user') {
+            viewUser(record);
         } else if (type == 'invoice') {
             window.open(`/invoice/edits?id=${record?.id}`, '_blank');
         } else if (type == 'invoice-discount' || type == 'receipt' || type == 'invoice-test') {
             window.open(`/invoice/edits?id=${record?.custom_info?.invoice_id}`, '_blank');
+        } else if (type == 'quotation') {
+            window.open(`/invoice/editQoutation?id=${record?.id}`, '_blank');
+        } else if (type == 'quotation-item') {
+            window.open(`/invoice/editQoutation?id=${record?.custom_info?.quotation_id}`, '_blank');
         }
     };
 
@@ -494,8 +670,13 @@ const Software_Logs = () => {
                 },
 
                 {
-                    label: 'Expence Entry',
-                    value: 'expence_entry',
+                    label: 'Quotation',
+                    value: 'quotation',
+                },
+
+                {
+                    label: 'Expense Entry',
+                    value: 'expense_entry',
                 },
                 {
                     label: 'File Upload',
@@ -513,6 +694,81 @@ const Software_Logs = () => {
         setState({ subModuleOption: menu });
     };
 
+    const handleModule = (option: any) => {
+        if (option == null) {
+            setState({ subModuleOption: [], subModule: null, invoiceSubMenuOption: [], invoiceSubModule: null });
+            form.setFieldsValue({ module: option, subModule: null, invoiceSubModule: null });
+        } else {
+            if (option?.value == 'people') {
+                setState({ subModule: { label: 'Customer', value: 'customer' } });
+                form.setFieldsValue({ module: option, subModule: { label: 'Customer', value: 'customer' } });
+            }
+            if (option?.value == 'master') {
+                setState({ subModule: { label: 'Discount', value: 'discount' } });
+                form.setFieldsValue({ module: option, subModule: { label: 'Discount', value: 'discount' } });
+            }
+
+            if (option?.value == 'invoice') {
+                setState({ subModule: { label: 'Invoice', value: 'invoice' } });
+                form.setFieldsValue({
+                    module: option,
+                    subModule: { label: 'Invoice', value: 'invoice' },
+                    invoice_sub_module: {
+                        label: 'Invoice History',
+                        value: 'invoice',
+                    },
+                });
+
+                setState({
+                    invoiceSubMenuOption: [
+                        {
+                            label: 'Invoice History',
+                            value: 'invoice',
+                        },
+
+                        {
+                            label: 'Invoice Test History',
+                            value: 'invoice_test',
+                        },
+                        {
+                            label: 'Invoice Payment History',
+                            value: 'invoice_payment',
+                        },
+
+                        {
+                            label: 'Invoice Discount History',
+                            value: 'invoice_discount',
+                        },
+                    ],
+                    invoiceSubModule: {
+                        label: 'Invoice History',
+                        value: 'invoice',
+                    },
+                });
+            }
+            if (option?.value == 'user') {
+                setState({
+                    subModule: {
+                        label: 'Change Password',
+                        value: 'change_password',
+                    },
+                    invoiceSubMenuOption: [],
+                    invoiceSubModule: null,
+                });
+                form.setFieldsValue({
+                    module: option,
+                    subModule: {
+                        label: 'Change Password',
+                        value: 'change_password',
+                    },
+                    invoiceSubModule: null,
+                });
+            }
+
+            handleSetSubmenu(option);
+        }
+    };
+
     return (
         <>
             <div className="panel">
@@ -528,8 +784,7 @@ const Software_Logs = () => {
                                     options={state.moduleOption}
                                     className=" flex-1"
                                     onChange={(selectedOption: any) => {
-                                        form.setFieldsValue({ module: selectedOption, subModule: null });
-                                        handleSetSubmenu(selectedOption);
+                                        handleModule(selectedOption);
                                     }}
                                     loadMore={() => {}}
                                     isSearchable
@@ -537,38 +792,80 @@ const Software_Logs = () => {
                                 />
                             </Form.Item>
 
-                            <Form.Item label="Module" name="subModule" style={{ width: '300px' }}>
+                            <Form.Item label="Sub Module" name="subModule" style={{ width: '300px' }}>
                                 <CustomSelect
                                     onSearch={(data: any) => {}}
                                     value={state.subModule}
                                     options={state.subModuleOption || []}
                                     className=" flex-1"
                                     onChange={(selectedOption: any) => {
-                                        setState({ subModule: selectedOption });
-                                        form.setFieldsValue({ subModule: selectedOption });
-                                        if (selectedOption?.value == 'invoice') {
-                                            setState({
-                                                invoiceSubMenuOption: [
-                                                    {
+                                        if (selectedOption) {
+                                            setState({ subModule: selectedOption });
+                                            form.setFieldsValue({ subModule: selectedOption });
+                                            if (selectedOption?.value == 'invoice') {
+                                                setState({
+                                                    invoiceSubMenuOption: [
+                                                        {
+                                                            label: 'Invoice History',
+                                                            value: 'invoice',
+                                                        },
+
+                                                        {
+                                                            label: 'Invoice Test History',
+                                                            value: 'invoice_test',
+                                                        },
+                                                        {
+                                                            label: 'Invoice Payment History',
+                                                            value: 'invoice_payment',
+                                                        },
+
+                                                        {
+                                                            label: 'Invoice Discount History',
+                                                            value: 'invoice_discount',
+                                                        },
+                                                    ],
+                                                    invoiceSubModule: {
                                                         label: 'Invoice History',
                                                         value: 'invoice',
                                                     },
+                                                });
+                                                form.setFieldsValue({
+                                                    invoice_sub_module: {
+                                                        label: 'Invoice History',
+                                                        value: 'invoice',
+                                                    },
+                                                });
+                                            } else if (selectedOption?.value == 'quotation') {
+                                                setState({
+                                                    invoiceSubMenuOption: [
+                                                        {
+                                                            label: 'Quotation History',
+                                                            value: 'quotation',
+                                                        },
 
-                                                    {
-                                                        label: 'Invoice Test History',
-                                                        value: 'invoice_test',
+                                                        {
+                                                            label: 'Quotation Item History',
+                                                            value: 'quotation_item',
+                                                        },
+                                                    ],
+                                                    invoiceSubModule: {
+                                                        label: 'Quotation History',
+                                                        value: 'quotation',
                                                     },
-                                                    {
-                                                        label: 'Invoice Payment History',
-                                                        value: 'invoice_payment',
+                                                });
+                                                form.setFieldsValue({
+                                                    invoice_sub_module: {
+                                                        label: 'Quotation History',
+                                                        value: 'quotation',
                                                     },
-
-                                                    {
-                                                        label: 'Invoice Discount History',
-                                                        value: 'invoice_discount',
-                                                    },
-                                                ],
-                                            });
+                                                });
+                                            } else {
+                                                setState({ invoiceSubMenuOption: [], invoiceSubModule: null });
+                                                form.setFieldsValue({ invoice_sub_module: null });
+                                            }
+                                        } else {
+                                            setState({ subModule: null });
+                                            form.setFieldsValue({ subModule: null });
                                         }
                                     }}
                                     loadMore={() => {}}
@@ -593,17 +890,34 @@ const Software_Logs = () => {
                                     />
                                 </Form.Item>
                             )}
-                            {/* <Form.Item<FieldType> label="Project Name" name="project_name" style={{ width: '250px' }}>
-                                <Input />
-                            </Form.Item> */}
+
+                            {state.subModule?.value == 'quotation' && (
+                                <Form.Item label="Quotation Sub Module" name="invoice_sub_module" style={{ width: '300px' }}>
+                                    <CustomSelect
+                                        onSearch={(data: any) => {}}
+                                        value={state.invoiceSubModule}
+                                        options={state.invoiceSubMenuOption || []}
+                                        className=" flex-1"
+                                        onChange={(selectedOption: any) => {
+                                            setState({ invoiceSubModule: selectedOption });
+                                            form.setFieldsValue({ invoice_sub_module: selectedOption });
+                                        }}
+                                        loadMore={() => {}}
+                                        isSearchable
+                                        filterOption={(input: string, option: any) => option.label.toLowerCase().includes(input.toLowerCase())}
+                                    />
+                                </Form.Item>
+                            )}
 
                             <Form.Item label="From Date" name="from_date" style={{ width: '250px' }}>
-                                <DatePicker style={{ width: '100%' }} />
+                                <DatePicker
+                                    style={{ width: '100%' }}
+                                    value={state.date}
+                                    onChange={(e) => {
+                                        setState({ date: e });
+                                    }}
+                                />
                             </Form.Item>
-
-                            {/*<Form.Item label="To Date" name="to_date" style={{ width: '250px' }}>
-                                <DatePicker style={{ width: '100%' }} />
-                            </Form.Item> */}
 
                             <div style={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: '10px' }}>
                                 <Form.Item>
@@ -744,6 +1058,24 @@ const Software_Logs = () => {
 
             <Modal title="View Test" open={state.inTestOpen} onCancel={() => setState({ inTestOpen: false })} footer={false}>
                 {invoiceTestData(state.inTestData).map((value: any, index: number) => (
+                    <div className="content-main" key={index}>
+                        <p className="content-1">{value?.label}</p>
+                        <p className="content-2">{value?.value}</p>
+                    </div>
+                ))}
+            </Modal>
+
+            <Modal title="View Quotation" open={state.inQuaOpen} onCancel={() => setState({ inQuaOpen: false })} footer={false}>
+                {quotationData(state.inQuaData).map((value: any, index: number) => (
+                    <div className="content-main" key={index}>
+                        <p className="content-1">{value?.label}</p>
+                        <p className="content-2">{value?.value}</p>
+                    </div>
+                ))}
+            </Modal>
+
+            <Modal title="View User" open={state.userOpen} onCancel={() => setState({ userOpen: false })} footer={false}>
+                {userData(state.userData).map((value: any, index: number) => (
                     <div className="content-main" key={index}>
                         <p className="content-1">{value?.label}</p>
                         <p className="content-2">{value?.value}</p>

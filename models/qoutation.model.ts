@@ -21,6 +21,28 @@ const qoutation = {
         return promise;
     },
 
+    detail: (id: any) => {
+        let promise = new Promise((resolve, reject) => {
+            let url = `quotation-items/${id}/`;
+            instance()
+                .get(url)
+                .then((res) => {
+                    resolve(res.data);
+                })
+                .catch((error) => {
+                    console.log('errorsss: ', error);
+                    if (error.response) {
+                        reject(error.response.data.error);
+                    } else {
+                        reject(error);
+                    }
+                });
+        });
+        return promise;
+    },
+
+    
+
      filter: (body: any, page: any) => {
             let promise = new Promise((resolve, reject) => {
                 let url = `quotation/?page=${page}`;
@@ -54,6 +76,8 @@ const qoutation = {
             });
             return promise;
         },
+
+
 }
 
 export default qoutation;
