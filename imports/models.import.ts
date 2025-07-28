@@ -15,6 +15,7 @@ import quotationReport from "@/models/quotationReport.model ";
 import test from "@/models/test.model";
 import preview from "@/models/preview.nodel";
 import testReport from "@/models/testReport.model";
+import state from "@/models/state.mode";
 
 
 
@@ -38,7 +39,8 @@ export const Models = {
     invoiceFile,
     invoiceReport,
     quotationReport,
-    testReport
+    testReport,
+    state
    
 
 };
