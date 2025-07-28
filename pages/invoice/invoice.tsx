@@ -4,10 +4,11 @@ import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import router from 'next/router';
 import dayjs from 'dayjs';
-import { baseUrl, ObjIsEmpty, roundNumber, useSetState } from '@/utils/function.util';
+import { baseUrl, ObjIsEmpty, roundNumber, useSetState,Dropdown } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import Models from '@/imports/models.import';
 import { scrollConfig } from '@/utils/constant';
+import CustomSelect from '@/components/Select';
 
 const Invoice = () => {
     const { Search } = Input;
@@ -30,7 +31,15 @@ const Invoice = () => {
         invoiceList: [],
         discount: 0,
         searchValue: null,
+         customerList: [],
+        customerHasNext: null,
+        customerCurrentPage: null,
     });
+
+
+    useEffect(()=>{
+        customersList();
+    },[])
 
     useEffect(() => {
         axios
@@ -65,6 +74,38 @@ const Invoice = () => {
             console.log('✌️error --->', error);
         }
     };
+
+    const customersList = async (page = 1) => {
+            try {
+                const res: any = await Models.invoice.customerList(page);
+                const dropdown = Dropdown(res?.results, 'customer_name');
+                setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: page });
+            } catch (error: any) {
+                console.log('✌️error --->', error);
+            }
+        };
+    
+        const customerSearch = async (text: any) => {
+            try {
+                const res: any = await Models.invoice.customerSearch(text);
+                if (res?.results?.length > 0) {
+                    const dropdown = Dropdown(res?.results, 'customer_name');
+                    setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: 1 });
+                }
+            } catch (error) {
+                console.log('✌️error --->', error);
+            }
+        };
+    
+        const customersLoadMore = async (page = 1) => {
+            try {
+                const res: any = await Models.invoice.customerList(page);
+                const dropdown = Dropdown(res?.results, 'customer_name');
+                setState({ customerList: [...state.customerList, ...dropdown], customerHasNext: res?.next, customerCurrentPage: page });
+            } catch (error: any) {
+                console.log('✌️error --->', error);
+            }
+        };
 
     // drawer
     const showDrawer = () => {
@@ -212,7 +253,7 @@ const Invoice = () => {
             setState({ btnLoading: true });
 
             const body = {
-                customer: values.customer,
+                customer: values.customer.value,
                 project_name: values.project_name,
                 advance: values.advance,
                 balance: values.balance,
@@ -348,7 +389,7 @@ const Invoice = () => {
                 project_name: values.project_name ? values.project_name : '',
                 from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
                 to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
-                customer: values.customer ? values.customer : '',
+                customer: values.customer.value ? values.customer.value : '',
                 completed: values.completed ? values.completed : '',
                 invoice_no: values.invoice_no ? values.invoice_no : '',
             };
@@ -405,13 +446,30 @@ const Invoice = () => {
                             </Form.Item>
 
                             <Form.Item label="Customer" name="customer" style={{ width: '250px' }}>
-                                <Select showSearch filterOption={(input: any, option: any) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}>
+                                {/* <Select showSearch filterOption={(input: any, option: any) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}>
                                     {formFields?.customer?.map((value: any) => (
                                         <Select.Option key={value.id} value={value.id}>
                                             {value.customer_name}
                                         </Select.Option>
                                     ))}
-                                </Select>
+                                </Select> */}
+                                <CustomSelect
+                                    onSearch={(data: any) => customerSearch(data)}
+                                    value={state.customer}
+                                    options={state.customerList}
+                                    className=" flex-1"
+                                    onChange={(selectedOption: any) => {
+                                        form.setFieldsValue({ customer: selectedOption });
+                                        customersList(1);
+                                    }}
+                                    loadMore={() => {
+                                        if (state.customerHasNext) {
+                                            customersLoadMore(state.customerCurrentPage + 1);
+                                        }
+                                    }}
+                                    isSearchable
+                                    filterOption={(input: string, option: any) => option.label.toLowerCase().includes(input.toLowerCase())}
+                                />
                             </Form.Item>
 
                             <Form.Item label="From Date" name="from_date" style={{ width: '200px' }}>
@@ -493,21 +551,25 @@ const Invoice = () => {
                 <Drawer title="Create Invoice" placement="right" width={600} onClose={onClose} open={open}>
                     <Form name="basic-form" layout="vertical" initialValues={{ remember: true }} onFinish={handleSubmit} onFinishFailed={onFinishFailed} autoComplete="off" form={form}>
                         <Form.Item label="Customer Name" name="customer" required={false} rules={[{ required: true, message: 'Please select Customer Name!' }]}>
-                            <Select
-                                onChange={handleSelectChange}
-                                placeholder="Select a customer"
-                                value={selectedCustomerId}
-                                showSearch
-                                filterOption={(input, option: any) =>
-                                    option.props.children.toString().toLowerCase().indexOf(input.toLowerCase()) >= 0 || option.props.children.toString().toLowerCase().indexOf(input.toLowerCase()) >= 0
-                                }
-                            >
-                                {formFields?.customer?.map((val: any) => (
-                                    <Select.Option key={val.id} value={val.id}>
-                                        {val.customer_name} - {val.phone_no}
-                                    </Select.Option>
-                                ))}
-                            </Select>
+                            
+
+                            <CustomSelect
+                                    onSearch={(data: any) => customerSearch(data)}
+                                    value={state.customer}
+                                    options={state.customerList}
+                                    className=" flex-1"
+                                    onChange={(selectedOption: any) => {
+                                        form.setFieldsValue({ customer: selectedOption });
+                                        customersList(1);
+                                    }}
+                                    loadMore={() => {
+                                        if (state.customerHasNext) {
+                                            customersLoadMore(state.customerCurrentPage + 1);
+                                        }
+                                    }}
+                                    isSearchable
+                                    filterOption={(input: string, option: any) => option.label.toLowerCase().includes(input.toLowerCase())}
+                                />
                         </Form.Item>
 
                         <Form.Item>

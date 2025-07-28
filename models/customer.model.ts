@@ -24,6 +24,27 @@ const customer = {
         return promise;
     },
 
+    customer: (id: any) => {
+        let promise = new Promise((resolve, reject) => {
+            let url = `customer/${id}/`;
+
+            instance()
+                .get(url)
+                .then((res) => {
+                    resolve(res.data);
+                })
+                .catch((error) => {
+                    console.log('errorsss: ', error);
+                    if (error.response) {
+                        reject(error.response.data.error);
+                    } else {
+                        reject(error);
+                    }
+                });
+        });
+        return promise;
+    },
+
     employeeList: (page: any, body: any) => {
         let promise = new Promise((resolve, reject) => {
             let url = `employee/?page=${page}`;
@@ -52,6 +73,48 @@ const customer = {
             let url = `${label}/${id}/`;
             instance()
                 .get(url)
+                .then((res) => {
+                    resolve(res.data);
+                })
+                .catch((error) => {
+                    console.log('errorsss: ', error);
+                    if (error.response) {
+                        reject(error.response.data.error);
+                    } else {
+                        reject(error);
+                    }
+                });
+        });
+        return promise;
+    },
+
+    createCustomer: (body: any) => {
+        let promise = new Promise((resolve, reject) => {
+            let url = `create_customer/`;
+
+            instance()
+                .post(url, body)
+                .then((res) => {
+                    resolve(res.data);
+                })
+                .catch((error) => {
+                    console.log('errorsss: ', error);
+                    if (error.response) {
+                        reject(error.response.data.error);
+                    } else {
+                        reject(error);
+                    }
+                });
+        });
+        return promise;
+    },
+
+    eidtCustomer: (id: any, body: any) => {
+        let promise = new Promise((resolve, reject) => {
+            let url = `customer/${id}/`;
+
+            instance()
+                .patch(url, body)
                 .then((res) => {
                     resolve(res.data);
                 })

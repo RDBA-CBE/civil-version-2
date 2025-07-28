@@ -3,7 +3,9 @@ import axios from 'axios';
 import { useRouter } from 'next/router';
 import { Space, Form, Button, message, Modal, Select } from 'antd';
 import 'react-quill/dist/quill.snow.css';
-import { baseUrl } from '@/utils/function.util';
+import { baseUrl, Dropdown, useSetState } from '@/utils/function.util';
+import CustomSelect from '@/components/Select';
+import Models from '@/imports/models.import';
 
 const InvoiceReport = () => {
     const editorRef: any = useRef();
@@ -24,6 +26,12 @@ const InvoiceReport = () => {
     const [selectedId, setSelectedId] = useState<any>(1);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    const [state, setState] = useSetState({
+        employeeList: [],
+        employeeHasNext: null,
+        employeeCurrentPage: null,
+    });
+
     useEffect(() => {
         editorRef.current = {
             CKEditor: require('@ckeditor/ckeditor5-react').CKEditor,
@@ -38,7 +46,41 @@ const InvoiceReport = () => {
 
     useEffect(() => {
         getTestReport();
+        employeeList(1);
     }, []);
+
+    const employeeList = async (page = 1) => {
+        try {
+            const res: any = await Models.customer.employeeList(page, null);
+            const dropdown = Dropdown(res?.results, 'employee_name');
+            setState({ employeeList: dropdown, employeeHasNext: res?.next, employeeCurrentPage: page });
+        } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const employeeSearch = async (text: any) => {
+        try {
+            const res: any = await Models.customer.employeeList(1, null);
+
+            if (res?.results?.length > 0) {
+                const dropdown = Dropdown(res?.results, 'employee_name');
+                setState({ employeeList: dropdown, employeeHasNext: res?.next, employeeCurrentPage: 1 });
+            }
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const employeeLoadMore = async (page = 1) => {
+        try {
+            const res: any = await Models.customer.employeeList(page, null);
+            const dropdown = Dropdown(res?.results, 'employee_name');
+            setState({ employeeList: [...state.employeeList, ...dropdown], employeeHasNext: res?.next, employeeCurrentPage: page });
+        } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
+    };
 
     const getTestReport = () => {
         const Token = localStorage.getItem('token');
@@ -191,7 +233,6 @@ const InvoiceReport = () => {
     };
 
     const onFinish1 = (values: any) => {
-
         if (values?.signature == 'with-signature') {
             setIsModalOpen(false);
             var id: any = invoiceReport.invoice_test.id;
@@ -208,6 +249,8 @@ const InvoiceReport = () => {
     };
 
     const onFinishFailed1 = (errorInfo: any) => {};
+
+    console.log('state.employeeList', state.employeeList);
 
     return (
         <>
@@ -250,7 +293,7 @@ const InvoiceReport = () => {
 
                         <div style={{ marginBottom: '20px' }}>
                             <label htmlFor="yourSelect">Employee Name</label>
-                            <select
+                            {/* <select
                                 id="yourSelect"
                                 value={formData?.is_authorised_signatory ? 'authorized signature' : selectedId}
                                 onChange={(e) => {
@@ -279,7 +322,45 @@ const InvoiceReport = () => {
                                     </option>
                                 ))}
                                 <option value="authorized signature">Authorized Signature</option>
-                            </select>
+                            </select> */}
+
+                            <CustomSelect
+                                onSearch={(data: any) => employeeSearch(data)}
+                                value={
+                                    formData?.is_authorised_signatory
+                                        ? { label: 'Authorized Signature', value: 'authorized signature' }
+                                        : invoiceReport?.signatures?.find((item: any) => item.id === selectedId)?.employee_name
+                                        ? {
+                                              label: invoiceReport?.signatures?.find((item: any) => item.id === selectedId)?.employee_name,
+                                              value: selectedId,
+                                          }
+                                        : null
+                                }
+                                options={[...(state.employeeList || []), { label: 'Authorized Signature', value: 'authorized signature' }]}
+                                className="flex-1"
+                                loadMore={() => {
+                                    if (state.employeeHasNext) {
+                                        employeeLoadMore(state.employeeCurrentPage + 1);
+                                    }
+                                }}
+                                isSearchable
+                                onChange={(selectedOption: any) => {
+                                    setSelectedId(selectedOption.value);
+
+                                    if (selectedOption.value === 'authorized signature') {
+                                        setFormData((prevData: any) => ({
+                                            ...prevData,
+                                            is_authorised_signatory: true,
+                                        }));
+                                    } else {
+                                        setFormData((prevData: any) => ({
+                                            ...prevData,
+                                            is_authorised_signatory: false,
+                                        }));
+                                    }
+                                }}
+                                filterOption={(input: string, option: any) => option.label.toLowerCase().includes(input.toLowerCase())}
+                            />
                         </div>
 
                         <Form.Item>
