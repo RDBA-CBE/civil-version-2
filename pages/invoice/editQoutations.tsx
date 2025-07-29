@@ -162,9 +162,16 @@ export default function EditQoutations() {
             }));
 
             const res = await Models.qoutation.create(body);
+            const bodyData = {
+                date_created: state.date,
+
+                completed: state.completed,
+            };
+            await Models.qoutation.quotationUpdate(id, bodyData);
             setState({ btnLoading: false, isModalOpen: false });
             await quotationItems();
             await getData();
+            form1.resetFields();
             Success('Qutation items added successfully');
         } catch (error) {
             setState({ btnLoading: false });
