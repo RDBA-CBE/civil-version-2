@@ -22,7 +22,7 @@ const logs = {
                 .catch((error) => {
                     console.log('errorsss: ', error);
                     if (error.response) {
-                        reject(error.response.data.error);
+                        reject(error.response.data);
                     } else {
                         reject(error);
                     }
@@ -34,6 +34,13 @@ const logs = {
     softwareLogList: (urls:string,page: number, body: any) => {
         let promise = new Promise((resolve, reject) => {
             let url = `${urls}-history/?page=${page}`;
+           
+            if (body?.from_date) {
+                url += `&from_date=${encodeURIComponent(body.from_date)}`;
+            }
+            if (body?.to_date) {
+                url += `&to_date=${encodeURIComponent(body.to_date)}`;
+            }
             instance()
                 .get(url)
                 .then((res) => {
@@ -42,7 +49,7 @@ const logs = {
                 .catch((error) => {
                     console.log('errorsss: ', error);
                     if (error.response) {
-                        reject(error.response.data.error);
+                        reject(error.response.data);
                     } else {
                         reject(error);
                     }
@@ -63,7 +70,7 @@ const logs = {
                 .catch((error) => {
                     console.log('errorsss: ', error);
                     if (error.response) {
-                        reject(error.response.data.error);
+                        reject(error.response.data);
                     } else {
                         reject(error);
                     }

@@ -12,7 +12,7 @@ const auth = {
                 .catch((error) => {
                     console.log('errorsss: ', error);
                     if (error.response) {
-                        reject(error.response.data.error);
+                        reject(error.response.data);
                     } else {
                         reject(error);
                     }
@@ -32,7 +32,7 @@ const auth = {
                 .catch((error) => {
                     console.log('errorsss: ', error);
                     if (error.response) {
-                        reject(error.response.data.error);
+                        reject(error.response.data);
                     } else {
                         reject(error);
                     }
@@ -52,7 +52,7 @@ const auth = {
                 .catch((error) => {
                     console.log('errorsss: ', error);
                     if (error.response) {
-                        reject(error.response.data.error);
+                        reject(error.response.data);
                     } else {
                         reject(error);
                     }
