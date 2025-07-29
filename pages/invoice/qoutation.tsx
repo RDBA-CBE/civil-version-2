@@ -218,7 +218,7 @@ const Quotations = () => {
                     <span onClick={() => handleEditClick(record)} style={{ cursor: 'pointer' }} className="edit-icon">
                         <EditOutlined rev={undefined} />
                     </span>
-                    <DeleteOutlined style={{ color: 'red', cursor: 'pointer' }} onClick={() => handleDelete(record)} className="delete-icon" rev={undefined} />
+                    {/* <DeleteOutlined style={{ color: 'red', cursor: 'pointer' }} onClick={() => handleDelete(record)} className="delete-icon" rev={undefined} /> */}
                 </Space>
             ),
         },
