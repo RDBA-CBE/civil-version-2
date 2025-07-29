@@ -20,6 +20,7 @@ import {
 import CustomSelect from '@/components/Select';
 import { EyeOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import moment from 'moment';
 
 type LogType =
     | 'employee'
@@ -105,11 +106,11 @@ const Software_Logs = () => {
         form.setFieldsValue({
             module: { value: 'invoice', label: 'Invoice' },
             subModule: {
-                label: 'Invoice History',
+                label: 'Invoice',
                 value: 'invoice',
             },
-            from_date:null,
-            to_date:null,
+            from_date: null,
+            to_date: null,
             invoice_sub_module: {
                 label: 'Invoice History',
                 value: 'invoice',
@@ -166,8 +167,6 @@ const Software_Logs = () => {
                 value: 'invoice',
             },
         });
-
-       
     };
     const getData = async () => {
         try {
@@ -346,7 +345,7 @@ const Software_Logs = () => {
             setState({ empData: res, employeeOpen: true });
         } catch (error: any) {
             if (error?.detail == 'Not found.') {
-                Failure('Record Not Found');
+                Failure('Record Deleted');
             }
             console.log('✌️error --->', error);
         }
@@ -358,7 +357,7 @@ const Software_Logs = () => {
             setState({ cusData: res, cusOpen: true });
         } catch (error: any) {
             if (error?.detail == 'Not found.') {
-                Failure('Record Not Found');
+                Failure('Record Deleted');
             }
             console.log('✌️error --->', error);
         }
@@ -370,7 +369,7 @@ const Software_Logs = () => {
             setState({ disData: res, disOpen: true });
         } catch (error: any) {
             if (error?.detail == 'Not found.') {
-                Failure('Record Not Found');
+                Failure('Record Deleted');
             }
             console.log('✌️error --->', error);
         }
@@ -382,7 +381,7 @@ const Software_Logs = () => {
             setState({ cityData: res, cityOpen: true });
         } catch (error: any) {
             if (error?.detail == 'Not found.') {
-                Failure('Record Not Found');
+                Failure('Record Deleted');
             }
             console.log('✌️error --->', error);
         }
@@ -394,7 +393,7 @@ const Software_Logs = () => {
             setState({ materialData: res, materialOpen: true });
         } catch (error: any) {
             if (error?.detail == 'Not found.') {
-                Failure('Record Not Found');
+                Failure('Record Deleted');
             }
             console.log('✌️error --->', error);
         }
@@ -406,7 +405,7 @@ const Software_Logs = () => {
             setState({ expenceCatData: res, expenceCatOpen: true });
         } catch (error: any) {
             if (error?.detail == 'Not found.') {
-                Failure('Record Not Found');
+                Failure('Record Deleted');
             }
             console.log('✌️error --->', error);
         }
@@ -418,7 +417,7 @@ const Software_Logs = () => {
             setState({ testData: res, testOpen: true });
         } catch (error: any) {
             if (error?.detail == 'Not found.') {
-                Failure('Record Not Found');
+                Failure('Record Deleted');
             }
             console.log('✌️error --->', error);
         }
@@ -430,7 +429,7 @@ const Software_Logs = () => {
             setState({ userData: { ...res, roles: record?.is_admin }, userOpen: true });
         } catch (error: any) {
             if (error?.detail == 'Not found.') {
-                Failure('Record Not Found');
+                Failure('Record Deleted');
             }
             console.log('✌️error --->', error);
         }
@@ -442,7 +441,7 @@ const Software_Logs = () => {
             setState({ inDisData: res, inDisOpen: true });
         } catch (error: any) {
             if (error?.detail == 'Not found.') {
-                Failure('Record Not Found');
+                Failure('Record Deleted');
             }
             console.log('✌️error --->', error);
         }
@@ -454,7 +453,7 @@ const Software_Logs = () => {
             setState({ inPaymentData: res, inPaymentOpen: true });
         } catch (error: any) {
             if (error?.detail == 'Not found.') {
-                Failure('Record Not Found');
+                Failure('Record Deleted');
             }
             console.log('✌️error --->', error);
         }
@@ -466,7 +465,7 @@ const Software_Logs = () => {
             setState({ inTestData: res, inTestOpen: true });
         } catch (error: any) {
             if (error?.detail == 'Not found.') {
-                Failure('Record Not Found');
+                Failure('Record Deleted');
             }
             console.log('✌️error --->', error);
         }
@@ -481,7 +480,7 @@ const Software_Logs = () => {
             setState({ btnLoading: false });
 
             if (error?.detail == 'Not found.') {
-                Failure('Record Not Found');
+                Failure('Record Deleted');
             }
             console.log('✌️error --->', error);
         }
@@ -490,17 +489,17 @@ const Software_Logs = () => {
     const tableFormat = (res: any, page: number, type: string) => {
         const processedData = res?.results.map((item: any) => ({
             ...item,
-            changes: item.changes
-                ? Object.entries(item.changes)
+            changes: item?.changes
+                ? Object.entries(item?.changes)
                       .filter(([key]) => key !== 'history_type')
                       .map(([field, change]: [string, any]) => ({
                           field,
                           from: change.from,
                           to: change.to,
                       }))
-                : item.history_action === 'Created'
+                : item?.history_action === 'Created'
                 ? [{ field: 'New Record Created', from: null, to: null }]
-                : item.history_action === 'Deleted'
+                : item?.history_action === 'Deleted'
                 ? [{ field: 'Record Deleted', from: null, to: null }]
                 : [{ field: 'No changes', from: null, to: null }],
         }));
@@ -510,7 +509,7 @@ const Software_Logs = () => {
                 title: 'Date',
                 dataIndex: 'history_date',
                 key: 'date',
-                render: (date: any) => new Date(date).toLocaleString(),
+                render: (date: any) =>date?moment(date)?.format('DD-MM-YYYY'):"",
             },
             {
                 title: 'User',
@@ -694,11 +693,11 @@ const Software_Logs = () => {
             form.setFieldsValue({ module: option, subModule: null, invoiceSubModule: null });
         } else {
             if (option?.value == 'people') {
-                setState({ subModule: { label: 'Customer', value: 'customer' } });
+                setState({ subModule: { label: 'Customer', value: 'customer' }, invoiceSubModule: null });
                 form.setFieldsValue({ module: option, subModule: { label: 'Customer', value: 'customer' } });
             }
             if (option?.value == 'master') {
-                setState({ subModule: { label: 'Discount', value: 'discount' } });
+                setState({ subModule: { label: 'Discount', value: 'discount' }, invoiceSubModule: null });
                 form.setFieldsValue({ module: option, subModule: { label: 'Discount', value: 'discount' } });
             }
 
