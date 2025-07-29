@@ -108,8 +108,8 @@ const Software_Logs = () => {
                 label: 'Invoice',
                 value: 'invoice',
             },
-            from_date:null,
-            to_date:null,
+            from_date: null,
+            to_date: null,
             invoice_sub_module: {
                 label: 'Invoice History',
                 value: 'invoice',
@@ -166,8 +166,6 @@ const Software_Logs = () => {
                 value: 'invoice',
             },
         });
-
-       
     };
     const getData = async () => {
         try {
@@ -694,11 +692,11 @@ const Software_Logs = () => {
             form.setFieldsValue({ module: option, subModule: null, invoiceSubModule: null });
         } else {
             if (option?.value == 'people') {
-                setState({ subModule: { label: 'Customer', value: 'customer' } });
+                setState({ subModule: { label: 'Customer', value: 'customer' }, invoiceSubModule: null });
                 form.setFieldsValue({ module: option, subModule: { label: 'Customer', value: 'customer' } });
             }
             if (option?.value == 'master') {
-                setState({ subModule: { label: 'Discount', value: 'discount' } });
+                setState({ subModule: { label: 'Discount', value: 'discount' }, invoiceSubModule: null });
                 form.setFieldsValue({ module: option, subModule: { label: 'Discount', value: 'discount' } });
             }
 
