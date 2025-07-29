@@ -29,13 +29,11 @@ const QuotationPreview = () => {
             })
             .then((res) => {
                 setInvoiceReport(res.data); // Set invoice report after fetching data
-
                 // Extract the necessary tax info
-                const selectedPercentages = res.data?.tax_list?.filter((item: any) => res.data.tax.includes(item.id));
+                const selectedPercentages = res.data?.tax?.filter((item: any) => res.data.tax.includes(item.id));
                 const totalTaxPercentage = selectedPercentages?.reduce((acc: number, item: any) => acc + parseFloat(item.tax_percentage), 0) || 0;
 
                 const totalAmount = res.data?.total_amount || 0; // Fallback to 0 if no total_amount in the response
-
                 // Calculate tax and after-tax amounts
                 const TaxAmount = (totalAmount * totalTaxPercentage) / 100;
                 const AfterTaxAmount = totalAmount + TaxAmount;
@@ -52,7 +50,8 @@ const QuotationPreview = () => {
     };
 
     const formatTotal = () => {
-        const selectedPercentages = invoiceReport?.tax_list?.filter((item: any) => invoiceReport.tax.includes(item.id));
+
+        const selectedPercentages = invoiceReport?.tax?.filter((item: any) => invoiceReport.tax.includes(item.id));
         if (selectedPercentages?.length > 0) {
             const formattedTaxDetails = selectedPercentages.map((item: any) => `${item.tax_name} (${parseFloat(item.tax_percentage)}%)`);
             return formattedTaxDetails.join('+ ');

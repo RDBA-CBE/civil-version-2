@@ -101,6 +101,26 @@ const qoutation = {
         return promise;
     },
 
+    quotationUpdate: (id: any,body:any) => {
+        let promise = new Promise((resolve, reject) => {
+            let url = `quotations/${id}/update/`;
+            instance()
+                .patch(url,body)
+                .then((res) => {
+                    resolve(res.data);
+                })
+                .catch((error) => {
+                    console.log('errorsss: ', error);
+                    if (error.response) {
+                        reject(error.response.data);
+                    } else {
+                        reject(error);
+                    }
+                });
+        });
+        return promise;
+    },
+
     quotationItemsList: (id: any) => {
         let promise = new Promise((resolve, reject) => {
             let url = `quotation-items/?quotation=${id}`;
@@ -124,6 +144,26 @@ const qoutation = {
     deleteItem: (id: any) => {
         let promise = new Promise((resolve, reject) => {
             let url = `quotation-items/${id}/delete/`;
+            instance()
+                .delete(url)
+                .then((res) => {
+                    resolve(res.data);
+                })
+                .catch((error) => {
+                    console.log('errorsss: ', error);
+                    if (error.response) {
+                        reject(error.response.data);
+                    } else {
+                        reject(error);
+                    }
+                });
+        });
+        return promise;
+    },
+
+    delete: (id: any) => {
+        let promise = new Promise((resolve, reject) => {
+            let url = `quotation/${id}/`;
             instance()
                 .delete(url)
                 .then((res) => {

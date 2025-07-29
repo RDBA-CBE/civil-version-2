@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { DatePicker, Space, Table, Spin, Button, Drawer, Form, Input, Select, Checkbox } from 'antd';
-import { EditOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import router from 'next/router';
 import dayjs from 'dayjs';
-import { baseUrl, ObjIsEmpty, roundNumber, useSetState , Dropdown} from '@/utils/function.util';
+import { baseUrl, ObjIsEmpty, roundNumber, useSetState, Dropdown } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import useDebounce from '@/components/useDebounce/useDebounce';
 import Models from '@/imports/models.import';
@@ -47,7 +47,7 @@ const Quotations = () => {
     });
 
     useEffect(() => {
-       customersList()
+        customersList();
     }, []);
 
     const getQuotation = async (page: number) => {
@@ -78,37 +78,45 @@ const Quotations = () => {
         setCustomerAddress('');
     };
 
+    const handleDelete = async (record: any) => {
+        try {
+            const res = await Models.qoutation.delete(record?.id);
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
+    };
+
     const customersList = async (page = 1) => {
-                try {
-                    const res: any = await Models.invoice.customerList(page);
-                    const dropdown = Dropdown(res?.results, 'customer_name');
-                    setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: page });
-                } catch (error: any) {
-                    console.log('✌️error --->', error);
-                }
-            };
-        
-            const customerSearch = async (text: any) => {
-                try {
-                    const res: any = await Models.invoice.customerSearch(text);
-                    if (res?.results?.length > 0) {
-                        const dropdown = Dropdown(res?.results, 'customer_name');
-                        setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: 1 });
-                    }
-                } catch (error) {
-                    console.log('✌️error --->', error);
-                }
-            };
-        
-            const customersLoadMore = async (page = 1) => {
-                try {
-                    const res: any = await Models.invoice.customerList(page);
-                    const dropdown = Dropdown(res?.results, 'customer_name');
-                    setState({ customerList: [...state.customerList, ...dropdown], customerHasNext: res?.next, customerCurrentPage: page });
-                } catch (error: any) {
-                    console.log('✌️error --->', error);
-                }
-            };
+        try {
+            const res: any = await Models.invoice.customerList(page);
+            const dropdown = Dropdown(res?.results, 'customer_name');
+            setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: page });
+        } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const customerSearch = async (text: any) => {
+        try {
+            const res: any = await Models.invoice.customerSearch(text);
+            if (res?.results?.length > 0) {
+                const dropdown = Dropdown(res?.results, 'customer_name');
+                setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: 1 });
+            }
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const customersLoadMore = async (page = 1) => {
+        try {
+            const res: any = await Models.invoice.customerList(page);
+            const dropdown = Dropdown(res?.results, 'customer_name');
+            setState({ customerList: [...state.customerList, ...dropdown], customerHasNext: res?.next, customerCurrentPage: page });
+        } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
+    };
 
     const columns = [
         {
@@ -210,9 +218,7 @@ const Quotations = () => {
                     <span onClick={() => handleEditClick(record)} style={{ cursor: 'pointer' }} className="edit-icon">
                         <EditOutlined rev={undefined} />
                     </span>
-                    {/* <DeleteOutlined
-                        style={{ color: "red", cursor: "pointer" }}
-                        onClick={() => handleDelete(record)} className='delete-icon' rev={undefined} /> */}
+                    <DeleteOutlined style={{ color: 'red', cursor: 'pointer' }} onClick={() => handleDelete(record)} className="delete-icon" rev={undefined} />
                 </Space>
             ),
         },
@@ -220,7 +226,7 @@ const Quotations = () => {
 
     const handleEditClick = (record: any) => {
         // Navigate to the /invoice/edit page with the record data as a query parameter
-        window.location.href = `/invoice/editQoutation?id=${record.id}`;
+        window.location.href = `/invoice/editQoutations?id=${record.id}`;
     };
 
     // form submit
@@ -252,6 +258,8 @@ const Quotations = () => {
 
         const body = {
             customer: id,
+            tax:[1,2]
+
             // project_name: values.project_name ? values.project_name : '',
             // taxes: Object.keys(checkedItems),
         };
@@ -263,7 +271,7 @@ const Quotations = () => {
             })
             .then((res) => {
                 initialData(1);
-                window.location.href = `/invoice/editQoutation?id=${res?.data?.id}`;
+                window.location.href = `/invoice/editQoutations?id=${res?.data?.id}`;
                 setOpen(false);
             })
             .catch((error) => {

@@ -99,20 +99,20 @@ const Edit = () => {
                 const response = res.data;
 
                 // Merge customer and customer_list, ensuring uniqueness based on `id`
-                const mergeArray = [response.customer, ...response.customer_list];
-                const uniqueArray = mergeArray.reduce((acc: any[], obj: any) => {
-                    // Only push unique customer objects based on `id`
-                    if (!acc.some((item) => item.id === obj.id)) {
-                        acc.push(obj);
-                    }
-                    return acc;
-                }, []);
+                // const mergeArray = [response.customer, ...response.customer_list];
+                // const uniqueArray = mergeArray.reduce((acc: any[], obj: any) => {
+                //     // Only push unique customer objects based on `id`
+                //     if (!acc.some((item) => item.id === obj.id)) {
+                //         acc.push(obj);
+                //     }
+                //     return acc;
+                // }, []);
 
                 // Set state with the fetched data
                 setSelectedIDs(response?.tax);
 
                 const data = {
-                    customer_list: uniqueArray,
+                    // customer_list: uniqueArray,
                     quotation: response.quotation,
                     quotation_items: response.quotation_items,
                     quotation_number: response.quotation_number,
@@ -128,7 +128,7 @@ const Edit = () => {
 
                 setFormData((prevState: any) => ({
                     ...prevState,
-                    customer: uniqueArray[0]?.id,
+                    // customer: uniqueArray[0]?.id,
                     date_created: response.date_created,
                     before_tax: response.total_amount,
                     tax: response.tax,
@@ -136,45 +136,45 @@ const Edit = () => {
                 }));
 
                 // Set customer address if available
-                setCustomerAddress(uniqueArray[0]?.address1);
+                // setCustomerAddress(uniqueArray[0]?.address1);
 
                 // Save the fetched data for future reference
                 setGetEditData(data);
 
                 // Map tax list to check if the tax is selected
-                const convertedObj: any = {};
-                data?.tax_list?.forEach((item: any) => {
-                    convertedObj[item.id] = data?.taxs.includes(item.id);
-                });
-                setCheckedItems(convertedObj);
+                // const convertedObj: any = {};
+                // data?.tax_list?.forEach((item: any) => {
+                //     convertedObj[item.id] = data?.taxs.includes(item.id);
+                // });
+                // setCheckedItems(convertedObj);
 
                 // Calculate before tax values
-                const beforeTax = data?.total_amount;
-                setUpdateBeforeTax(beforeTax);
-                setBeforeTotalTax(beforeTax);
+                // const beforeTax = data?.total_amount;
+                // setUpdateBeforeTax(beforeTax);
+                // setBeforeTotalTax(beforeTax);
 
-                // Calculate tax percentage
-                const matchedTaxs = data?.tax_list.filter((item: any) => data?.taxs.includes(item.id));
-                const sumPercentage = matchedTaxs.reduce((sum: number, item: any) => {
-                    return sum + parseFloat(item.tax_percentage);
-                }, 0);
+                // // Calculate tax percentage
+                // const matchedTaxs = data?.tax_list.filter((item: any) => data?.taxs.includes(item.id));
+                // const sumPercentage = matchedTaxs.reduce((sum: number, item: any) => {
+                //     return sum + parseFloat(item.tax_percentage);
+                // }, 0);
 
-                const totalTaxPercentage = (sumPercentage * beforeTax) / 100;
-                setTotalTaxPercentage(Math.round(totalTaxPercentage));
+                // const totalTaxPercentage = (sumPercentage * beforeTax) / 100;
+                // setTotalTaxPercentage(Math.round(totalTaxPercentage));
 
-                // Calculate after tax total
-                const afterTax = beforeTax + totalTaxPercentage;
-                setAfterTax(Math.round(afterTax));
+                // // Calculate after tax total
+                // const afterTax = beforeTax + totalTaxPercentage;
+                // setAfterTax(Math.round(afterTax));
 
-                // Calculate advance payment
-                const totalAmount = response?.payments?.reduce((accumulator: number, current: any) => {
-                    return accumulator + parseFloat(current.amount);
-                }, 0);
-                setAdvance(totalAmount);
+                // // Calculate advance payment
+                // const totalAmount = response?.payments?.reduce((accumulator: number, current: any) => {
+                //     return accumulator + parseFloat(current.amount);
+                // }, 0);
+                // setAdvance(totalAmount);
 
-                // Calculate balance after payment
-                const initialBalance = afterTax - totalAmount;
-                setBalance(Math.round(initialBalance));
+                // // Calculate balance after payment
+                // const initialBalance = afterTax - totalAmount;
+                // setBalance(Math.round(initialBalance));
             })
             .catch((error: any) => {
                 // Handle unauthorized errors (401) by redirecting to the login page

@@ -636,9 +636,9 @@ const Software_Logs = () => {
         } else if (type == 'invoice-discount' || type == 'receipt' || type == 'invoice-test') {
             window.open(`/invoice/edits?id=${record?.custom_info?.invoice_id}`, '_blank');
         } else if (type == 'quotation') {
-            window.open(`/invoice/editQoutation?id=${record?.id}`, '_blank');
+            window.open(`/invoice/editQoutations?id=${record?.id}`, '_blank');
         } else if (type == 'quotation-item') {
-            window.open(`/invoice/editQoutation?id=${record?.custom_info?.quotation_id}`, '_blank');
+            window.open(`/invoice/editQoutations?id=${record?.custom_info?.quotation_id}`, '_blank');
         }
     };
 
