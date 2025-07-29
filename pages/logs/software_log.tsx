@@ -105,7 +105,7 @@ const Software_Logs = () => {
         form.setFieldsValue({
             module: { value: 'invoice', label: 'Invoice' },
             subModule: {
-                label: 'Invoice History',
+                label: 'Invoice',
                 value: 'invoice',
             },
             from_date:null,
@@ -490,17 +490,17 @@ const Software_Logs = () => {
     const tableFormat = (res: any, page: number, type: string) => {
         const processedData = res?.results.map((item: any) => ({
             ...item,
-            changes: item.changes
-                ? Object.entries(item.changes)
+            changes: item?.changes
+                ? Object.entries(item?.changes)
                       .filter(([key]) => key !== 'history_type')
                       .map(([field, change]: [string, any]) => ({
                           field,
                           from: change.from,
                           to: change.to,
                       }))
-                : item.history_action === 'Created'
+                : item?.history_action === 'Created'
                 ? [{ field: 'New Record Created', from: null, to: null }]
-                : item.history_action === 'Deleted'
+                : item?.history_action === 'Deleted'
                 ? [{ field: 'Record Deleted', from: null, to: null }]
                 : [{ field: 'No changes', from: null, to: null }],
         }));
