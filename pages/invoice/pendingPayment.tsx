@@ -5,12 +5,13 @@ import * as FileSaver from 'file-saver';
 import ExcelJS from 'exceljs';
 import router from 'next/router';
 import dayjs from 'dayjs';
-import { baseUrl, ObjIsEmpty, useSetState, roundNumber } from '@/utils/function.util';
+import { baseUrl, ObjIsEmpty, useSetState, roundNumber, Dropdown } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import Models from '@/imports/models.import';
 import paymentPending from '@/models/paymentPending.model';
 import IconLoader from '@/components/Icon/IconLoader';
 import { scrollConfig } from '@/utils/constant';
+import CustomSelect from '@/components/Select';
 
 const PendingPayment = () => {
     const { Search } = Input;
@@ -29,25 +30,48 @@ const PendingPayment = () => {
         pagePrev: null,
         paymentPendingList: [],
         searchValue: null,
-        btnloading:false
+        btnloading:false,
+        customerList: [],
+        customerHasNext: null,
+        customerCurrentPage: null,
     });
 
     useEffect(() => {
-        axios
-            .get(`${baseUrl}/create_invoice/`, {
-                headers: {
-                    Authorization: `Token ${localStorage.getItem('token')}`,
-                },
-            })
-            .then((res) => {
-                setFormFields(res.data);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
-            });
+       customersList()
     }, []);
+
+
+     const customersList = async (page = 1) => {
+            try {
+                const res: any = await Models.invoice.customerList(page);
+                const dropdown = Dropdown(res?.results, 'customer_name');
+                setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: page });
+            } catch (error: any) {
+                console.log('✌️error --->', error);
+            }
+        };
+    
+        const customerSearch = async (text: any) => {
+            try {
+                const res: any = await Models.invoice.customerSearch(text);
+                if (res?.results?.length > 0) {
+                    const dropdown = Dropdown(res?.results, 'customer_name');
+                    setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: 1 });
+                }
+            } catch (error) {
+                console.log('✌️error --->', error);
+            }
+        };
+    
+        const customersLoadMore = async (page = 1) => {
+            try {
+                const res: any = await Models.invoice.customerList(page);
+                const dropdown = Dropdown(res?.results, 'customer_name');
+                setState({ customerList: [...state.customerList, ...dropdown], customerHasNext: res?.next, customerCurrentPage: page });
+            } catch (error: any) {
+                console.log('✌️error --->', error);
+            }
+        };
 
     // Table Datas
     const columns = [
@@ -146,7 +170,7 @@ const PendingPayment = () => {
             project_name: state.searchValue?.project_name ? state.searchValue?.project_name : '',
             from_date: state.searchValue?.from_date ? dayjs(state.searchValue?.from_date).format('YYYY-MM-DD') : '',
             to_date: state.searchValue?.to_date ? dayjs(state.searchValue?.to_date).format('YYYY-MM-DD') : '',
-            customer: state.searchValue?.customer ? state.searchValue?.customer : '',
+            customer: state.searchValue?.customer ? state.searchValue?.customer?.value : '',
             invoice_no: state.searchValue?.invoice_no ? state.searchValue?.invoice_no : '',
         };
 
@@ -270,7 +294,7 @@ const PendingPayment = () => {
                 project_name: values.project_name ? values.project_name : '',
                 from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
                 to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
-                customer: values.customer ? values.customer : '',
+                customer: values.customer ? values.customer?.value : '',
                 invoice_no: values.invoice_no ? values.invoice_no : '',
             };
 
@@ -316,13 +340,24 @@ const PendingPayment = () => {
                             </Form.Item>
 
                             <Form.Item label="Customer" name="customer" style={{ width: '250px' }}>
-                                <Select showSearch filterOption={(input: any, option: any) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}>
-                                    {formFields?.customer?.map((value: any) => (
-                                        <Select.Option key={value.id} value={value.id}>
-                                            {value.customer_name}
-                                        </Select.Option>
-                                    ))}
-                                </Select>
+                                
+                                <CustomSelect
+                                    onSearch={(data: any) => customerSearch(data)}
+                                    value={state.customer}
+                                    options={state.customerList}
+                                    className=" flex-1"
+                                    onChange={(selectedOption: any) => {
+                                        form.setFieldsValue({ customer: selectedOption });
+                                        customersList(1);
+                                    }}
+                                    loadMore={() => {
+                                        if (state.customerHasNext) {
+                                            customersLoadMore(state.customerCurrentPage + 1);
+                                        }
+                                    }}
+                                    isSearchable
+                                    filterOption={(input: string, option: any) => option.label.toLowerCase().includes(input.toLowerCase())}
+                                />
                             </Form.Item>
 
                             <Form.Item label="Project Name" name="project_name" style={{ width: '200px' }}>

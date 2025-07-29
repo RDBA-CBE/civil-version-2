@@ -21,6 +21,26 @@ const invoice = {
         return promise;
     },
 
+     invoiceSearch: (name: any) => {
+                let promise = new Promise((resolve, reject) => {
+                    let url = `invoice/?search=${name}`;
+                    instance()
+                        .get(url)
+                        .then((res) => {
+                            resolve(res.data);
+                        })
+                        .catch((error) => {
+                            console.log('errorsss: ', error);
+                            if (error.response) {
+                                reject(error.response.data.error);
+                            } else {
+                                reject(error);
+                            }
+                        });
+                });
+                return promise;
+            },
+
     createInvoiceDiscount: (data: any) => {
         let promise = new Promise((resolve, reject) => {
             let url = `invoice-discount/`;
@@ -300,6 +320,8 @@ const invoice = {
         });
         return promise;
     },
+
+   
 
     getInvoiceDetails: (id: any) => {
         let promise = new Promise((resolve, reject) => {

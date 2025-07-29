@@ -142,6 +142,28 @@ const InvoiceFileUpload = () => {
         setOpen(true);
     };
 
+    //  const invoiceList:any = async (page = 1) => {
+    //     try {
+    //         const res: any = await Models.invoice.invoiceList(page);
+
+    //         console.log('res', res);
+    //         const updatedResults = res.results?.map((item: any) => ({
+    //             ...item,
+    //             combined_label: `${item.invoice_no} - ${item.customer.customer_name} - ${item.customer.phone_no}`,
+    //         }));
+
+    //         console.log('updatedResults', updatedResults);
+
+    //         const dropdown = Dropdown(updatedResults, 'combined_label');
+
+    //         console.log('dropdown', dropdown);
+
+    //         setState({ invoiceList: dropdown, invoiceHasNext: res?.next, invoiceCurrentPage: page });
+    //     } catch (error: any) {
+    //         console.log('✌️error --->', error);
+    //     }
+    // };
+
     const onClose = () => {
         setOpen(false);
         form.resetFields();

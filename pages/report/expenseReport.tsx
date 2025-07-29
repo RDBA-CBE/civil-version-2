@@ -6,12 +6,13 @@ import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import dayjs from 'dayjs';
 import router from 'next/router';
-import { baseUrl, ObjIsEmpty, roundNumber, useSetState } from '@/utils/function.util';
+import { baseUrl, ObjIsEmpty, roundNumber, useSetState, Dropdown } from '@/utils/function.util';
 import Models from '@/imports/models.import';
 import Pagination from '@/components/pagination/pagination';
 import IconLoader from '@/components/Icon/IconLoader';
 import moment from 'moment';
 import { scrollConfig } from '@/utils/constant';
+import CustomSelect from '@/components/Select';
 
 const ExpenseReport = () => {
     const [form] = Form.useForm();
@@ -29,32 +30,68 @@ const ExpenseReport = () => {
         expenseList: [],
         search: '',
         btnLoading: false,
+        expenseCatHasNext: null,
+        expenseCatCurrentPage: 1,
+        expenseCatList: [],
     });
 
     // get GetExpenseReport datas
     useEffect(() => {
-        GetExpenseReport();
+        // GetExpenseReport();
         initialData(1);
+        expenseCatList(1);
     }, []);
 
-    const GetExpenseReport = () => {
-        const Token = localStorage.getItem('token');
+    // const GetExpenseReport = () => {
+    //     const Token = localStorage.getItem('token');
 
-        axios
-            .get(`${baseUrl}/create_expense_entry/`, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res) => {
-                setSaleFormData(res.data);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
+    //     axios
+    //         .get(`${baseUrl}/create_expense_entry/`, {
+    //             headers: {
+    //                 Authorization: `Token ${Token}`,
+    //             },
+    //         })
+    //         .then((res) => {
+    //             setSaleFormData(res.data);
+    //         })
+    //         .catch((error: any) => {
+    //             if (error.response.status === 401) {
+    //                 router.push('/');
+    //             }
+    //         });
+    // };
+
+    const expenseCatList = async (page = 1) => {
+            try {
+                const res: any = await Models.expense.expenseList(page, undefined);
+                const dropdown = Dropdown(res?.results, 'expense_name');
+                setState({ expenseCatList: dropdown, expenseCatHasNext: res?.next, expenseCatCurrentPage: page });
+            } catch (error: any) {
+                console.log('✌️error --->', error);
+            }
+        };
+    
+        const expenseCatSearch = async (text: any) => {
+            try {
+                const res: any = await Models.expense.expenseSearch(text);
+                if (res?.results?.length > 0) {
+                    const dropdown = Dropdown(res?.results, 'expense_name');
+                    setState({ expenseCatList: dropdown, expenseCatHasNext: res?.next, expenseCatCurrentPage: 1 });
                 }
-            });
-    };
+            } catch (error) {
+                console.log('✌️error --->', error);
+            }
+        };
+    
+        const expenseCatLoadMore = async (page = 1) => {
+            try {
+                const res: any = await Models.expense.expenseList(page, undefined);
+                const dropdown = Dropdown(res?.results, 'expense_name');
+                setState({ expenseCatList: [...state.expenseCatList, ...dropdown], expenseCatHasNext: res?.next, expenseCatCurrentPage: page });
+            } catch (error: any) {
+                console.log('✌️error --->', error);
+            }
+        };
 
     // Table Headers
     const columns = [
@@ -155,7 +192,7 @@ const ExpenseReport = () => {
             from_date: state.searchValue?.from_date ? dayjs(state.searchValue.from_date).format('YYYY-MM-DD') : '',
             to_date: state.searchValue?.to_date ? dayjs(state.searchValue.to_date).format('YYYY-MM-DD') : '',
             expense_user: state.searchValue?.expense_user || '',
-            expense_category: state.searchValue?.expense_category || '',
+            expense_category: state.searchValue?.expense_category?.value || '',
         };
 
         let allData: any[] = [];
@@ -243,7 +280,6 @@ const ExpenseReport = () => {
 
     // form submit
     const onFinish = async (values: any, page = 1) => {
-
         try {
             setState({ loading: true });
 
@@ -251,7 +287,7 @@ const ExpenseReport = () => {
                 from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
                 to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
                 expense_user: values.expense_user ? values.expense_user : '',
-                expense_category: values.expense_category ? values.expense_category : '',
+                expense_category: values.expense_category ? values.expense_category.value : '',
             };
 
             const res: any = await Models.expenseEntry.filter(body, page);
@@ -272,7 +308,6 @@ const ExpenseReport = () => {
     };
 
     const onFinishFailed = (errorInfo: any) => {};
-
 
     const handlePageChange = (number: any) => {
         setState({ currentPage: number });
@@ -307,13 +342,23 @@ const ExpenseReport = () => {
                             </Form.Item>
 
                             <Form.Item label="Expense Category" name="expense_category" style={{ width: '300px' }}>
-                                <Select showSearch filterOption={(input: any, option: any) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}>
-                                    {saleFormData?.expense?.map((value: any) => (
-                                        <Select.Option key={value.id} value={value.id}>
-                                            {value.expense_name}
-                                        </Select.Option>
-                                    ))}
-                                </Select>
+                                <CustomSelect
+                                    onSearch={(data: any) => expenseCatSearch(data)}
+                                    value={state.expenseCat}
+                                    options={state.expenseCatList}
+                                    className=" flex-1"
+                                    onChange={(selectedOption: any) => {
+                                        form.setFieldsValue({ expense_category: selectedOption });
+                                        expenseCatList(1);
+                                    }}
+                                    loadMore={() => {
+                                        if (state.expenseCatHasNext) {
+                                            expenseCatLoadMore(state.expenseCatCurrentPage + 1);
+                                        }
+                                    }}
+                                    isSearchable
+                                    filterOption={(input: string, option: any) => option.label.toLowerCase().includes(input.toLowerCase())}
+                                />
                             </Form.Item>
 
                             <div style={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: '10px' }}>

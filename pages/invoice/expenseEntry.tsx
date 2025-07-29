@@ -4,10 +4,11 @@ import { EditOutlined, EyeOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import router from 'next/router';
-import { baseUrl, roundNumber, ObjIsEmpty, useSetState } from '@/utils/function.util';
+import { baseUrl, roundNumber, ObjIsEmpty, useSetState, Dropdown } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import Models from '@/imports/models.import';
 import { scrollConfig } from '@/utils/constant';
+import CustomSelect from '@/components/Select';
 
 const ExpenseEntry = () => {
     const [form] = Form.useForm();
@@ -31,28 +32,16 @@ const ExpenseEntry = () => {
         expenseList: [],
         discount: 0,
         searchValue: null,
+        expenseCatHasNext: null,
+        expenseCatCurrentPage: 1,
+        expenseCatList: [],
     });
 
-    useEffect(() => {
-        axios
-            .get(`${baseUrl}/create_expense_entry/`, {
-                headers: {
-                    Authorization: `Token ${localStorage.getItem('token')}`,
-                },
-            })
-            .then((res) => {
-                setFormFields(res.data);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                } else {
-                }
-            });
-    }, []);
     
-       useEffect(() => {
+
+    useEffect(() => {
         initialData(1);
+        expenseCatList(1);
     }, []);
 
     useEffect(() => {
@@ -81,14 +70,19 @@ const ExpenseEntry = () => {
     // drawer
     const showDrawer = (record: any) => {
         if (record) {
+            console.log("record",record);
+            
             const updateData: any = {
                 amount: record.amount,
                 date: dayjs(record?.date),
-                expense_category: record.expense_category,
+                expense_category: {value:record.expense_category, label:record.expense_category_name},
                 expense_user: record.expense_user,
                 id: record.id,
                 narration: record.narration,
             };
+
+            console.log("updateData", updateData);
+            
             setEditRecord(updateData);
             form.setFieldsValue(updateData); // Set form values for editing
         } else {
@@ -102,6 +96,38 @@ const ExpenseEntry = () => {
     const onClose = () => {
         setOpen(false);
         form.resetFields();
+    };
+
+    const expenseCatList = async (page = 1) => {
+        try {
+            const res: any = await Models.expense.expenseList(page, undefined);
+            const dropdown = Dropdown(res?.results, 'expense_name');
+            setState({ expenseCatList: dropdown, expenseCatHasNext: res?.next, expenseCatCurrentPage: page });
+        } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const expenseCatSearch = async (text: any) => {
+        try {
+            const res: any = await Models.expense.expenseSearch(text);
+            if (res?.results?.length > 0) {
+                const dropdown = Dropdown(res?.results, 'expense_name');
+                setState({ expenseCatList: dropdown, expenseCatHasNext: res?.next, expenseCatCurrentPage: 1 });
+            }
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const expenseCatLoadMore = async (page = 1) => {
+        try {
+            const res: any = await Models.expense.expenseList(page, undefined);
+            const dropdown = Dropdown(res?.results, 'expense_name');
+            setState({ expenseCatList: [...state.expenseCatList, ...dropdown], expenseCatHasNext: res?.next, expenseCatCurrentPage: page });
+        } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
     };
 
     const columns = [
@@ -199,7 +225,7 @@ const ExpenseEntry = () => {
             ...values,
             expense_user: values.expense_user,
             date: dayjs(values.date), // Updated date formatting
-            expense_category: values.expense_category,
+            expense_category: values.expense_category.value ,
             amount: values.amount,
             narration: values.narration,
         };
@@ -358,7 +384,8 @@ const ExpenseEntry = () => {
 
     // form submit
     const onFinish2 = async (values: any, page = 1) => {
-
+        console.log("values",values);
+        
         try {
             setState({ loading: true });
 
@@ -366,8 +393,11 @@ const ExpenseEntry = () => {
                 from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
                 to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
                 expense_user: values.expense_user ? values.expense_user : '',
-                expense_category: values.expense_category ? values.expense_category : '',
+                expense_category: values.expense_category ? values.expense_category?.value : '',
             };
+
+            console.log("body", body);
+            
 
             const res: any = await Models.expenseEntry.filter(body, page);
             setState({
@@ -413,13 +443,25 @@ const ExpenseEntry = () => {
                             </Form.Item>
 
                             <Form.Item label="Expense Category" name="expense_category" style={{ width: '300px' }}>
-                                <Select showSearch filterOption={(input: any, option: any) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}>
-                                    {formFields?.expense?.map((value: any) => (
-                                        <Select.Option key={value.id} value={value.id}>
-                                            {value.expense_name}
-                                        </Select.Option>
-                                    ))}
-                                </Select>
+                              
+
+                                <CustomSelect
+                                    onSearch={(data: any) => expenseCatSearch(data)}
+                                    value={state.expenseCat}
+                                    options={state.expenseCatList}
+                                    className=" flex-1"
+                                    onChange={(selectedOption: any) => {
+                                        form.setFieldsValue({ expense_category: selectedOption });
+                                        expenseCatList(1);
+                                    }}
+                                    loadMore={() => {
+                                        if (state.expenseCatHasNext) {
+                                            expenseCatLoadMore(state.expenseCatCurrentPage + 1);
+                                        }
+                                    }}
+                                    isSearchable
+                                    filterOption={(input: string, option: any) => option.label.toLowerCase().includes(input.toLowerCase())}
+                                />
                             </Form.Item>
 
                             <Form.Item label="From Date" name="from_date" style={{ width: '250px' }}>
@@ -479,7 +521,6 @@ const ExpenseEntry = () => {
                 {state.expenseList?.length > 0 && (
                     <div>
                         <div
-                            
                             style={{
                                 display: 'flex',
                                 justifyContent: 'center',
@@ -499,13 +540,25 @@ const ExpenseEntry = () => {
                         </Form.Item>
 
                         <Form.Item label="Expense Category" name="expense_category" required={true} rules={[{ required: true, message: 'Expense Category field is required.' }]}>
-                            <Select placeholder="Select a expense category">
-                                {formFields?.expense?.map((val: any) => (
-                                    <Select.Option key={val.id} value={val.id}>
-                                        {val.expense_name}
-                                    </Select.Option>
-                                ))}
-                            </Select>
+                           
+
+                             <CustomSelect
+                                    onSearch={(data: any) => expenseCatSearch(data)}
+                                    value={form.getFieldValue}
+                                    options={state.expenseCatList}
+                                    className=" flex-1"
+                                    onChange={(selectedOption: any) => {
+                                        form.setFieldsValue({ expense_category: selectedOption });
+                                        expenseCatList(1);
+                                    }}
+                                    loadMore={() => {
+                                        if (state.expenseCatHasNext) {
+                                            expenseCatLoadMore(state.expenseCatCurrentPage + 1);
+                                        }
+                                    }}
+                                    isSearchable
+                                    filterOption={(input: string, option: any) => option.label.toLowerCase().includes(input.toLowerCase())}
+                                />
                         </Form.Item>
 
                         <Form.Item<FieldType> label="Amount" name="amount" required={true} rules={[{ required: true, message: 'Amount field is required.' }]}>

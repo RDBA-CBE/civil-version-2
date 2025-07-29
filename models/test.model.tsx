@@ -7,6 +7,9 @@ const test = {
             if (body?.search) {
                 url += `&search=${encodeURIComponent(body.search)}`;
             }
+            if (body?.material) {
+                url += `&material_name=${encodeURIComponent(body.material)}`
+            }
             instance()
                 .get(url)
                 .then((res) => {

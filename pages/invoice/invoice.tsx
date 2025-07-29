@@ -389,7 +389,7 @@ const Invoice = () => {
                 project_name: values.project_name ? values.project_name : '',
                 from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
                 to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
-                customer: values.customer.value ? values.customer.value : '',
+                customer: values.customer?.value ? values.customer?.value : '',
                 completed: values.completed ? values.completed : '',
                 invoice_no: values.invoice_no ? values.invoice_no : '',
             };

@@ -6,7 +6,7 @@ import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import dayjs from 'dayjs';
 import router from 'next/router';
-import { baseUrl, ObjIsEmpty, roundNumber, useSetState } from '@/utils/function.util';
+import { baseUrl, ObjIsEmpty, roundNumber, useSetState, Dropdown } from '@/utils/function.util';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import IconEye from '@/components/Icon/IconEye';
@@ -15,6 +15,7 @@ import Models from '@/imports/models.import';
 import Pagination from '@/components/pagination/pagination';
 import IconLoader from '@/components/Icon/IconLoader';
 import { scrollConfig } from '@/utils/constant';
+import CustomSelect from '@/components/Select';
 
 const QuotationReport = () => {
     const [form] = Form.useForm();
@@ -33,10 +34,14 @@ const QuotationReport = () => {
         quotationReportList: [],
         search: '',
         btnLoading: false,
+         customerList: [],
+        customerHasNext: null,
+        customerCurrentPage: null,
     });
 
     // get GetExpenseReport datas
     useEffect(() => {
+         customersList();
         GetExpenseReport();
         initialData(1);
     }, []);
@@ -108,6 +113,38 @@ const QuotationReport = () => {
             console.log('✌️error --->', error);
         }
     };
+
+     const customersList = async (page = 1) => {
+            try {
+                const res: any = await Models.invoice.customerList(page);
+                const dropdown = Dropdown(res?.results, 'customer_name');
+                setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: page });
+            } catch (error: any) {
+                console.log('✌️error --->', error);
+            }
+        };
+    
+        const customerSearch = async (text: any) => {
+            try {
+                const res: any = await Models.invoice.customerSearch(text);
+                if (res?.results?.length > 0) {
+                    const dropdown = Dropdown(res?.results, 'customer_name');
+                    setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: 1 });
+                }
+            } catch (error) {
+                console.log('✌️error --->', error);
+            }
+        };
+    
+        const customersLoadMore = async (page = 1) => {
+            try {
+                const res: any = await Models.invoice.customerList(page);
+                const dropdown = Dropdown(res?.results, 'customer_name');
+                setState({ customerList: [...state.customerList, ...dropdown], customerHasNext: res?.next, customerCurrentPage: page });
+            } catch (error: any) {
+                console.log('✌️error --->', error);
+            }
+        };
 
     // Table Headers
     const columns = [
@@ -187,7 +224,7 @@ const QuotationReport = () => {
         const body = {
             from_date: state.searchValue?.start_date ? dayjs(state.searchValue.start_date).format('YYYY-MM-DD') : '',
             to_date: state.searchValue?.end_date ? dayjs(state.searchValue.end_date).format('YYYY-MM-DD') : '',
-            customer: state.searchValue?.customer ? state.searchValue?.customer : '',
+            customer: state.searchValue?.customer ? state.searchValue?.customer?.value : '',
         };
 
 
@@ -250,7 +287,7 @@ const QuotationReport = () => {
                 to_date: values?.end_date ? dayjs(values?.end_date).format('YYYY-MM-DD') : '',
                 // invoice_number: values?.invoice_no ? values?.invoice_no : '',
                 // project_name: values?.project_name ? values?.project_name : '',
-                customer: values?.customer ? values?.customer : '',
+                customer: values?.customer ? values?.customer?.value : '',
             };
 
             const res: any = await Models.quotationReport.filter(body, page);
@@ -295,7 +332,7 @@ const QuotationReport = () => {
         const body = {
             from_date: state.searchValue?.start_date ? dayjs(state.searchValue.start_date).format('YYYY-MM-DD') : '',
             to_date: state.searchValue?.end_date ? dayjs(state.searchValue.end_date).format('YYYY-MM-DD') : '',
-            customer: state.searchValue?.customer ? state.searchValue?.customer : '',
+            customer: state.searchValue?.customer ? state.searchValue?.customer?.value : '',
         };
 
         let allData: any[] = [];
@@ -412,13 +449,23 @@ const QuotationReport = () => {
                             </Form.Item> */}
 
                             <Form.Item label="Customer" name="customer" style={{ width: '250px' }}>
-                                <Select showSearch filterOption={(input: any, option: any) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}>
-                                    {formFields?.customer?.map((value: any) => (
-                                        <Select.Option key={value.id} value={value.id}>
-                                            {value.customer_name}
-                                        </Select.Option>
-                                    ))}
-                                </Select>
+                                <CustomSelect
+                                    onSearch={(data: any) => customerSearch(data)}
+                                    value={state.customer}
+                                    options={state.customerList}
+                                    className=" flex-1"
+                                    onChange={(selectedOption: any) => {
+                                        form.setFieldsValue({ customer: selectedOption });
+                                        customersList(1);
+                                    }}
+                                    loadMore={() => {
+                                        if (state.customerHasNext) {
+                                            customersLoadMore(state.customerCurrentPage + 1);
+                                        }
+                                    }}
+                                    isSearchable
+                                    filterOption={(input: string, option: any) => option.label.toLowerCase().includes(input.toLowerCase())}
+                                />
                             </Form.Item>
 
                             {/* <Form.Item label="Project Name" name="project_name" style={{ width: '200px' }}>
