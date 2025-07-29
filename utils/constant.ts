@@ -378,6 +378,78 @@ export const expenseCatData = (viewRecord: any) => {
     return data;
 };
 
+export const expenseEntryData = (viewRecord: any) => {
+    const data = [
+        {
+            label: 'Expense User:',
+            value: viewRecord?.expense_user || 'N/A',
+        },
+
+        {
+            label: 'Expense Category:',
+            value: viewRecord?.expense_category_name || 'N/A',
+        },
+
+        {
+            label: 'Narration:',
+            value: viewRecord?.narration || 'N/A',
+        },
+
+
+        {
+            label: 'Created Date:',
+            value: moment(viewRecord?.created_date).format('DD-MM-YYYY') || 'N/A',
+        },
+        {
+            label: 'Modified Data:',
+            value: moment(viewRecord?.modified_date).format('DD-MM-YYYY') || 'N/A',
+        },
+    ];
+
+    return data;
+};
+
+
+export const invoiceFileData = (viewRecord: any) => {
+    const data = [
+        {
+            label: 'Invoice Number:',
+            value: viewRecord?.invoice_no || 'N/A',
+        },
+
+        {
+            label: 'Category Name:',
+            value: viewRecord?.category_name || 'N/A',
+        },
+        {
+            label: 'Customer:',
+            value: viewRecord?.customer || 'N/A',
+        },
+        {
+            label: 'Project Name:',
+            value: viewRecord?.project_name || 'N/A',
+        },
+
+
+        {
+            label: 'Invoice Amount:',
+            value: viewRecord?.invoice_amount || 'N/A',
+        },
+
+       
+        {
+            label: 'Created Date:',
+            value: moment(viewRecord?.created_date).format('DD-MM-YYYY') || 'N/A',
+        },
+        {
+            label: 'Modified Data:',
+            value: moment(viewRecord?.modified_date).format('DD-MM-YYYY') || 'N/A',
+        },
+    ];
+
+    return data;
+};
+
 export const invoiceTestData = (viewRecord: any) => {
     const data = [
         {

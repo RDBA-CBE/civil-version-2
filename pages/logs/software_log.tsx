@@ -9,7 +9,9 @@ import {
     discountData,
     employeeData,
     expenseCatData,
+    expenseEntryData,
     invoiceDisData,
+    invoiceFileData,
     invoicePaymentData,
     invoiceTestData,
     quotationData,
@@ -91,6 +93,9 @@ const Software_Logs = () => {
         userData: null,
         userOpen: false,
         module: { value: 'people', lable: 'People' },
+        expenceEntryData: null,
+        expenceEntryOpen: false,
+        invoiceFileData: null, invoiceFileOpen: false 
     });
 
     useEffect(() => {
@@ -411,6 +416,30 @@ const Software_Logs = () => {
         }
     };
 
+    const viewExpenceEntry = async (record: any) => {
+        try {
+            const res = await Models.expense.expenseEntryDetail(record?.id);
+            setState({ expenceEntryData: res, expenceEntryOpen: true });
+        } catch (error: any) {
+            if (error?.detail == 'Not found.') {
+                Failure('Record Deleted');
+            }
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const viewInvoiceFile = async (record: any) => {
+        try {
+            const res = await Models.invoiceFile.getInvoiceFile(record?.id);
+            setState({ invoiceFileData: res, invoiceFileOpen: true });
+        } catch (error: any) {
+            if (error?.detail == 'Not found.') {
+                Failure('Record Deleted');
+            }
+            console.log('✌️error --->', error);
+        }
+    };
+
     const viewTest = async (record: any) => {
         try {
             const res = await Models.test.detail(record?.id);
@@ -509,7 +538,7 @@ const Software_Logs = () => {
                 title: 'Date',
                 dataIndex: 'history_date',
                 key: 'date',
-                render: (date: any) =>date?moment(date)?.format('DD-MM-YYYY'):"",
+                render: (date: any) => (date ? moment(date)?.format('DD-MM-YYYY HH:mm a') : ''),
             },
             {
                 title: 'User',
@@ -582,7 +611,7 @@ const Software_Logs = () => {
 
     const viewRecord = (type: string, record: any) => {
         setState({ selectedrec: record?.id });
-        if (type == 'discount') {
+        if (type == 'customer-discount') {
             viewDiscount(record);
         } else if (type == 'employee') {
             viewEmployee(record);
@@ -592,8 +621,12 @@ const Software_Logs = () => {
             viewCity(record);
         } else if (type == 'material') {
             viewMaterial(record);
-        } else if (type == 'expence') {
+        } else if (type == 'expense') {
             viewExpenceCategory(record);
+        } else if (type == 'expense-entry') {
+            viewExpenceEntry(record);
+        } else if (type == 'invoice-file') {
+            viewInvoiceFile(record);
         } else if (type == 'test') {
             viewTest(record);
         } else if (type == 'user') {
@@ -1073,6 +1106,26 @@ const Software_Logs = () => {
                     </div>
                 ))}
             </Modal>
+
+            <Modal title="View Expense Category" open={state.expenceEntryOpen} onCancel={() => setState({ expenceEntryOpen: false })} footer={false}>
+                {expenseEntryData(state.expenceEntryData).map((value: any, index: number) => (
+                    <div className="content-main" key={index}>
+                        <p className="content-1">{value?.label}</p>
+                        <p className="content-2">{value?.value}</p>
+                    </div>
+                ))}
+            </Modal>
+
+            <Modal title="View Invoice File" open={state.invoiceFileOpen} onCancel={() => setState({ invoiceFileOpen: false })} footer={false}>
+                {invoiceFileData(state.invoiceFileData).map((value: any, index: number) => (
+                    <div className="content-main" key={index}>
+                        <p className="content-1">{value?.label}</p>
+                        <p className="content-2">{value?.value}</p>
+                    </div>
+                ))}
+            </Modal>
+
+
         </>
     );
 };

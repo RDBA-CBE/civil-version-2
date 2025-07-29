@@ -64,3 +64,14 @@ export function capitalizeFLetter(text: string): string {
     if (!text) return '';
     return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
 }
+
+
+
+export const FormatTaxDisplay = (selectedTaxes: any[], total: number) => {
+    if (selectedTaxes.length === 0) return '';
+
+    const names = selectedTaxes.map((tax) => tax.tax_name).join(' + ');
+    const percentages = selectedTaxes.map((tax) => `${Math.round(parseFloat(tax.tax_percentage))}%`).join(' + ');
+
+    return `${names} : ${percentages} = ${Math.round(total)}`;
+};

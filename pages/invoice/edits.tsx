@@ -402,28 +402,29 @@ export default function Edits() {
 
     const handleChange = async (taxId: number) => {
         try {
+            if (state.checkedItems[taxId]) {
+                return;
+            }
+
             let newCheckedItems = { ...state.checkedItems };
 
-            // If IGST is being checked
             if (taxId === 3) {
                 newCheckedItems = {
-                    1: false, // Uncheck CGST
-                    2: false, // Uncheck SGST
-                    3: !newCheckedItems[3], // Toggle IGST
+                    1: false,
+                    2: false,
+                    3: true,
                 };
-            }
-            // If CGST is being toggled
-            else if (taxId === 1) {
+            } else if (taxId === 1) {
                 newCheckedItems = {
-                    1: !newCheckedItems[1], // Toggle CGST
-                    2: !newCheckedItems[1], // SGST matches CGST
-                    3: false, // Uncheck IGST
+                    1: true,
+                    2: true,
+                    3: false,
                 };
             } else if (taxId === 2) {
                 newCheckedItems = {
-                    1: !newCheckedItems[2], // CGST matches SGST
-                    2: !newCheckedItems[2], // Toggle SGST
-                    3: false, // Uncheck IGST
+                    1: true,
+                    2: true,
+                    3: false,
                 };
             }
 
