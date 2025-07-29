@@ -4,11 +4,14 @@ import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import router from 'next/router';
 import dayjs from 'dayjs';
-import { baseUrl, ObjIsEmpty, roundNumber, useSetState,Dropdown } from '@/utils/function.util';
+import { baseUrl, ObjIsEmpty, roundNumber, useSetState, Dropdown } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import Models from '@/imports/models.import';
 import { scrollConfig } from '@/utils/constant';
 import CustomSelect from '@/components/Select';
+import ExcelJS from 'exceljs';
+import * as FileSaver from 'file-saver';
+import IconLoader from '@/components/Icon/IconLoader';
 
 const Invoice = () => {
     const { Search } = Input;
@@ -31,15 +34,14 @@ const Invoice = () => {
         invoiceList: [],
         discount: 0,
         searchValue: null,
-         customerList: [],
+        customerList: [],
         customerHasNext: null,
         customerCurrentPage: null,
     });
 
-
-    useEffect(()=>{
+    useEffect(() => {
         customersList();
-    },[])
+    }, []);
 
     useEffect(() => {
         axios
@@ -76,36 +78,36 @@ const Invoice = () => {
     };
 
     const customersList = async (page = 1) => {
-            try {
-                const res: any = await Models.invoice.customerList(page);
+        try {
+            const res: any = await Models.invoice.customerList(page);
+            const dropdown = Dropdown(res?.results, 'customer_name');
+            setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: page });
+        } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const customerSearch = async (text: any) => {
+        try {
+            const res: any = await Models.invoice.customerSearch(text);
+            if (res?.results?.length > 0) {
                 const dropdown = Dropdown(res?.results, 'customer_name');
-                setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: page });
-            } catch (error: any) {
-                console.log('✌️error --->', error);
+                setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: 1 });
             }
-        };
-    
-        const customerSearch = async (text: any) => {
-            try {
-                const res: any = await Models.invoice.customerSearch(text);
-                if (res?.results?.length > 0) {
-                    const dropdown = Dropdown(res?.results, 'customer_name');
-                    setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: 1 });
-                }
-            } catch (error) {
-                console.log('✌️error --->', error);
-            }
-        };
-    
-        const customersLoadMore = async (page = 1) => {
-            try {
-                const res: any = await Models.invoice.customerList(page);
-                const dropdown = Dropdown(res?.results, 'customer_name');
-                setState({ customerList: [...state.customerList, ...dropdown], customerHasNext: res?.next, customerCurrentPage: page });
-            } catch (error: any) {
-                console.log('✌️error --->', error);
-            }
-        };
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const customersLoadMore = async (page = 1) => {
+        try {
+            const res: any = await Models.invoice.customerList(page);
+            const dropdown = Dropdown(res?.results, 'customer_name');
+            setState({ customerList: [...state.customerList, ...dropdown], customerHasNext: res?.next, customerCurrentPage: page });
+        } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
+    };
 
     // drawer
     const showDrawer = () => {
@@ -220,6 +222,49 @@ const Invoice = () => {
         },
     ];
 
+    const exportToExcel = async () => {
+        setState({ excelBtnLoading: true });
+
+        let allData: any[] = [];
+        let currentPage = 1;
+        let hasNext = true;
+
+        while (hasNext) {
+            const body = bodyData();
+            const res: any = await Models.invoice.invoiceList(currentPage);
+
+            allData = allData.concat(res?.results || []);
+
+            if (res?.next) {
+                currentPage += 1;
+            } else {
+                hasNext = false;
+            }
+        }
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Sheet1');
+
+        worksheet.addRow(['Invoice No', 'Date', 'Customer Name', 'Project Name', 'Total Amount', 'Balance']);
+
+        allData.forEach((item: any) => {
+            worksheet.addRow([item.invoice_no, dayjs(item.date).format('DD-MM-YYYY'), item.customer, item?.project_name, item?.total_amount, item?.balance]);
+        });
+
+        // Generate a Blob containing the Excel file
+        const blob = await workbook.xlsx.writeBuffer();
+
+        // Use file-saver to save the Blob as a file
+        FileSaver.saveAs(
+            new Blob([blob], {
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            }),
+            `Invoice-Report.xlsx`
+        );
+
+        setState({ excelBtnLoading: false });
+    };
+
     const handleEditClick = (record: any) => {
         // Navigate to the /invoice/edit page with the record data as a query parameter
         window.location.href = `/invoice/edits?id=${record.id}`;
@@ -291,7 +336,7 @@ const Invoice = () => {
                 invoice: invoiceResponse.id,
             };
 
-           await Models.invoice.createInvoiceDiscount(discountBody);
+            await Models.invoice.createInvoiceDiscount(discountBody);
             window.location.href = `/invoice/edits?id=${invoiceResponse?.id}`;
             setOpen(false);
             setState({ btnLoading: false });
@@ -329,7 +374,6 @@ const Invoice = () => {
             console.log('✌️error --->', error);
         }
     };
-
 
     useEffect(() => {
         initialData(1);
@@ -386,7 +430,7 @@ const Invoice = () => {
         try {
             setState({ loading: true });
             const body = {
-                project_name: values.project_name ? values.project_name : '',
+                project_name: values?.project_name ? values?.project_name : '',
                 from_date: values?.from_date ? dayjs(values?.from_date).format('YYYY-MM-DD') : '',
                 to_date: values?.to_date ? dayjs(values?.to_date).format('YYYY-MM-DD') : '',
                 customer: values.customer?.value ? values.customer?.value : '',
@@ -518,6 +562,10 @@ const Invoice = () => {
                         <button type="button" className="create-button" onClick={() => showDrawer()}>
                             + Create Invoice
                         </button>
+
+                        {/* <button type="button" className="create-button" onClick={() => exportToExcel()}>
+                            {state.excelBtnLoading ? <IconLoader /> : 'Excel to export'}
+                        </button> */}
                     </div>
                 </div>
                 <div className="table-responsive">
@@ -536,7 +584,6 @@ const Invoice = () => {
                 {state.invoiceList?.length > 0 && (
                     <div>
                         <div
-                            
                             style={{
                                 display: 'flex',
                                 justifyContent: 'center',
@@ -551,25 +598,23 @@ const Invoice = () => {
                 <Drawer title="Create Invoice" placement="right" width={600} onClose={onClose} open={open}>
                     <Form name="basic-form" layout="vertical" initialValues={{ remember: true }} onFinish={handleSubmit} onFinishFailed={onFinishFailed} autoComplete="off" form={form}>
                         <Form.Item label="Customer Name" name="customer" required={false} rules={[{ required: true, message: 'Please select Customer Name!' }]}>
-                            
-
                             <CustomSelect
-                                    onSearch={(data: any) => customerSearch(data)}
-                                    value={state.customer}
-                                    options={state.customerList}
-                                    className=" flex-1"
-                                    onChange={(selectedOption: any) => {
-                                        form.setFieldsValue({ customer: selectedOption });
-                                        customersList(1);
-                                    }}
-                                    loadMore={() => {
-                                        if (state.customerHasNext) {
-                                            customersLoadMore(state.customerCurrentPage + 1);
-                                        }
-                                    }}
-                                    isSearchable
-                                    filterOption={(input: string, option: any) => option.label.toLowerCase().includes(input.toLowerCase())}
-                                />
+                                onSearch={(data: any) => customerSearch(data)}
+                                value={state.customer}
+                                options={state.customerList}
+                                className=" flex-1"
+                                onChange={(selectedOption: any) => {
+                                    form.setFieldsValue({ customer: selectedOption });
+                                    customersList(1);
+                                }}
+                                loadMore={() => {
+                                    if (state.customerHasNext) {
+                                        customersLoadMore(state.customerCurrentPage + 1);
+                                    }
+                                }}
+                                isSearchable
+                                filterOption={(input: string, option: any) => option.label.toLowerCase().includes(input.toLowerCase())}
+                            />
                         </Form.Item>
 
                         <Form.Item>

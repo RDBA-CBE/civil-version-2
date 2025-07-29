@@ -143,7 +143,7 @@ const Edit = () => {
 
                 // Map tax list to check if the tax is selected
                 const convertedObj: any = {};
-                data?.tax_list.forEach((item: any) => {
+                data?.tax_list?.forEach((item: any) => {
                     convertedObj[item.id] = data?.taxs.includes(item.id);
                 });
                 setCheckedItems(convertedObj);

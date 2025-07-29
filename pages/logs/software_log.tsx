@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button, DatePicker, Form, Input, Modal, Space, Table, message } from 'antd';
 import Models from '@/imports/models.import';
-import moment from 'moment';
-import CommonLoader from '@/components/commonLoader';
-import { capitalizeFLetter, roundNumber, useSetState } from '@/utils/function.util';
+import { capitalizeFLetter, Failure, roundNumber, useSetState } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import {
     cityData,
@@ -20,10 +18,8 @@ import {
     userData,
 } from '@/utils/constant';
 import CustomSelect from '@/components/Select';
-import { BellOutlined, EditOutlined, EyeOutlined, InfoCircleFilled, InfoCircleOutlined, MenuFoldOutlined, NotificationOutlined } from '@ant-design/icons';
-import { useRouter } from 'next/router';
-import IconBell from '@/components/Icon/IconBell';
-import IconLoader from '@/components/Icon/IconLoader';
+import { EyeOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
 
 type LogType =
     | 'employee'
@@ -32,7 +28,7 @@ type LogType =
     | 'discount'
     | 'tax'
     | 'material'
-    | 'expense-category'
+    | 'expence_category'
     | 'test'
     | 'invoice'
     | 'invoice-test'
@@ -44,12 +40,6 @@ type LogType =
 
 const Software_Logs = () => {
     const [form] = Form.useForm();
-
-    const router = useRouter();
-
-    const editorRef: any = useRef();
-
-    const { CKEditor, ClassicEditor } = editorRef.current || {};
 
     const [messageApi, contextHolder] = message.useMessage();
 
@@ -99,287 +89,253 @@ const Software_Logs = () => {
         selectedrec: null,
         userData: null,
         userOpen: false,
+        module: { value: 'people', lable: 'People' },
     });
 
-    // useEffect(() => {
-    //     if (state.subModule?.value == 'employee') {
-    //         employeeList(1);
-    //     } else if (state.subModule?.value == 'customer') {
-    //         customerList(1);
-    //     } else if (state.subModule?.value == 'city') {
-    //         cityList(1);
-    //     } else if (state.subModule?.value == 'discount') {
-    //         discountList(1);
-    //     } else if (state.subModule?.value == 'tax') {
-    //     } else if (state.subModule?.value == 'material') {
-    //         materialList(1);
-    //     } else if (state.subModule?.value == 'expence_category') {
-    //         expenceCategoryList(1);
-    //     } else if (state.subModule?.value == 'test') {
-    //         testList(1);
-    //     } else if (state.invoiceSubModule?.value == 'invoice') {
-    //         invoiceHistory(1);
-    //     } else if (state.invoiceSubModule?.value == 'invoice_test') {
-    //         invoiceTestList(1);
-    //     } else if (state.invoiceSubModule?.value == 'invoice_payment') {
-    //         invoicePaymentList(1);
-    //     } else if (state.invoiceSubModule?.value == 'invoice_discount') {
-    //         invoiceDiscountList(1);
-    //     } else if (state.invoiceSubModule?.value == 'quotation') {
-    //         quotationList(1);
-    //     } else if (state.invoiceSubModule?.value == 'quotation_item') {
-    //         quotationItemList(1);
-    //     } else if (state.subModule?.value == 'expense_entry') {
-    //         expenseEntryList(1);
-    //     } else if (state.subModule?.value == 'file_upload') {
-    //         fileuploadList(1);
-    //     }
-    //     setState({ editorLoaded: true });
-    // }, [state.subModule, state.invoiceSubModule]);
+    useEffect(() => {
+        getData();
+    }, []);
 
     useEffect(() => {
-        if (!state.subModule?.value && !state.invoiceSubModule?.value) {
-            setState({ loading: false, tableData: [], columns: [], currentPage: 1, total: 0, invoiceSubModule: null, subModule: null });
+        assignInitialRecord();
+    }, []);
 
-            return;
+    const assignInitialRecord = () => {
+        fetchAndFormatLogs('invoice', 1);
+        form.setFieldsValue({
+            module: { value: 'invoice', label: 'Invoice' },
+            subModule: {
+                label: 'Invoice History',
+                value: 'invoice',
+            },
+            from_date:null,
+            to_date:null,
+            invoice_sub_module: {
+                label: 'Invoice History',
+                value: 'invoice',
+            },
+        });
+
+        setState({
+            subModuleOption: [
+                {
+                    label: 'Invoice',
+                    value: 'invoice',
+                },
+
+                {
+                    label: 'Quotation',
+                    value: 'quotation',
+                },
+
+                {
+                    label: 'Expense Entry',
+                    value: 'expense_entry',
+                },
+                {
+                    label: 'File Upload',
+                    value: 'file_upload',
+                },
+            ],
+            invoiceSubMenuOption: [
+                {
+                    label: 'Invoice History',
+                    value: 'invoice',
+                },
+
+                {
+                    label: 'Invoice Test History',
+                    value: 'invoice_test',
+                },
+                {
+                    label: 'Invoice Payment History',
+                    value: 'invoice_payment',
+                },
+
+                {
+                    label: 'Invoice Discount History',
+                    value: 'invoice_discount',
+                },
+            ],
+            invoiceSubModule: {
+                label: 'Invoice History',
+                value: 'invoice',
+            },
+            subModule: {
+                label: 'Invoice History',
+                value: 'invoice',
+            },
+        });
+
+       
+    };
+    const getData = async () => {
+        try {
+            if (!state.subModule?.value && !state.invoiceSubModule?.value) {
+                setState({ loading: false, tableData: [], columns: [], currentPage: 1, total: 0, invoiceSubModule: null, subModule: null });
+
+                return;
+            }
+
+            const page = 1; // Default page
+            const typeMap: any = {
+                employee: 'employee',
+                customer: 'customer',
+                city: 'city',
+                discount: 'customer-discount',
+                tax: 'tax',
+                material: 'material',
+                expence_category: 'expense',
+                test: 'test',
+                expense_entry: 'expense-entry',
+                file_upload: 'invoice-file',
+                // Invoice sub-modules
+                invoice: 'invoice',
+                invoice_test: 'invoice-test',
+                invoice_payment: 'receipt',
+                invoice_discount: 'invoice-discount',
+                quotation: 'quotation',
+                quotation_item: 'quotation-item',
+                change_password: 'user',
+            };
+
+            let type = null;
+
+            if (state?.invoiceSubModule?.value) {
+                type = state?.invoiceSubModule?.value;
+            } else if (state.subModule?.value) {
+                type = state.subModule?.value;
+            } else {
+                type = state.invoiceSubModule?.value;
+            }
+            if (type && typeMap[type]) {
+                fetchAndFormatLogs(typeMap[type], page);
+            } else {
+                setState({ loading: false, tableData: [], columns: [], currentPage: 1, total: 0 });
+            }
+
+            setState({ editorLoaded: true });
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const filterSubmit = (values: any) => {
+        let body: any = {};
+        if (values?.from_date) {
+            const from_date = dayjs(values.from_date).format('YYYY-MM-DD');
+            body.from_date = from_date;
+        }
+        if (values?.to_date) {
+            const to_date = dayjs(values.to_date).format('YYYY-MM-DD');
+
+            body.to_date = to_date;
         }
 
-        const page = 1; // Default page
-        const typeMap: any = {
-            employee: 'employee',
-            customer: 'customer',
-            city: 'city',
-            discount: 'customer-discount',
-            tax: 'tax',
-            material: 'material',
-            expence_category: 'expense',
-            test: 'test',
-            expense_entry: 'expense-entry',
-            file_upload: 'invoice-file',
-            // Invoice sub-modules
-            invoice: 'invoice',
-            invoice_test: 'invoice-test',
-            invoice_payment: 'receipt',
-            invoice_discount: 'invoice-discount',
-            quotation: 'quotation',
-            quotation_item: 'quotation-item',
-            change_password: 'user',
-        };
+        if (values?.subModule) {
+            const typeMap: any = {
+                employee: 'employee',
+                customer: 'customer',
+                city: 'city',
+                discount: 'customer-discount',
+                tax: 'tax',
+                material: 'material',
+                expence_category: 'expense',
+                test: 'test',
+                expense_entry: 'expense-entry',
+                file_upload: 'invoice-file',
+                // Invoice sub-modules
+                invoice: 'invoice',
+                invoice_test: 'invoice-test',
+                invoice_payment: 'receipt',
+                invoice_discount: 'invoice-discount',
+                quotation: 'quotation',
+                quotation_item: 'quotation-item',
+                change_password: 'user',
+            };
+            let type = null;
+            if (values?.invoice_sub_module?.value) {
+                type = values?.invoice_sub_module?.value;
+            } else if (values.subModule?.value) {
+                type = values.subModule?.value;
+            } else {
+                type = values.invoiceSubModule?.value;
+            }
 
-        const type = state.invoiceSubModule?.value || state.subModule?.value;
-        console.log('✌️type --->', type);
-        if (type && typeMap[type]) {
-            fetchAndFormatLogs(typeMap[type], page);
-        } else {
-            setState({ loading: false, tableData: [], columns: [], currentPage: 1, total: 0 });
+            filterData(typeMap[type], 1, body);
         }
+    };
 
-        setState({ editorLoaded: true });
-    }, [state.subModule, state.invoiceSubModule]);
-
-    const fetchAndFormatLogs = async (type: LogType, page: number) => {
+    const filterData = async (type: LogType, page = 1, body = null) => {
         try {
             setState({ loading: true });
-            const res: any = await Models.logs.softwareLogList(type, page, null);
+            const res: any = await Models.logs.softwareLogList(type, page, body);
             tableFormat(res, page, type);
-            setState({ loading: false });
+            setState({ loading: false, currentPage: page, total: res?.count });
         } catch (error) {
             setState({ loading: false });
             console.log('error: ', error);
         }
     };
 
-    const employeeList = async (page: number) => {
-        try {
-            setState({ loading: true });
-            const res: any = await Models.logs.softwareLogList('employee', page, null);
-            tableFormat(res, page, 'employee');
-            setState({ loading: false });
-        } catch (error) {
-            setState({ loading: false });
-
-            console.log('error: ', error);
+    const bodyData = () => {
+        let body: any = {};
+        if (state?.from_date) {
+            const from_date = dayjs(state.from_date).format('YYYY-MM-DD');
+            body.from_date = from_date;
         }
+        if (state?.to_date) {
+            const to_date = dayjs(state.to_date).format('YYYY-MM-DD');
+
+            body.to_date = to_date;
+        }
+
+        if (state?.subModule) {
+            const typeMap: any = {
+                employee: 'employee',
+                customer: 'customer',
+                city: 'city',
+                discount: 'customer-discount',
+                tax: 'tax',
+                material: 'material',
+                expence_category: 'expense',
+                test: 'test',
+                expense_entry: 'expense-entry',
+                file_upload: 'invoice-file',
+                // Invoice sub-modules
+                invoice: 'invoice',
+                invoice_test: 'invoice-test',
+                invoice_payment: 'receipt',
+                invoice_discount: 'invoice-discount',
+                quotation: 'quotation',
+                quotation_item: 'quotation-item',
+                change_password: 'user',
+            };
+            let type = null;
+            // const type = state.invoiceSubModule?.value || state.subModule?.value;
+
+            if (state?.invoiceSubModule?.value) {
+                type = state?.invoiceSubModule?.value;
+            } else if (state.subModule?.value) {
+                type = state.subModule?.value;
+            } else {
+                type = state.invoiceSubModule?.value;
+            }
+            body.type = typeMap[type];
+        }
+
+        return body;
     };
 
-    const customerList = async (page: number) => {
+    const fetchAndFormatLogs = async (type: LogType, page = 1) => {
         try {
             setState({ loading: true });
-            const res: any = await Models.logs.softwareLogList('customer', page, null);
-            tableFormat(res, page, 'customer');
-            setState({ loading: false });
+            const body = bodyData();
+            const res: any = await Models.logs.softwareLogList(type, page, body);
+            tableFormat(res, page, type);
+            setState({ loading: false, currentPage: page, total: res?.count });
         } catch (error) {
             setState({ loading: false });
-
-            console.log('error: ', error);
-        }
-    };
-
-    const discountList = async (page: number) => {
-        try {
-            setState({ loading: true });
-            const res: any = await Models.logs.softwareLogList('customer-discount', page, null);
-            tableFormat(res, page, 'discount');
-            setState({ loading: false });
-        } catch (error) {
-            setState({ loading: false });
-
-            console.log('error: ', error);
-        }
-    };
-
-    const materialList = async (page: number) => {
-        try {
-            setState({ loading: true });
-            const res: any = await Models.logs.softwareLogList('material', page, null);
-            tableFormat(res, page, 'material');
-            setState({ loading: false });
-        } catch (error) {
-            setState({ loading: false });
-
-            console.log('error: ', error);
-        }
-    };
-
-    const testList = async (page: number) => {
-        try {
-            setState({ loading: true });
-            const res: any = await Models.logs.softwareLogList('test', page, null);
-            tableFormat(res, page, 'test');
-            setState({ loading: false });
-        } catch (error) {
-            setState({ loading: false });
-
-            console.log('error: ', error);
-        }
-    };
-
-    const expenceCategoryList = async (page: number) => {
-        try {
-            setState({ loading: true });
-            const res: any = await Models.logs.softwareLogList('expense', page, null);
-            tableFormat(res, page, 'expence');
-            setState({ loading: false });
-        } catch (error) {
-            setState({ loading: false });
-
-            console.log('error: ', error);
-        }
-    };
-
-    const cityList = async (page: number) => {
-        try {
-            setState({ loading: true });
-            const res: any = await Models.logs.softwareLogList('city', page, null);
-            tableFormat(res, page, 'city');
-            setState({ loading: false });
-        } catch (error) {
-            setState({ loading: false });
-
-            console.log('error: ', error);
-        }
-    };
-
-    const invoiceHistory = async (page: number) => {
-        try {
-            setState({ loading: true });
-            const res: any = await Models.logs.softwareLogList('invoice', page, null);
-            tableFormat(res, page, 'invoice');
-            setState({ loading: false });
-        } catch (error) {
-            setState({ loading: false });
-
-            console.log('error: ', error);
-        }
-    };
-
-    const invoiceTestList = async (page: number) => {
-        try {
-            setState({ loading: true });
-            const res: any = await Models.logs.softwareLogList('invoice-test', page, null);
-            tableFormat(res, page, 'invoice-test');
-            setState({ loading: false });
-        } catch (error) {
-            setState({ loading: false });
-
-            console.log('error: ', error);
-        }
-    };
-
-    const quotationList = async (page: number) => {
-        try {
-            setState({ loading: true });
-            const res: any = await Models.logs.softwareLogList('quotation', page, null);
-            tableFormat(res, page, 'quotation');
-            setState({ loading: false });
-        } catch (error) {
-            setState({ loading: false });
-
-            console.log('error: ', error);
-        }
-    };
-
-    const quotationItemList = async (page: number) => {
-        try {
-            setState({ loading: true });
-            const res: any = await Models.logs.softwareLogList('quotation-item', page, null);
-            tableFormat(res, page, 'quotation-item');
-            setState({ loading: false });
-        } catch (error) {
-            setState({ loading: false });
-
-            console.log('error: ', error);
-        }
-    };
-
-    const invoicePaymentList = async (page: number) => {
-        try {
-            setState({ loading: true });
-            const res: any = await Models.logs.softwareLogList('receipt', page, null);
-            tableFormat(res, page, 'receipt');
-            setState({ loading: false });
-        } catch (error) {
-            setState({ loading: false });
-
-            console.log('error: ', error);
-        }
-    };
-
-    const invoiceDiscountList = async (page: number) => {
-        try {
-            setState({ loading: true });
-            const res: any = await Models.logs.softwareLogList('invoice-discount', page, null);
-            tableFormat(res, page, 'invoice-discount');
-            setState({ loading: false });
-        } catch (error) {
-            setState({ loading: false });
-
-            console.log('error: ', error);
-        }
-    };
-
-    const expenseEntryList = async (page: number) => {
-        try {
-            setState({ loading: true });
-            const res: any = await Models.logs.softwareLogList('expense-entry', page, null);
-            tableFormat(res, page, 'expense-entry');
-            setState({ loading: false });
-        } catch (error) {
-            setState({ loading: false });
-
-            console.log('error: ', error);
-        }
-    };
-
-    const fileuploadList = async (page: number) => {
-        try {
-            setState({ loading: true });
-            const res: any = await Models.logs.softwareLogList('invoice-file', page, null);
-            tableFormat(res, page, 'invoice-file');
-            setState({ loading: false });
-        } catch (error) {
-            setState({ loading: false });
-
             console.log('error: ', error);
         }
     };
@@ -388,7 +344,10 @@ const Software_Logs = () => {
         try {
             const res = await Models.customer.detail('employee', record?.id);
             setState({ empData: res, employeeOpen: true });
-        } catch (error) {
+        } catch (error: any) {
+            if (error?.detail == 'Not found.') {
+                Failure('Record Not Found');
+            }
             console.log('✌️error --->', error);
         }
     };
@@ -397,7 +356,10 @@ const Software_Logs = () => {
         try {
             const res = await Models.customer.detail('customer', record?.id);
             setState({ cusData: res, cusOpen: true });
-        } catch (error) {
+        } catch (error: any) {
+            if (error?.detail == 'Not found.') {
+                Failure('Record Not Found');
+            }
             console.log('✌️error --->', error);
         }
     };
@@ -406,7 +368,10 @@ const Software_Logs = () => {
         try {
             const res = await Models.discount.details(record?.id);
             setState({ disData: res, disOpen: true });
-        } catch (error) {
+        } catch (error: any) {
+            if (error?.detail == 'Not found.') {
+                Failure('Record Not Found');
+            }
             console.log('✌️error --->', error);
         }
     };
@@ -415,7 +380,10 @@ const Software_Logs = () => {
         try {
             const res = await Models.city.detail(record?.id);
             setState({ cityData: res, cityOpen: true });
-        } catch (error) {
+        } catch (error: any) {
+            if (error?.detail == 'Not found.') {
+                Failure('Record Not Found');
+            }
             console.log('✌️error --->', error);
         }
     };
@@ -424,7 +392,10 @@ const Software_Logs = () => {
         try {
             const res = await Models.material.detail(record?.id);
             setState({ materialData: res, materialOpen: true });
-        } catch (error) {
+        } catch (error: any) {
+            if (error?.detail == 'Not found.') {
+                Failure('Record Not Found');
+            }
             console.log('✌️error --->', error);
         }
     };
@@ -433,7 +404,10 @@ const Software_Logs = () => {
         try {
             const res = await Models.expense.detail(record?.id);
             setState({ expenceCatData: res, expenceCatOpen: true });
-        } catch (error) {
+        } catch (error: any) {
+            if (error?.detail == 'Not found.') {
+                Failure('Record Not Found');
+            }
             console.log('✌️error --->', error);
         }
     };
@@ -442,17 +416,22 @@ const Software_Logs = () => {
         try {
             const res = await Models.test.detail(record?.id);
             setState({ testData: res, testOpen: true });
-        } catch (error) {
+        } catch (error: any) {
+            if (error?.detail == 'Not found.') {
+                Failure('Record Not Found');
+            }
             console.log('✌️error --->', error);
         }
     };
 
     const viewUser = async (record: any) => {
         try {
-            const res:any = await Models.auth.detail(record?.custom_info?.employee_id);
-            console.log('viewUser --->', {...res,roles:record?.is_admin});
-            setState({ userData: {...res,roles:record?.is_admin}, userOpen: true });
-        } catch (error) {
+            const res: any = await Models.auth.detail(record?.custom_info?.employee_id);
+            setState({ userData: { ...res, roles: record?.is_admin }, userOpen: true });
+        } catch (error: any) {
+            if (error?.detail == 'Not found.') {
+                Failure('Record Not Found');
+            }
             console.log('✌️error --->', error);
         }
     };
@@ -461,7 +440,10 @@ const Software_Logs = () => {
         try {
             const res: any = await Models.invoice.getInvoiceDiscount(record?.id);
             setState({ inDisData: res, inDisOpen: true });
-        } catch (error) {
+        } catch (error: any) {
+            if (error?.detail == 'Not found.') {
+                Failure('Record Not Found');
+            }
             console.log('✌️error --->', error);
         }
     };
@@ -470,7 +452,10 @@ const Software_Logs = () => {
         try {
             const res: any = await Models.invoice.getPayment(record?.id);
             setState({ inPaymentData: res, inPaymentOpen: true });
-        } catch (error) {
+        } catch (error: any) {
+            if (error?.detail == 'Not found.') {
+                Failure('Record Not Found');
+            }
             console.log('✌️error --->', error);
         }
     };
@@ -479,7 +464,10 @@ const Software_Logs = () => {
         try {
             const res = await Models.invoice.getTest(record?.id);
             setState({ inTestData: res, inTestOpen: true });
-        } catch (error) {
+        } catch (error: any) {
+            if (error?.detail == 'Not found.') {
+                Failure('Record Not Found');
+            }
             console.log('✌️error --->', error);
         }
     };
@@ -489,28 +477,33 @@ const Software_Logs = () => {
             setState({ btnLoading: true });
             const res = await Models.qoutation.detail(record?.id);
             setState({ inQuaData: res, inQuaOpen: true, btnLoading: false });
-        } catch (error) {
+        } catch (error: any) {
             setState({ btnLoading: false });
 
+            if (error?.detail == 'Not found.') {
+                Failure('Record Not Found');
+            }
             console.log('✌️error --->', error);
         }
     };
 
     const tableFormat = (res: any, page: number, type: string) => {
-        const processedData = res?.results
-            .filter((item: any) => item.history_action === 'Created' || item.changes !== null)
-            .map((item: any) => ({
-                ...item,
-                changes: item.changes
-                    ? Object.entries(item.changes)
-                          .filter(([key]) => key !== 'history_type')
-                          .map(([field, change]: [string, any]) => ({
-                              field,
-                              from: change.from,
-                              to: change.to,
-                          }))
-                    : [],
-            }));
+        const processedData = res?.results.map((item: any) => ({
+            ...item,
+            changes: item.changes
+                ? Object.entries(item.changes)
+                      .filter(([key]) => key !== 'history_type')
+                      .map(([field, change]: [string, any]) => ({
+                          field,
+                          from: change.from,
+                          to: change.to,
+                      }))
+                : item.history_action === 'Created'
+                ? [{ field: 'New Record Created', from: null, to: null }]
+                : item.history_action === 'Deleted'
+                ? [{ field: 'Record Deleted', from: null, to: null }]
+                : [{ field: 'No changes', from: null, to: null }],
+        }));
 
         const columns = [
             {
@@ -542,16 +535,18 @@ const Software_Logs = () => {
                 render: (changes: any) => (
                     <div>
                         {changes.length > 0 ? (
-                            <ul style={{ margin: 0, paddingLeft: 20 }}>
-                                {changes.map((change: any, index: number) => (
-                                    <li key={index}>
-                                        <strong>{capitalizeFLetter(change.field)}:</strong> {change.from || 'Empty'} → {change.to || 'Empty'}
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            ''
-                        )}
+                            changes[0].field === 'No changes' || changes[0].field === 'New Record Created' || changes[0].field === 'Record Deleted' ? (
+                                <span>{changes[0].field}</span> // Show simple message
+                            ) : (
+                                <ul style={{ margin: 0, paddingLeft: 20 }}>
+                                    {changes?.map((change: any, index: number) => (
+                                        <li key={index}>
+                                            <strong>{capitalizeFLetter(change.field)}:</strong> {change.from || 'Empty'} → {change.to || 'Empty'}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )
+                        ) : null}
                     </div>
                 ),
             },
@@ -560,13 +555,11 @@ const Software_Logs = () => {
                 key: 'actions',
                 className: 'singleLineCell',
                 render: (record: any) => (
-                    <div className=" flex gap-4">
-                        {(type == 'invoice-test' || type == 'receipt' || type == 'invoice-discount' || type == 'quotation-item') && (
-                            // (state.btnLoading  ? (
-                            //     <IconLoader className=" h-4 w-4 animate-spin" />
-                            // ) : (
-                            <InfoCircleOutlined style={{ cursor: 'pointer' }} className="view-icon" rev={undefined} onClick={() => viewInvoiceRecord(type, record)} />
-                        )}
+                    <div className="flex gap-4">
+                        {(type === 'invoice-test' || type === 'receipt' || type === 'invoice-discount' || type === 'quotation-item') &&
+                            record.history_action !== 'Deleted' && ( // Add this condition
+                                <InfoCircleOutlined style={{ cursor: 'pointer' }} className="view-icon" rev={undefined} onClick={() => viewInvoiceRecord(type, record)} />
+                            )}
                         <EyeOutlined style={{ cursor: 'pointer' }} className="view-icon" rev={undefined} onClick={() => viewRecord(type, record)} />
                     </div>
                 ),
@@ -617,10 +610,11 @@ const Software_Logs = () => {
         }
     };
 
-    const filterSubmit = (values: any) => {};
-
     const handlePageChange = (number: any) => {
         setState({ currentPage: number });
+        const body = bodyData();
+
+        filterData(body.type, number, body);
 
         return number;
     };
@@ -777,7 +771,7 @@ const Software_Logs = () => {
                 <div>
                     <Form name="basic" layout="vertical" form={form} initialValues={{ remember: true }} onFinish={filterSubmit} autoComplete="off">
                         <div className="sale_report_inputs gap-3">
-                            <Form.Item label="Module" name="customer" style={{ width: '300px' }}>
+                            <Form.Item label="Module" name="module" style={{ width: '300px' }}>
                                 <CustomSelect
                                     onSearch={(data: any) => {}}
                                     value={state.module}
@@ -910,13 +904,11 @@ const Software_Logs = () => {
                             )}
 
                             <Form.Item label="From Date" name="from_date" style={{ width: '250px' }}>
-                                <DatePicker
-                                    style={{ width: '100%' }}
-                                    value={state.date}
-                                    onChange={(e) => {
-                                        setState({ date: e });
-                                    }}
-                                />
+                                <DatePicker style={{ width: '100%' }} value={state.from_date} onChange={(e) => setState({ from_date: e })} />
+                            </Form.Item>
+
+                            <Form.Item label="To Date" name="to_date" style={{ width: '250px' }}>
+                                <DatePicker style={{ width: '100%' }} value={state.to_date} onChange={(e) => setState({ to_date: e })} />
                             </Form.Item>
 
                             <div style={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: '10px' }}>
@@ -930,7 +922,7 @@ const Software_Logs = () => {
                                         type="primary"
                                         htmlType="submit"
                                         onClick={() => {
-                                            form.resetFields();
+                                            assignInitialRecord();
                                         }}
                                         style={{ width: '100px' }}
                                     >
@@ -949,7 +941,7 @@ const Software_Logs = () => {
                 </div>
                 <div className="table-responsive">
                     <Table dataSource={state.tableData} columns={state.columns} pagination={false} scroll={scrollConfig} loading={state.loading} />
-                    {state.logList?.length > 0 && (
+                    {state.tableData?.length > 0 && (
                         <div>
                             <div
                                 style={{
