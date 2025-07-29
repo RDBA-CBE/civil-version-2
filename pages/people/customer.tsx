@@ -248,6 +248,8 @@ const Customer = () => {
 
     // drawer
     const showDrawer = async (record: any) => {
+        console.log("record",record);
+        
         if (record) {
             try {
                 const res: any = await Models.customer.customer(record.id);
@@ -257,12 +259,12 @@ const Customer = () => {
 
                 form.setFieldsValue({
                     ...record,
-                    city1: { value: res.city1.id, label: res.city1.name },
-                    state1: { value: res.state1.id, label: res.state1.name },
-                    country1: { value: res.country1.id, label: res.country1.name },
-                    city2: { value: res.city2.id, label: res.city2.name },
-                    state2: { value: res.state2.id, label: res.state2.name },
-                    country2: { value: res.country2.id, label: res.country2.name },
+                    city1: { value: res?.city1?.id, label: res?.city1?.name },
+                    state1: { value: res?.state1?.id, label: res?.state1?.name },
+                    country1: { value: res?.country1?.id, label: res?.country1?.name },
+                    city2: { value: res?.city2?.id, label: res?.city2?.name },
+                    state2: { value: res?.state2?.id, label: res?.state2?.name },
+                    country2: { value: res?.country2?.id, label: res?.country2?.name },
                 });
             } catch (error) {
                 console.log(error);
@@ -353,18 +355,18 @@ const Customer = () => {
                 gstin_no: values.gstin_no,
                 email: values.email,
                 address1: values.address1,
-                city1: values.city1.value,
-                state1: values.state1.value,
-                country1: values.country1.value,
+                city1: values.city1?.value,
+                state1: values.state1?.value,
+                country1: values.country1?.value,
                 pincode1: values.pincode1,
                 contact_person1: values.contact_person1,
                 mobile_no1: values.mobile_no1,
                 contact_person_email1: values.contact_person_email1,
                 place_of_testing: values.place_of_testing,
                 address2: values.address2,
-                city2: values.city2.value,
-                state2: values.state2.value,
-                country2: values.country2.value,
+                city2: values.city2?.value,
+                state2: values.state2?.value,
+                country2: values.country2?.value,
                 pincode2: values.pincode2,
                 contact_person2: values.contact_person2,
                 mobile_no2: values.mobile_no2,
