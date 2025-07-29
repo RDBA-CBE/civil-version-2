@@ -4,11 +4,12 @@ import { EditOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import router from 'next/router';
 import dayjs from 'dayjs';
-import { baseUrl, ObjIsEmpty,roundNumber, useSetState } from '@/utils/function.util';
+import { baseUrl, ObjIsEmpty, roundNumber, useSetState , Dropdown} from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import useDebounce from '@/components/useDebounce/useDebounce';
 import Models from '@/imports/models.import';
 import { scrollConfig } from '@/utils/constant';
+import CustomSelect from '@/components/Select';
 
 const Quotations = () => {
     const { Search } = Input;
@@ -40,24 +41,13 @@ const Quotations = () => {
         pagePrev: null,
         searchValue: null,
         qoutationList: [],
-   
+        customerList: [],
+        customerHasNext: null,
+        customerCurrentPage: null,
     });
 
     useEffect(() => {
-        axios
-            .get(`${baseUrl}/create_invoice/`, {
-                headers: {
-                    Authorization: `Token ${localStorage.getItem('token')}`,
-                },
-            })
-            .then((res) => {
-                setFormFields(res.data);
-            })
-            .catch((error: any) => {
-                if (error.response?.status === 401) {
-                    router.push('/');
-                }
-            });
+       customersList()
     }, []);
 
     const getQuotation = async (page: number) => {
@@ -87,6 +77,38 @@ const Quotations = () => {
         form.resetFields();
         setCustomerAddress('');
     };
+
+    const customersList = async (page = 1) => {
+                try {
+                    const res: any = await Models.invoice.customerList(page);
+                    const dropdown = Dropdown(res?.results, 'customer_name');
+                    setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: page });
+                } catch (error: any) {
+                    console.log('✌️error --->', error);
+                }
+            };
+        
+            const customerSearch = async (text: any) => {
+                try {
+                    const res: any = await Models.invoice.customerSearch(text);
+                    if (res?.results?.length > 0) {
+                        const dropdown = Dropdown(res?.results, 'customer_name');
+                        setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: 1 });
+                    }
+                } catch (error) {
+                    console.log('✌️error --->', error);
+                }
+            };
+        
+            const customersLoadMore = async (page = 1) => {
+                try {
+                    const res: any = await Models.invoice.customerList(page);
+                    const dropdown = Dropdown(res?.results, 'customer_name');
+                    setState({ customerList: [...state.customerList, ...dropdown], customerHasNext: res?.next, customerCurrentPage: page });
+                } catch (error: any) {
+                    console.log('✌️error --->', error);
+                }
+            };
 
     const columns = [
         {
@@ -260,7 +282,6 @@ const Quotations = () => {
         setCustomerAddress(selectedCustomer?.address1 || '');
     };
 
-
     // search
 
     useEffect(() => {
@@ -335,7 +356,7 @@ const Quotations = () => {
                 // project_name: values.project_name ? values.project_name : '',
                 from_date: values?.start_date ? dayjs(values?.start_date).format('YYYY-MM-DD') : '',
                 to_date: values?.end_date ? dayjs(values?.end_date).format('YYYY-MM-DD') : '',
-                customer: values.customer ? values.customer : '',
+                customer: values.customer ? values?.customer?.value : '',
                 completed: values.completed == 'Yes' ? true : values.completed == 'No' ? false : '',
             };
 
@@ -355,8 +376,6 @@ const Quotations = () => {
 
             console.log('✌️error --->', error);
         }
-
-     
     };
 
     const onFinishFailed2 = (errorInfo: any) => {};
@@ -388,13 +407,23 @@ const Quotations = () => {
                             </Form.Item> */}
 
                             <Form.Item label="Customer" name="customer" style={{ width: '250px' }}>
-                                <Select showSearch filterOption={(input: any, option: any) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}>
-                                    {formFields?.customer?.map((value: any) => (
-                                        <Select.Option key={value.id} value={value.id}>
-                                            {value.customer_name}
-                                        </Select.Option>
-                                    ))}
-                                </Select>
+                                <CustomSelect
+                                    onSearch={(data: any) => customerSearch(data)}
+                                    value={state.customer}
+                                    options={state.customerList}
+                                    className=" flex-1"
+                                    onChange={(selectedOption: any) => {
+                                        form.setFieldsValue({ customer: selectedOption });
+                                        customersList(1);
+                                    }}
+                                    loadMore={() => {
+                                        if (state.customerHasNext) {
+                                            customersLoadMore(state.customerCurrentPage + 1);
+                                        }
+                                    }}
+                                    isSearchable
+                                    filterOption={(input: string, option: any) => option.label.toLowerCase().includes(input.toLowerCase())}
+                                />
                             </Form.Item>
 
                             <Form.Item label="From Date" name="start_date" style={{ width: '200px' }}>
@@ -462,7 +491,6 @@ const Quotations = () => {
                 {state.qoutationList?.length > 0 && (
                     <div>
                         <div
-                            
                             style={{
                                 display: 'flex',
                                 justifyContent: 'center',
