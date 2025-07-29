@@ -21,6 +21,26 @@ const auth = {
         return promise;
     },
 
+    detail: (id: any) => {
+        let promise = new Promise((resolve, reject) => {
+            let url = `employee/${id}/`;
+            instance()
+                .get(url)
+                .then((res) => {
+                    resolve(res.data);
+                })
+                .catch((error) => {
+                    console.log('errorsss: ', error);
+                    if (error.response) {
+                        reject(error.response.data.error);
+                    } else {
+                        reject(error);
+                    }
+                });
+        });
+        return promise;
+    },
+
     logout: () => {
         let promise = new Promise((resolve, reject) => {
             let url = `logout/`;

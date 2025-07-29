@@ -233,6 +233,10 @@ const TestReport = () => {
             if (state.searchValue?.test) {
                 body.test = state.searchValue.test;
             }
+
+            if (state.searchValue?.invoice_no) {
+                body.invoice_no = state.searchValue.invoice_no;
+            }
         }
 
         return body;
@@ -287,6 +291,7 @@ const TestReport = () => {
             to_date: state.searchValue?.to_date ? dayjs(state.searchValue?.to_date).format('DD-MM-YYYY') : '',
             customer: state.searchValue?.customer ? state.searchValue.customer?.value : '',
             material: state.searchValue?.material ? state.searchValue.material?.value : '',
+            invoice_no: state.searchValue?.invoice_no ? state.searchValue?.invoice_no : '',
         };
 
         let allData: any[] = [];
@@ -353,8 +358,6 @@ const TestReport = () => {
 
         return number;
     };
-
-  
 
     return (
         <>
@@ -491,7 +494,6 @@ const TestReport = () => {
                 {state.testList?.length > 0 && (
                     <div>
                         <div
-                            
                             style={{
                                 display: 'flex',
                                 justifyContent: 'center',

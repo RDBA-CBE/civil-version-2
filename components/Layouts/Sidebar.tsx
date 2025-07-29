@@ -222,6 +222,14 @@ const Sidebar = () => {
                             </li>
 
                             <li className="menu nav-item">
+                                <Link href="/invoice/qoutation" className="group">
+                                    <div className="flex items-center">
+                                        <span className="text-black dark:text-[#506690] dark:group-hover:text-white-dark ltr:pl-3 rtl:pr-3">{t('Quotation')}</span>
+                                    </div>
+                                </Link>
+                            </li>
+
+                            <li className="menu nav-item">
                                 <Link href="/invoice/pendingPayment" className="group">
                                     <div className="flex items-center">
                                         <span className="text-black dark:text-[#506690] dark:group-hover:text-white-dark ltr:pl-3 rtl:pr-3">{t('Pending Payment')}</span>
