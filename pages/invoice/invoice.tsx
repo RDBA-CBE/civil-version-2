@@ -248,7 +248,7 @@ const Invoice = () => {
         worksheet.addRow(['Invoice No', 'Date', 'Customer Name', 'Project Name', 'Total Amount', 'Balance']);
 
         allData.forEach((item: any) => {
-            worksheet.addRow([item.invoice_no, dayjs(item.date).format('DD-MM-YYYY'), item.customer, item?.project_name, item?.total_amount, item?.balance]);
+            worksheet.addRow([item.invoice_no, dayjs(item.date).format('DD-MM-YYYY'), item.customer?.customer_name, item?.project_name, item?.total_amount, item?.balance]);
         });
 
         // Generate a Blob containing the Excel file
@@ -563,9 +563,9 @@ const Invoice = () => {
                             + Create Invoice
                         </button>
 
-                        {/* <button type="button" className="create-button" onClick={() => exportToExcel()}>
+                        <button type="button" className="create-button" onClick={() => exportToExcel()}>
                             {state.excelBtnLoading ? <IconLoader /> : 'Excel to export'}
-                        </button> */}
+                        </button>
                     </div>
                 </div>
                 <div className="table-responsive">

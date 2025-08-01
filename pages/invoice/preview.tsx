@@ -43,7 +43,7 @@ const Preview = () => {
                 const taxPercentages = res?.tax.map((tax: any) => tax.tax_percentage.split('.')[0] + '%');
                 const result = `${taxNames.join(' + ')} : ${taxPercentages.join(' + ')}`;
                 const totalPercentage = res?.after_tax_amount - res?.before_tax_amount;
-                setState({ taxData: result, totalPercentage });
+                setState({ taxData: result, totalPercentage: roundNumber(totalPercentage) });
             }
 
             setState({ invoiceData: res, loading: false });
@@ -177,7 +177,7 @@ const Preview = () => {
                                                     <b>Name:</b> Covai Civil Lab Private Limited
                                                 </td>
 
-                                                {state.invoiceData?.invoice_discounts?.length > 0 &&state.invoiceData?.invoice_discounts[0]?.discount>0  ? (
+                                                {state.invoiceData?.invoice_discounts?.length > 0 && state.invoiceData?.invoice_discounts[0]?.discount > 0 ? (
                                                     <>
                                                         <td style={{ textAlign: 'right' }}>Discount (%) </td>
                                                         <td style={{ textAlign: 'right' }}>{roundNumber(state.invoiceData?.invoice_discounts[0]?.discount)}</td>
