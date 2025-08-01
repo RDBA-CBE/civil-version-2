@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 import axios from 'axios';
 import { baseUrl, roundNumber, useSetState } from '@/utils/function.util';
 import Models from '@/imports/models.import';
-import { TAX } from '@/utils/constant';
 import PageLoader from 'next/dist/client/page-loader';
 import CommonLoader from '@/components/commonLoader';
 

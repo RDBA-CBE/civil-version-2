@@ -76,16 +76,16 @@ export default function EditQoutations() {
     const getData = async () => {
         try {
             const res: any = await Models.qoutation.qoutationDetail(id);
-            console.log('✌️res --->', res);
+            const taxList: any = await Models.tax.taxList();
 
-            if (res?.tax?.length > 0) {
-                const initialCheckedState = TAX.reduce((acc, tax) => {
+            if (res?.tax?.length > 0 && taxList?.length > 0) {
+                const initialCheckedState = taxList?.reduce((acc: any, tax:any) => {
                     acc[tax.id] = res?.tax.some((selectedTax: any) => selectedTax.id === tax.id);
                     return acc;
                 }, {} as Record<number, boolean>);
                 setState({ checkedItems: initialCheckedState });
 
-                const selectedTaxes = TAX.filter((tax) => initialCheckedState[tax.id]);
+                const selectedTaxes = taxList?.filter((tax:any) => initialCheckedState[tax.id]);
                 const totalPercentage = res?.after_tax - res?.before_tax;
                 const taxData = FormatTaxDisplay(selectedTaxes, totalPercentage);
                 console.log('✌️taxData --->', taxData);

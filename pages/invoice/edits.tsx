@@ -129,6 +129,7 @@ export default function Edits() {
         try {
             setState({ loading: true });
             const res: any = await Models.invoice.invoiceDetails(id);
+            const taxList: any = await Models.tax.taxList();
             setState({
                 details: res,
                 customerName: { value: res?.customer?.id, label: res?.customer?.customer_name },
@@ -158,14 +159,14 @@ export default function Edits() {
                 // customer: res?.customer?.customer_name || '',
                 discount: res?.invoice_discounts?.length > 0 ? roundNumber(res?.invoice_discounts[0]?.discount) || 0 : 0,
             });
-            if (res?.tax?.length > 0) {
-                const initialCheckedState = TAX.reduce((acc, tax) => {
+            if (res?.tax?.length > 0 && taxList?.length > 0) {
+                const initialCheckedState = taxList?.reduce((acc:any, tax:any) => {
                     acc[tax.id] = res?.tax.some((selectedTax: any) => selectedTax.id === tax.id);
                     return acc;
                 }, {} as Record<number, boolean>);
                 setState({ checkedItems: initialCheckedState });
 
-                const selectedTaxes = TAX.filter((tax) => initialCheckedState[tax.id]);
+                const selectedTaxes = taxList?.filter((tax: any) => initialCheckedState[tax.id]);
                 const totalPercentage = res?.after_tax_amount - res?.before_tax_amount;
                 const taxData = formatTaxDisplay(selectedTaxes, totalPercentage);
                 setState({ taxData });
@@ -332,6 +333,7 @@ export default function Edits() {
     };
 
     const formatTaxDisplay = (selectedTaxes: any[], total: number) => {
+        console.log('✌️selectedTaxes --->', selectedTaxes);
         if (selectedTaxes.length === 0) return '';
 
         const names = selectedTaxes.map((tax) => tax.tax_name).join(' + ');
