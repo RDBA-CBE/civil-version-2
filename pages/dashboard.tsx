@@ -31,6 +31,10 @@ const Expense = () => {
     const [expenses, setexpenses] = useState([]);
     const [expense_amount_sum, setexpense_amount_sum] = useState(0);
     const [admin, setAdmin] = useState<any>([]);
+    const [loading, setLoading] = useState(false);
+console.log('✌️loading --->', loading);
+
+    
 
     useEffect(() => {
         const Admin: any = localStorage.getItem('admin');
@@ -289,6 +293,7 @@ const Expense = () => {
         series: [],
         options: salesinitdata,
     });
+    console.log('✌️salesByCategory --->', salesByCategory);
 
     const [expenseChart, setExpenseChart] = useState<any>(null);
     const [pending_payment, setpending_payment] = useState(0);
@@ -383,6 +388,7 @@ const Expense = () => {
     });
 
     const [isMounted, setIsMounted] = useState(false);
+console.log('✌️isMounted --->', isMounted);
 
     useEffect(() => {
         setIsMounted(true);
@@ -394,6 +400,7 @@ const Expense = () => {
     }, [payments_sum, expenseMonthWise, invoiceMonthData]);
 
     const getExpense = () => {
+        setLoading(true)
         const Token = localStorage.getItem('token');
 
         axios
@@ -599,8 +606,12 @@ const Expense = () => {
                         },
                     },
                 }));
+        setLoading(false)
+
             })
             .catch((error: any) => {
+        setLoading(false)
+
                 if (error.response?.status === 401) {
                     router.push('/');
                 }
@@ -907,9 +918,13 @@ const Expense = () => {
                                         </div>
                                         <div>
                                             <div className="rounded-lg bg-white dark:bg-black">
-                                                {isMounted ? (
-                                                    <ReactApexChart series={salesByCategory.series} options={salesByCategory.options} type="donut" height={460} width={'100%'} />
-                                                ) : (
+                                                {isMounted && !loading ? (
+                                                    // <ReactApexChart series={revenueChart.series} options={revenueChart.options} type="area" height={325} width={'100%'} />
+
+                                                    <ReactApexChart
+                                                    key={isMounted ? 'mounted' : 'unmounted'} 
+                                                    series={salesByCategory.series} options={salesByCategory.options} type="donut" height={460} width={'100%'} />
+                                              ) : ( 
                                                     <div className="grid min-h-[325px] place-content-center bg-white-light/30 dark:bg-dark dark:bg-opacity-[0.08] ">
                                                         <span className="inline-flex h-5 w-5 animate-spin rounded-full  border-2 border-black !border-l-transparent dark:border-white"></span>
                                                     </div>

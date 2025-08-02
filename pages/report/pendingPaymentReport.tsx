@@ -176,9 +176,9 @@ const PendingPaymentReport = () => {
             },
         },
         {
-            title: 'Total-Amount',
-            dataIndex: 'total_amount',
-            key: 'total_amount',
+            title: 'After Tax',
+            dataIndex: 'after_tax_amount',
+            key: 'after_tax_amount',
             className: 'singleLineCell',
             render: (record: any) => {
                 return <div>{roundNumber(record)}</div>;
@@ -268,7 +268,7 @@ const PendingPaymentReport = () => {
                         return row.customer?.customer_name || '';
                     } else if (column.key === 'invoice_file') {
                         return row.invoice_file;
-                    } else if (column.key === 'advance' || column.key === 'total_amount' || column.key === 'balance') {
+                    } else if (column.key === 'advance' || column.key === 'after_tax_amount' || column.key === 'balance') {
                         return roundNumber(row);
                     } else {
                         return ''; // fallback

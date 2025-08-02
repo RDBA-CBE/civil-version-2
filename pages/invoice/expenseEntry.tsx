@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Space, Table, Modal, InputNumber, Button, Drawer, Form, Input, Select, DatePicker, Spin } from 'antd';
-import { EditOutlined, EyeOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import router from 'next/router';
@@ -37,8 +37,6 @@ const ExpenseEntry = () => {
         expenseCatList: [],
     });
 
-    
-
     useEffect(() => {
         initialData(1);
         expenseCatList(1);
@@ -70,19 +68,17 @@ const ExpenseEntry = () => {
     // drawer
     const showDrawer = (record: any) => {
         if (record) {
-            console.log("record",record);
-            
             const updateData: any = {
                 amount: record.amount,
                 date: dayjs(record?.date),
-                expense_category: {value:record.expense_category, label:record.expense_category_name},
+                expense_category: { value: record.expense_category, label: record.expense_category_name },
                 expense_user: record.expense_user,
                 id: record.id,
                 narration: record.narration,
             };
 
-            console.log("updateData", updateData);
-            
+            console.log('updateData', updateData);
+
             setEditRecord(updateData);
             form.setFieldsValue(updateData); // Set form values for editing
         } else {
@@ -126,6 +122,16 @@ const ExpenseEntry = () => {
             const dropdown = Dropdown(res?.results, 'expense_name');
             setState({ expenseCatList: [...state.expenseCatList, ...dropdown], expenseCatHasNext: res?.next, expenseCatCurrentPage: page });
         } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const handleDelete = async (record: any) => {
+        console.log('✌️record --->', record);
+        try {
+            await Models.expenseEntry.delete(record.id);
+        } catch (error) {
+            setState({ testDeleteLoading: false });
             console.log('✌️error --->', error);
         }
     };
@@ -180,7 +186,7 @@ const ExpenseEntry = () => {
                     ) : (
                         <EditOutlined style={{ cursor: 'pointer', display: 'none' }} onClick={() => showDrawer(record)} className="edit-icon" rev={undefined} />
                     )}
-
+                    {/* <DeleteOutlined style={{ color: 'red', cursor: 'pointer' }} onClick={() => handleDelete(record)} className="delete-icon" rev={undefined} /> */}
                     {/* <EditOutlined
             style={{ cursor: "pointer" }}
             onClick={() => showDrawer(record)}
@@ -225,7 +231,7 @@ const ExpenseEntry = () => {
             ...values,
             expense_user: values.expense_user,
             date: dayjs(values.date), // Updated date formatting
-            expense_category: values.expense_category.value ,
+            expense_category: values.expense_category.value,
             amount: values.amount,
             narration: values.narration,
         };
@@ -384,8 +390,8 @@ const ExpenseEntry = () => {
 
     // form submit
     const onFinish2 = async (values: any, page = 1) => {
-        console.log("values",values);
-        
+        console.log('values', values);
+
         try {
             setState({ loading: true });
 
@@ -396,8 +402,6 @@ const ExpenseEntry = () => {
                 expense_category: values.expense_category ? values.expense_category?.value : '',
             };
 
-            console.log("body", body);
-            
 
             const res: any = await Models.expenseEntry.filter(body, page);
             setState({
@@ -443,8 +447,6 @@ const ExpenseEntry = () => {
                             </Form.Item>
 
                             <Form.Item label="Expense Category" name="expense_category" style={{ width: '300px' }}>
-                              
-
                                 <CustomSelect
                                     onSearch={(data: any) => expenseCatSearch(data)}
                                     value={state.expenseCat}
@@ -540,25 +542,23 @@ const ExpenseEntry = () => {
                         </Form.Item>
 
                         <Form.Item label="Expense Category" name="expense_category" required={true} rules={[{ required: true, message: 'Expense Category field is required.' }]}>
-                           
-
-                             <CustomSelect
-                                    onSearch={(data: any) => expenseCatSearch(data)}
-                                    value={form.getFieldValue}
-                                    options={state.expenseCatList}
-                                    className=" flex-1"
-                                    onChange={(selectedOption: any) => {
-                                        form.setFieldsValue({ expense_category: selectedOption });
-                                        expenseCatList(1);
-                                    }}
-                                    loadMore={() => {
-                                        if (state.expenseCatHasNext) {
-                                            expenseCatLoadMore(state.expenseCatCurrentPage + 1);
-                                        }
-                                    }}
-                                    isSearchable
-                                    filterOption={(input: string, option: any) => option.label.toLowerCase().includes(input.toLowerCase())}
-                                />
+                            <CustomSelect
+                                onSearch={(data: any) => expenseCatSearch(data)}
+                                value={form.getFieldValue}
+                                options={state.expenseCatList}
+                                className=" flex-1"
+                                onChange={(selectedOption: any) => {
+                                    form.setFieldsValue({ expense_category: selectedOption });
+                                    expenseCatList(1);
+                                }}
+                                loadMore={() => {
+                                    if (state.expenseCatHasNext) {
+                                        expenseCatLoadMore(state.expenseCatCurrentPage + 1);
+                                    }
+                                }}
+                                isSearchable
+                                filterOption={(input: string, option: any) => option.label.toLowerCase().includes(input.toLowerCase())}
+                            />
                         </Form.Item>
 
                         <Form.Item<FieldType> label="Amount" name="amount" required={true} rules={[{ required: true, message: 'Amount field is required.' }]}>

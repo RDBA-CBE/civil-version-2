@@ -122,9 +122,9 @@ const PendingPayment = () => {
             },
         },
         {
-            title: 'Total-Amount',
-            dataIndex: 'total_amount',
-            key: 'total_amount',
+            title: 'After Tax',
+            dataIndex: 'after_tax_amount',
+            key: 'after_tax_amount',
             className: 'singleLineCell',
             render: (record: any) => {
                 return <div>{roundNumber(record)}</div>;

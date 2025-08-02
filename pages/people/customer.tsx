@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Space, Table, Modal, InputNumber } from 'antd';
 import { Button, Drawer } from 'antd';
 import { Form, Input, Select, Spin } from 'antd';
-import { EditOutlined, EyeOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import router from 'next/router';
 import { baseUrl, useSetState, Dropdown } from '@/utils/function.util';
@@ -248,8 +248,6 @@ const Customer = () => {
 
     // drawer
     const showDrawer = async (record: any) => {
-        console.log("record",record);
-        
         if (record) {
             try {
                 const res: any = await Models.customer.customer(record.id);
@@ -280,6 +278,16 @@ const Customer = () => {
     const onClose = () => {
         setOpen(false);
         form.resetFields();
+    };
+
+    const handleDelete = async (record: any) => {
+        console.log('✌️record --->', record);
+        try {
+            await Models.customer.delete(record.id);
+        } catch (error) {
+            setState({ testDeleteLoading: false });
+            console.log('✌️error --->', error);
+        }
     };
 
     // table heading
@@ -315,7 +323,7 @@ const Customer = () => {
                     ) : (
                         <EditOutlined style={{ cursor: 'pointer', display: 'none' }} onClick={() => showDrawer(record)} className="edit-icon" rev={undefined} />
                     )}
-
+                    {/* <DeleteOutlined onClick={() => handleDelete(record)} className="delete-icon" rev={undefined} /> */}
                     {/* {
                         localStorage.getItem('admin') === 'true' ? (
                             <DeleteOutlined

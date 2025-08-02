@@ -160,7 +160,7 @@ export default function Edits() {
                 discount: res?.invoice_discounts?.length > 0 ? roundNumber(res?.invoice_discounts[0]?.discount) || 0 : 0,
             });
             if (res?.tax?.length > 0 && taxList?.length > 0) {
-                const initialCheckedState = taxList?.reduce((acc:any, tax:any) => {
+                const initialCheckedState = taxList?.reduce((acc: any, tax: any) => {
                     acc[tax.id] = res?.tax.some((selectedTax: any) => selectedTax.id === tax.id);
                     return acc;
                 }, {} as Record<number, boolean>);
@@ -244,11 +244,20 @@ export default function Edits() {
                 return;
             }
             setState({ btnLoading: true });
-            const body = {
+            const body: any = {
                 date: state.date,
                 completed: state.completed,
                 place_of_testing: state.place_of_testing,
             };
+
+            const advance = Number(state.advance);
+            const afterTax = Number(state.after_tax_amount);
+
+            if (advance == afterTax) {
+                body.fully_paid = true;
+            } else {
+                body.fully_paid = false;
+            }
 
             const res = await Models.invoice.editInvoice(id, body);
             messageApi.open({
@@ -265,12 +274,27 @@ export default function Edits() {
 
     const invoiceUpdate = async () => {
         try {
-            const body = {
+            const body: any = {
                 date: state.date,
                 completed: state.completed,
                 place_of_testing: state.place_of_testing,
             };
-            const res = await Models.invoice.editInvoice(id, body);
+
+            await Models.invoice.editInvoice(id, body);
+
+            const invoice: any = await Models.invoice.invoiceDetails(id);
+            console.log('✌️invoice --->', invoice);
+
+            const advance = Number(invoice.advance);
+            const afterTax = Number(invoice.after_tax_amount);
+
+            if (advance == afterTax) {
+                body.fully_paid = true;
+            } else {
+                body.fully_paid = false;
+            }
+
+            await Models.invoice.editInvoice(id, body);
         } catch (error) {
             console.log('✌️error --->', error);
         }
@@ -724,6 +748,7 @@ export default function Edits() {
             const res = await Models.invoice.updatePayment(state.paymentId, body);
             paymentList();
             getInvoice();
+            invoiceUpdate();
 
             setState({ paymentLoading: false, isOpenPayment: false, paymentId: null, payment_mode: { value: 'cash', label: 'Cash' }, paymentAmount: '', paymentDate: '' });
         } catch (error: any) {

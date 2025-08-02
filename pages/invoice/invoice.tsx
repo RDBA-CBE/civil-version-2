@@ -158,8 +158,8 @@ const Invoice = () => {
         },
         {
             title: 'Total Amount',
-            dataIndex: 'total_amount',
-            key: 'total_amount',
+            dataIndex: 'after_tax_amount',
+            key: 'after_tax_amount',
             className: 'singleLineCell',
             render: (record: any) => {
                 return <div>{roundNumber(record)}</div>;
@@ -216,7 +216,7 @@ const Invoice = () => {
                     <span onClick={() => handleEditClick(record)} style={{ cursor: 'pointer' }} className="edit-icon">
                         <EditOutlined rev={undefined} />
                     </span>
-                    {/* <DeleteOutlined style={{ color: 'red', cursor: 'pointer' }} onClick={() => handleDelete(record)} className="delete-icon" rev={undefined} /> */}
+                    <DeleteOutlined style={{ color: 'red', cursor: 'pointer' }} onClick={() => handleDelete(record)} className="delete-icon" rev={undefined} />
                 </Space>
             ),
         },
@@ -245,10 +245,10 @@ const Invoice = () => {
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Sheet1');
 
-        worksheet.addRow(['Invoice No', 'Date', 'Customer Name', 'Project Name', 'Total Amount', 'Balance']);
+        worksheet.addRow(['Invoice No', 'Date', 'Customer Name', 'Project Name', 'After Tax Amount', 'Balance']);
 
         allData.forEach((item: any) => {
-            worksheet.addRow([item.invoice_no, dayjs(item.date).format('DD-MM-YYYY'), item.customer?.customer_name, item?.project_name, item?.total_amount, item?.balance]);
+            worksheet.addRow([item.invoice_no, dayjs(item.date).format('DD-MM-YYYY'), item.customer?.customer_name, item?.project_name, item?.after_tax_amount, item?.balance]);
         });
 
         // Generate a Blob containing the Excel file

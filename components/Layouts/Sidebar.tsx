@@ -298,6 +298,30 @@ const Sidebar = () => {
                                             </div>
                                         </Link>
                                     </li>
+
+                                    <li className="menu nav-item">
+                                        <Link href="/report/pendingPaymentReport" className="group">
+                                            <div className="flex items-center">
+                                                <span className="text-black dark:text-[#506690] dark:group-hover:text-white-dark ltr:pl-3 rtl:pr-3">{t('Pending Payment Report')}</span>
+                                            </div>
+                                        </Link>
+                                    </li>
+
+                                    <li className="menu nav-item">
+                                        <Link href="/report/invoiceReport" className="group">
+                                            <div className="flex items-center">
+                                                <span className="text-black dark:text-[#506690] dark:group-hover:text-white-dark ltr:pl-3 rtl:pr-3">{t('Invoice Report')}</span>
+                                            </div>
+                                        </Link>
+                                    </li>
+
+                                    <li className="menu nav-item">
+                                        <Link href="/report/quotationReport" className="group">
+                                            <div className="flex items-center">
+                                                <span className="text-black dark:text-[#506690] dark:group-hover:text-white-dark ltr:pl-3 rtl:pr-3">{t('Quotation Report')}</span>
+                                            </div>
+                                        </Link>
+                                    </li>
                                 </>
                             ) : (
                                 <></>

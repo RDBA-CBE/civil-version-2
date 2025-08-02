@@ -382,8 +382,8 @@ const SaleReport = () => {
                 </Tooltip>
             ),
             title1: 'Total Amount',
-            dataIndex: 'total_amount',
-            key: 'total_amount',
+            dataIndex: 'after_tax_amount',
+            key: 'after_tax_amount',
             className: 'singleLineCell',
             width: 250,
             render: (record: any) => {
@@ -500,7 +500,7 @@ const SaleReport = () => {
                         return row.customer?.gstin_no || '';
                     }
 
-                    if (key === 'advance' || key === 'balance' || key === 'total_amount') {
+                    if (key === 'advance' || key === 'balance' || key === 'after_tax_amount') {
                         return roundNumber(row[key]);
                     }
 
@@ -587,11 +587,11 @@ const SaleReport = () => {
             .then((res: any) => {
                 messageApi.open({
                     type: 'success',
-                    content: 'Invoice report generated successfully.',
+                    content: 'Sales report generated successfully.',
                 });
                 setIsModalOpen(false);
                 const blob = new Blob([res.data], { type: 'application/zip' });
-                saveAs(blob, `Invoice Report ${year}-${month}.zip`);
+                saveAs(blob, `Sales Report ${year}-${month}.zip`);
             })
             .catch((error: any) => {
                 console.log('✌️error --->', error);
