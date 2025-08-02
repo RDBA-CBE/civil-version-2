@@ -32,9 +32,7 @@ const Expense = () => {
     const [expense_amount_sum, setexpense_amount_sum] = useState(0);
     const [admin, setAdmin] = useState<any>([]);
     const [loading, setLoading] = useState(false);
-console.log('✌️loading --->', loading);
-
-    
+    console.log('✌️loading --->', loading);
 
     useEffect(() => {
         const Admin: any = localStorage.getItem('admin');
@@ -388,7 +386,7 @@ console.log('✌️loading --->', loading);
     });
 
     const [isMounted, setIsMounted] = useState(false);
-console.log('✌️isMounted --->', isMounted);
+    console.log('✌️isMounted --->', isMounted);
 
     useEffect(() => {
         setIsMounted(true);
@@ -400,7 +398,7 @@ console.log('✌️isMounted --->', isMounted);
     }, [payments_sum, expenseMonthWise, invoiceMonthData]);
 
     const getExpense = () => {
-        setLoading(true)
+        setLoading(true);
         const Token = localStorage.getItem('token');
 
         axios
@@ -438,7 +436,7 @@ console.log('✌️isMounted --->', isMounted);
                 setpayments_sum(res.data.payments_sum);
 
                 setsalesByCategory((prevData) => ({
-                    series: invoiceMonthData,
+                    series: res.data.payments,
                     options: {
                         chart: {
                             type: 'donut',
@@ -606,11 +604,10 @@ console.log('✌️isMounted --->', isMounted);
                         },
                     },
                 }));
-        setLoading(false)
-
+                setLoading(false);
             })
             .catch((error: any) => {
-        setLoading(false)
+                setLoading(false);
 
                 if (error.response?.status === 401) {
                     router.push('/');
@@ -918,13 +915,18 @@ console.log('✌️isMounted --->', isMounted);
                                         </div>
                                         <div>
                                             <div className="rounded-lg bg-white dark:bg-black">
-                                                {isMounted && !loading ? (
+                                                {isMounted && salesByCategory.series?.length > 0 ? (
                                                     // <ReactApexChart series={revenueChart.series} options={revenueChart.options} type="area" height={325} width={'100%'} />
 
                                                     <ReactApexChart
-                                                    key={isMounted ? 'mounted' : 'unmounted'} 
-                                                    series={salesByCategory.series} options={salesByCategory.options} type="donut" height={460} width={'100%'} />
-                                              ) : ( 
+                                                        key={isMounted ? 'mounted' : 'unmounted'}
+                                                        series={salesByCategory.series}
+                                                        options={salesByCategory.options}
+                                                        type="donut"
+                                                        height={460}
+                                                        width={'100%'}
+                                                    />
+                                                ) : (
                                                     <div className="grid min-h-[325px] place-content-center bg-white-light/30 dark:bg-dark dark:bg-opacity-[0.08] ">
                                                         <span className="inline-flex h-5 w-5 animate-spin rounded-full  border-2 border-black !border-l-transparent dark:border-white"></span>
                                                     </div>
