@@ -262,13 +262,16 @@ const PendingPaymentReport = () => {
 
             allData.forEach((row: any) => {
                 const rowData = columns.map((column: any) => {
+                    if (column.key == 'advance' || column.key == 'after_tax_amount' || column.key == 'balance') {
+                        return roundNumber(row[column.key]);
+                    }
                     if (column.dataIndex) {
                         return row[column.dataIndex];
                     } else if (column.key === 'customer_name') {
                         return row.customer?.customer_name || '';
                     } else if (column.key === 'invoice_file') {
                         return row.invoice_file;
-                    } else if (column.key === 'advance' || column.key === 'after_tax_amount' || column.key === 'balance') {
+                    } else if (column.key == 'advance' || column.key == 'after_tax_amount' || column.key == 'balance') {
                         return roundNumber(row);
                     } else {
                         return ''; // fallback

@@ -219,7 +219,7 @@ const InvoiceReport = () => {
     // export to excel format
 
     const exportToExcel = async (values: any) => {
-        setState({ btnloading: true });
+        setState({ btn1loading: true });
 
         const selectedDate = values.month;
         const year = selectedDate?.year();
@@ -271,7 +271,7 @@ const InvoiceReport = () => {
                 row.invoice.customer,
                 row.invoice.project_name,
                 roundNumber(row.invoice.advance),
-                roundNumber(row.invoice.total_amount),
+                roundNumber(row.invoice.after_tax_amount),
                 roundNumber(row.invoice.balance),
                 row.invoice.date,
                 {
@@ -293,7 +293,7 @@ const InvoiceReport = () => {
             `Invoice-Report-${year}.xlsx`
         );
 
-        setState({ btnloading: false });
+        setState({ btn1loading: false });
         setIsModalOpen(false);
     };
 
@@ -766,7 +766,7 @@ const InvoiceReport = () => {
                                 <Button danger htmlType="submit" onClick={() => handleCancel()}>
                                     Cancel
                                 </Button>
-                                <Button type="primary" htmlType="submit">
+                                <Button type="primary" htmlType="submit" loading={state.btn1loading}>
                                     {state.loading ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2 " /> : 'Submit'}
                                 </Button>
                             </Space>

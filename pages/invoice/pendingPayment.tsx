@@ -30,48 +30,47 @@ const PendingPayment = () => {
         pagePrev: null,
         paymentPendingList: [],
         searchValue: null,
-        btnloading:false,
+        btnloading: false,
         customerList: [],
         customerHasNext: null,
         customerCurrentPage: null,
     });
 
     useEffect(() => {
-       customersList()
+        customersList();
     }, []);
 
+    const customersList = async (page = 1) => {
+        try {
+            const res: any = await Models.invoice.customerList(page);
+            const dropdown = Dropdown(res?.results, 'customer_name');
+            setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: page });
+        } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
+    };
 
-     const customersList = async (page = 1) => {
-            try {
-                const res: any = await Models.invoice.customerList(page);
+    const customerSearch = async (text: any) => {
+        try {
+            const res: any = await Models.invoice.customerSearch(text);
+            if (res?.results?.length > 0) {
                 const dropdown = Dropdown(res?.results, 'customer_name');
-                setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: page });
-            } catch (error: any) {
-                console.log('✌️error --->', error);
+                setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: 1 });
             }
-        };
-    
-        const customerSearch = async (text: any) => {
-            try {
-                const res: any = await Models.invoice.customerSearch(text);
-                if (res?.results?.length > 0) {
-                    const dropdown = Dropdown(res?.results, 'customer_name');
-                    setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: 1 });
-                }
-            } catch (error) {
-                console.log('✌️error --->', error);
-            }
-        };
-    
-        const customersLoadMore = async (page = 1) => {
-            try {
-                const res: any = await Models.invoice.customerList(page);
-                const dropdown = Dropdown(res?.results, 'customer_name');
-                setState({ customerList: [...state.customerList, ...dropdown], customerHasNext: res?.next, customerCurrentPage: page });
-            } catch (error: any) {
-                console.log('✌️error --->', error);
-            }
-        };
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const customersLoadMore = async (page = 1) => {
+        try {
+            const res: any = await Models.invoice.customerList(page);
+            const dropdown = Dropdown(res?.results, 'customer_name');
+            setState({ customerList: [...state.customerList, ...dropdown], customerHasNext: res?.next, customerCurrentPage: page });
+        } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
+    };
 
     // Table Datas
     const columns = [
@@ -202,13 +201,16 @@ const PendingPayment = () => {
             // Add data rows
             allData.forEach((row: any) => {
                 const rowData = columns.map((column: any) => {
+                    if (column.key === 'advance' || column.key === 'after_tax_amount' || column.key === 'balance') {
+                        return roundNumber(row[column.key]);
+                    }
                     if (column.dataIndex) {
                         return row[column.dataIndex];
                     } else if (column.key === 'customer_name') {
                         return row.customer?.customer_name || '';
                     } else if (column.key === 'incompleted_test') {
                         return row.completed;
-                    } else if (column.key === 'advance' || column.key === 'total_amount' || column.key === 'balance') {
+                    } else if (column.key === 'advance' || column.key === 'after_tax_amount' || column.key === 'balance') {
                         return roundNumber(row);
                     } else {
                         return ''; // fallback
@@ -340,7 +342,6 @@ const PendingPayment = () => {
                             </Form.Item>
 
                             <Form.Item label="Customer" name="customer" style={{ width: '250px' }}>
-                                
                                 <CustomSelect
                                     onSearch={(data: any) => customerSearch(data)}
                                     value={state.customer}
@@ -425,7 +426,6 @@ const PendingPayment = () => {
                 {state.paymentPendingList?.length > 0 && (
                     <div>
                         <div
-                            
                             style={{
                                 display: 'flex',
                                 justifyContent: 'center',

@@ -563,9 +563,9 @@ const Invoice = () => {
                             + Create Invoice
                         </button>
 
-                        <button type="button" className="create-button" onClick={() => exportToExcel()}>
+                        {/* <button type="button" className="create-button" onClick={() => exportToExcel()}>
                             {state.excelBtnLoading ? <IconLoader /> : 'Excel to export'}
-                        </button>
+                        </button> */}
                     </div>
                 </div>
                 <div className="table-responsive">
