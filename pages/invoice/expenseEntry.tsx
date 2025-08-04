@@ -317,7 +317,7 @@ const ExpenseEntry = () => {
             },
             {
                 label: 'Amount:',
-                value: viewRecord?.amount || 'N/A',
+                value: roundNumber(viewRecord?.amount )|| 'N/A',
             },
             {
                 label: 'Narration:',

@@ -648,7 +648,10 @@ export default function Edits() {
                 return;
             }
 
-            if (Number(state.paymentAmount) > Number(state.balance)) {
+            const paymentAmount = roundNumber(state.paymentAmount);
+            const balance = roundNumber(state.balance);
+
+            if (paymentAmount > balance) {
                 messageApi.open({
                     type: 'error',
                     content: 'Payment amount cannot be greater than balance.',
