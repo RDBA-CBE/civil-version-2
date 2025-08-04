@@ -148,7 +148,7 @@ const expense = {
 
     expenseFileReport: (page: number, body: any) => {
         let promise = new Promise((resolve, reject) => {
-            let url = `invoice_file/?page=${page}&category=3`;
+            let url = `invoice-file/?page=${page}&category=3`;
             if (body?.search) {
                 url += `&search=${encodeURIComponent(body.search)}`;
             }
@@ -193,7 +193,7 @@ const expense = {
 
     invoiceFileReport: (page: number, body: any) => {
         let promise = new Promise((resolve, reject) => {
-            let url = `invoice_file/?page=${page}&category=2`;
+            let url = `invoice-file/?page=${page}&category=2`;
             if (body?.search) {
                 url += `&search=${encodeURIComponent(body.search)}`;
             }

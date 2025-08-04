@@ -229,6 +229,10 @@ const ExpenseReport = () => {
                         return roundNumber(value);
                     }
 
+                    if (col.dataIndex === 'date') {
+                        return moment(value).format('DD-MM-YYYY');
+                    }
+
                     return value ?? ''; // fallback if null/undefined
                 });
 
