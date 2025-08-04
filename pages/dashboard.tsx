@@ -8,36 +8,27 @@ import dynamic from 'next/dynamic';
 const ReactApexChart = dynamic(() => import('react-apexcharts').then((mod) => mod.default), { ssr: false });
 import { useRouter } from 'next/router';
 import dayjs from 'dayjs';
-import { baseUrl, roundNumber } from '@/utils/function.util';
+import { baseUrl, roundNumber, useSetState } from '@/utils/function.util';
+import Models from '@/imports/models.import';
 
 const Expense = () => {
     const router = useRouter();
-    const [customerCount, setCustomerCount] = useState('');
-    const [thisMonthcustomerCount, setthisMonthcustomerCount] = useState('');
+    const [state, setState] = useSetState({
+        data: null,
+        cardData: [],
+        invoiceList: [],
+        currentMonth: 'This',
+        expenseList: [],
+        expenceTotal: 0,
+        admin: 'false',
+        isMounted: false,
+        revenueChart: {},
+    });
 
-    const [invoiceTotal, setInvoiceTotal] = useState('');
-    const [incompleteinvoiceTotal, setIncompleteInvoiceTotal] = useState('');
-
-    const [incompletetestTotal, setIncompletetestTotal] = useState('');
-    const [incompletetestThisMonthTotal, setincompletetestThisMonthTotal] = useState('');
-
-    const [invoiceThisMonthTotal, setInvoiceThisMonthTotal] = useState('');
-    const [incompleteinvoiceThisMonthTotal, setincompleteInvoiceThisMonthTotal] = useState('');
-    const [expenseTotal, setExpenseTotal] = useState('');
-    const [expenseThisMonthTotal, setExpenseThisMonthTotal] = useState('');
-    const [thisMonthName, setthisMonthName] = useState('This');
     const [invoiceMonthData, setInvoiceMonthData] = useState([]);
-    const [invoices, setinvoices] = useState([]);
-    const [expenses, setexpenses] = useState([]);
-    const [expense_amount_sum, setexpense_amount_sum] = useState(0);
-    const [admin, setAdmin] = useState<any>([]);
-    const [loading, setLoading] = useState(false);
-    console.log('✌️loading --->', loading);
-
-    useEffect(() => {
-        const Admin: any = localStorage.getItem('admin');
-        setAdmin(Admin);
-    }, []);
+    const [expenseChart, setExpenseChart] = useState<any>(null);
+    const [expenseMonthWise, setexpenseMonthWise] = useState([]);
+    const [payments_sum, setpayments_sum] = useState(0);
 
     const [monthName, setMonthName] = useState(['April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', 'January', 'February', 'March']);
     const [total, setTotal] = useState([13080.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
@@ -47,6 +38,22 @@ const Expense = () => {
     const isDark = useSelector((state: IRootState) => state.themeConfig.theme === 'dark' || state.themeConfig.isDarkMode);
 
     const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl' ? true : false;
+
+    useEffect(() => {
+        const admin: any = localStorage.getItem('admin');
+        if (admin) {
+            setState({ admin });
+        }
+    }, []);
+
+    useEffect(() => {
+        setState({ isMounted: true });
+        getExpense();
+    }, [payments_sum]);
+
+    useEffect(() => {
+        updateChart();
+    }, [payments_sum, expenseMonthWise, invoiceMonthData]);
 
     const [initialSeriesData] = [
         {
@@ -209,8 +216,6 @@ const Expense = () => {
         },
     ];
 
-    const [payments_sum, setpayments_sum] = useState(0);
-
     const [revenueChart, setRevenueChart] = useState({
         series: initialSeriesData,
         options: initialOptions,
@@ -291,12 +296,6 @@ const Expense = () => {
         series: [],
         options: salesinitdata,
     });
-    console.log('✌️salesByCategory --->', salesByCategory);
-
-    const [expenseChart, setExpenseChart] = useState<any>(null);
-    const [pending_payment, setpending_payment] = useState(0);
-    const [pending_payment_this_month, setpending_payment_this_month] = useState('');
-    const [expenseMonthWise, setexpenseMonthWise] = useState([]);
 
     const [categoryinitdata] = [
         {
@@ -385,20 +384,229 @@ const Expense = () => {
         options: initialOptions,
     });
 
-    const [isMounted, setIsMounted] = useState(false);
-    console.log('✌️isMounted --->', isMounted);
+    const getExpense = async () => {
+        try {
+            const res: any = await Models.auth.dashboard();
+            console.log('✌️res --->', res);
 
-    useEffect(() => {
-        setIsMounted(true);
-        getExpense();
-    }, [payments_sum]);
+            const cardData = [
+                {
+                    name: 'Customer',
+                    total: res?.customer_count,
+                    monthData: res?.this_month_customer_count,
+                    bg: 'from-cyan-500 to-cyan-400',
+                    link: '/people/customer',
+                },
+                {
+                    name: 'Invoices',
+                    total: res?.all_invoice,
+                    monthData: res?.this_month_generated_invoice,
+                    bg: 'from-violet-500 to-violet-400',
+                    link: '/invoice/invoice',
+                },
+                {
+                    name: 'Incomplete Invoices',
+                    total: res?.incompleted_invoice_count,
+                    monthData: res?.this_month_generated_incompleted_invoice,
+                    bg: 'from-red-500 to-red-400',
+                    link: '/invoice/invoice',
+                },
+                {
+                    name: 'Incomplete tests',
+                    total: res?.incompleted_test_count,
+                    monthData: res?.this_month_generated_incompleted_test,
+                    bg: 'from-rose-500 to-rose-400',
+                    link: '/report/testReport',
+                },
+                {
+                    name: 'Expense',
+                    total: res?.total_expense_count,
+                    monthData: res?.this_month_expense_entry_count,
+                    bg: 'from-blue-500 to-blue-400',
+                    link: '/report/expenseReport',
+                },
+            ];
 
-    useEffect(() => {
-        updateChart();
-    }, [payments_sum, expenseMonthWise, invoiceMonthData]);
+            const revenueOptions = [
+                {
+                    chart: {
+                        height: 325,
+                        type: 'area',
+                        fontFamily: 'Nunito, sans-serif',
+                        zoom: {
+                            enabled: false,
+                        },
+                        toolbar: {
+                            show: false,
+                        },
+                    },
 
-    const getExpense = () => {
-        setLoading(true);
+                    dataLabels: {
+                        enabled: false,
+                    },
+                    stroke: {
+                        show: true,
+                        curve: 'smooth',
+                        width: 2,
+                        lineCap: 'square',
+                    },
+                    dropShadow: {
+                        enabled: true,
+                        opacity: 0.2,
+                        blur: 10,
+                        left: -7,
+                        top: 22,
+                    },
+                    colors: isDark ? ['#2196F3', '#E7515A', '#e670f8'] : ['#1B55E2', '#E7515A', '#e670f8'],
+                    markers: {
+                        discrete: [
+                            {
+                                seriesIndex: 0,
+                                dataPointIndex: 6,
+                                fillColor: '#1B55E2',
+                                strokeColor: 'transparent',
+                                size: 7,
+                            },
+                            {
+                                seriesIndex: 1,
+                                dataPointIndex: 5,
+                                fillColor: '#E7515A',
+                                strokeColor: 'transparent',
+                                size: 7,
+                            },
+                            {
+                                seriesIndex: 2,
+                                dataPointIndex: 5,
+                                fillColor: '#e670f8',
+                                strokeColor: 'transparent',
+                                size: 7,
+                            },
+                        ],
+                    },
+                    labels: ['April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', 'January', 'February', 'March'],
+                    xaxis: {
+                        axisBorder: {
+                            show: false,
+                        },
+                        axisTicks: {
+                            show: false,
+                        },
+                        crosshairs: {
+                            show: true,
+                        },
+                        labels: {
+                            offsetX: isRtl ? 2 : 0,
+                            offsetY: 5,
+                            style: {
+                                fontSize: '12px',
+                                cssClass: 'apexcharts-xaxis-title',
+                            },
+                        },
+                    },
+                    yaxis: {
+                        tickAmount: 7,
+                        labels: {
+                            formatter: (value: number) => {
+                                return value;
+                            },
+                            offsetX: isRtl ? -30 : -10,
+                            offsetY: 0,
+                            style: {
+                                fontSize: '12px',
+                                cssClass: 'apexcharts-yaxis-title',
+                            },
+                        },
+                        opposite: isRtl ? true : false,
+                    },
+                    grid: {
+                        borderColor: isDark ? '#191E3A' : '#E0E6ED',
+                        strokeDashArray: 5,
+                        xaxis: {
+                            lines: {
+                                show: false,
+                            },
+                        },
+                        yaxis: {
+                            lines: {
+                                show: true,
+                            },
+                        },
+                        padding: {
+                            top: 0,
+                            right: 0,
+                            bottom: 0,
+                            left: 0,
+                        },
+                    },
+                    legend: {
+                        position: 'top',
+                        horizontalAlign: 'right',
+                        fontSize: '16px',
+                        markers: {
+                            width: 10,
+                            height: 10,
+                            offsetX: -2,
+                        },
+                        itemMargin: {
+                            horizontal: 10,
+                            vertical: 5,
+                        },
+                    },
+                    tooltip: {
+                        marker: {
+                            show: true,
+                        },
+                        x: {
+                            show: false,
+                        },
+                    },
+                    fill: {
+                        type: 'gradient',
+                        gradient: {
+                            shadeIntensity: 1,
+                            inverseColors: !1,
+                            opacityFrom: isDark ? 0.19 : 0.28,
+                            opacityTo: 0.05,
+                            stops: isDark ? [100, 100] : [45, 100],
+                        },
+                    },
+                },
+            ];
+
+            const revenueSeries = [
+                {
+                    name: 'Total',
+                    data: res?.total_amount,
+                },
+                {
+                    name: 'Paid Amount',
+                    data: res?.paid_amount,
+                },
+                {
+                    name: 'Unpaid Amount',
+                    data: res?.banlance_amount,
+                },
+            ];
+
+            const pendingPayment = {
+                total: roundNumber(res?.pending_payment),
+                monthData: roundNumber(res?.pending_payment_this_month),
+            };
+            setState({
+                cardData,
+                pendingPayment,
+                currentMonth: res?.this_month_name,
+                invoiceList: res?.invoices,
+                expenseList: res?.expenses,
+                expenceTotal: res?.expense_amount_sum,
+                revenueChart: {
+                    series: revenueSeries,
+                    options: revenueOptions,
+                },
+            });
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
         const Token = localStorage.getItem('token');
 
         axios
@@ -408,31 +616,12 @@ const Expense = () => {
                 },
             })
             .then((res) => {
-                setCustomerCount(res.data.customer_count);
-                setthisMonthcustomerCount(res.data.this_month_customer_count);
-                setInvoiceTotal(res.data.all_invoice);
-
-                setIncompleteInvoiceTotal(res.data.incompleted_invoice_count);
-                setInvoiceThisMonthTotal(res.data.this_month_generated_invoice);
-
-                setIncompletetestTotal(res.data.incompleted_test_count);
-
-                setincompleteInvoiceThisMonthTotal(res.data.this_month_generated_incompleted_invoice);
-                setincompletetestThisMonthTotal(res.data.this_month_generated_incompleted_test);
-                setExpenseTotal(res.data.total_expense_count);
-                setExpenseThisMonthTotal(res.data.this_month_expense_count);
-                setpending_payment(roundNumber(res.data.pending_payment));
-                setpending_payment_this_month(res.data.pending_payment_this_month);
                 setMonthName(res.data.months_name);
                 setTotal(res.data.total_amount);
                 setPaid(res.data.paid_amount);
                 setUnPaid(res.data.banlance_amount);
                 setInvoiceMonthData(res.data.payments);
-                setthisMonthName(res.data.this_month_name);
-                setinvoices(res.data.invoices);
-                setexpenses(res.data.expenses);
                 setexpenseMonthWise(res.data.expense_amount_list);
-                setexpense_amount_sum(res.data.expense_amount_sum);
                 setpayments_sum(res.data.payments_sum);
 
                 setsalesByCategory((prevData) => ({
@@ -604,11 +793,8 @@ const Expense = () => {
                         },
                     },
                 }));
-                setLoading(false);
             })
             .catch((error: any) => {
-                setLoading(false);
-
                 if (error.response?.status === 401) {
                     router.push('/');
                 }
@@ -785,24 +971,25 @@ const Expense = () => {
                 </ul>
                 <div className="pt-5">
                     <div className="mb-6 grid grid-cols-1 gap-6 text-white sm:grid-cols-2 xl:grid-cols-4">
-                        {admin === 'true' ? (
+                        {state.admin === 'true' ? (
                             <>
-                                <Link href="/people/customer">
-                                    <div className="panel bg-gradient-to-r from-cyan-500 to-cyan-400">
-                                        <div className="flex justify-between">
-                                            <div className="text-md font-semibold ltr:mr-1 rtl:ml-1">Customer</div>
+                                {state.cardData?.map((item: any) => (
+                                    <Link href={item?.link ? item?.link : '#'}>
+                                        <div className={`panel bg-gradient-to-r ${item?.bg} `}>
+                                            <div className="flex justify-between">
+                                                <div className="text-md font-semibold ltr:mr-1 rtl:ml-1">{item?.name}</div>
+                                            </div>
+                                            <div className="mt-5 flex items-center">
+                                                <div className="text-3xl font-bold ltr:mr-3 rtl:ml-3">Total : {item?.total} </div>
+                                            </div>
+                                            <div className="mt-5 flex items-center font-semibold">
+                                                <IconEye className="shrink-0 ltr:mr-2 rtl:ml-2" />
+                                                {state.currentMonth} month added : {item?.monthData}
+                                            </div>
                                         </div>
-                                        <div className="mt-5 flex items-center">
-                                            <div className="text-3xl font-bold ltr:mr-3 rtl:ml-3">Total : {customerCount} </div>
-                                        </div>
-                                        <div className="mt-5 flex items-center font-semibold">
-                                            <IconEye className="shrink-0 ltr:mr-2 rtl:ml-2" />
-                                            {thisMonthName} month added : {thisMonthcustomerCount}
-                                        </div>
-                                    </div>
-                                </Link>
-
-                                <Link href="/invoice/invoice">
+                                    </Link>
+                                ))}
+                                {/* <Link href="/invoice/invoice">
                                     <div className="panel bg-gradient-to-r from-violet-500 to-violet-400">
                                         <div className="flex justify-between">
                                             <div className="text-md font-semibold ltr:mr-1 rtl:ml-1">Invoices</div>
@@ -863,7 +1050,7 @@ const Expense = () => {
                                             {thisMonthName} Month added : {expenseThisMonthTotal}
                                         </div>
                                     </div>
-                                </Link>
+                                </Link> */}
                             </>
                         ) : (
                             <></>
@@ -876,17 +1063,17 @@ const Expense = () => {
                                     <div className="dropdown"></div>
                                 </div>
                                 <div className="mt-5 flex items-center">
-                                    <div className="text-3xl font-bold ltr:mr-3 rtl:ml-3">Amount : {pending_payment} </div>
+                                    <div className="text-3xl font-bold ltr:mr-3 rtl:ml-3">Amount : {state.pendingPayment?.total} </div>
                                 </div>
                                 <div className="mt-5 flex items-center font-semibold">
                                     <IconEye className="shrink-0 ltr:mr-2 rtl:ml-2" />
-                                    {thisMonthName} Month : {pending_payment_this_month}
+                                    {state.currentMonth} Month : {state.pendingPayment?.monthData}
                                 </div>
                             </div>
                         </Link>
                     </div>
 
-                    {admin === 'true' ? (
+                    {state.admin === 'true' ? (
                         <>
                             <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
                                 <div className="panel h-full">
@@ -896,7 +1083,7 @@ const Expense = () => {
                                     <div className=" h-full xl:col-span-2">
                                         <div className="relative">
                                             <div className="rounded-lg bg-white dark:bg-black">
-                                                {isMounted ? (
+                                                {state.isMounted ? (
                                                     <ReactApexChart series={revenueChart.series} options={revenueChart.options} type="area" height={325} width={'100%'} />
                                                 ) : (
                                                     <div className="grid min-h-[325px] place-content-center bg-white-light/30 dark:bg-dark dark:bg-opacity-[0.08] ">
@@ -911,15 +1098,15 @@ const Expense = () => {
                                 <div>
                                     <div className="panel h-full">
                                         <div className="mb-5 flex items-center">
-                                            <h5 className="text-lg font-semibold dark:text-white-light">{thisMonthName} Payment</h5>
+                                            <h5 className="text-lg font-semibold dark:text-white-light">{state.currentMonth} Payment</h5>
                                         </div>
                                         <div>
                                             <div className="rounded-lg bg-white dark:bg-black">
-                                                {isMounted && salesByCategory.series?.length > 0 ? (
+                                                {state.isMounted && salesByCategory.series?.length > 0 ? (
                                                     // <ReactApexChart series={revenueChart.series} options={revenueChart.options} type="area" height={325} width={'100%'} />
 
                                                     <ReactApexChart
-                                                        key={isMounted ? 'mounted' : 'unmounted'}
+                                                        key={state.isMounted ? 'mounted' : 'unmounted'}
                                                         series={salesByCategory.series}
                                                         options={salesByCategory.options}
                                                         type="donut"
@@ -946,44 +1133,48 @@ const Expense = () => {
                             <div className="mb-5 flex items-center justify-between">
                                 <h5 className="text-lg font-semibold dark:text-white-light">Recent Invoices</h5>
                             </div>
-                            <div className="table-responsive">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th className="ltr:rounded-l-md rtl:rounded-r-md">Customer</th>
-                                            <th>Invoice No</th>
-                                            <th>Amount</th>
-                                            <th>Balance</th>
-                                            <th className="ltr:rounded-r-md rtl:rounded-l-md">Project Name</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {invoices.map((item: any, rowIndex: any) => (
-                                            <tr key={rowIndex} className="group text-white-dark hover:text-black dark:hover:text-white-light/90">
-                                                <td>{item.customer}</td>
-                                                <td>{item.invoice_no}</td>
-                                                <td>{roundNumber(item.total_amount)}</td>
-                                                <td>{roundNumber(item.balance)}</td>
-                                                <td>{item.project_name}</td>
+                            {state.invoiceList?.length > 0 ? (
+                                <div className="table-responsive">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th className="ltr:rounded-l-md rtl:rounded-r-md">Customer</th>
+                                                <th>Invoice No</th>
+                                                <th>Amount</th>
+                                                <th>Balance</th>
+                                                <th className="ltr:rounded-r-md rtl:rounded-l-md">Project Name</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                                        </thead>
+                                        <tbody>
+                                            {state.invoiceList?.map((item: any, rowIndex: any) => (
+                                                <tr key={rowIndex} className="group text-white-dark hover:text-black dark:hover:text-white-light/90">
+                                                    <td>{item?.customer}</td>
+                                                    <td>{item?.invoice_no}</td>
+                                                    <td>{roundNumber(item?.total_amount)}</td>
+                                                    <td>{roundNumber(item?.balance)}</td>
+                                                    <td>{item?.project_name}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ) : (
+                                <div>No Invoice Found</div>
+                            )}
                         </div>
                     </div>
 
-                    {admin === 'true' ? (
+                    {state.admin === 'true' ? (
                         <>
                             <div className="mb-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
                                 <div className="panel h-full ">
                                     <div className="mb-5 flex items-center font-bold">
-                                        <span className="text-lg">Expense - ({expense_amount_sum})</span>
+                                        <span className="text-lg">Expense - ({state.expenceTotal})</span>
                                     </div>
                                     <div className="xl:col-span-2">
                                         <div className="relative">
                                             <div className="rounded-lg bg-white dark:bg-black">
-                                                {isMounted ? (
+                                                {state.isMounted ? (
                                                     <ReactApexChart series={expenseChart.series} options={expenseChart.options} type="area" height={325} width={'100%'} />
                                                 ) : (
                                                     <div className="grid min-h-[325px] place-content-center bg-white-light/30 dark:bg-dark dark:bg-opacity-[0.08] ">
@@ -998,11 +1189,11 @@ const Expense = () => {
                                 <div>
                                     <div className="panel h-full">
                                         <div className="mb-5 flex items-center">
-                                            <h5 className="text-lg font-semibold dark:text-white-light">{thisMonthName} Expense</h5>
+                                            <h5 className="text-lg font-semibold dark:text-white-light">{state.currentMonth} Expense</h5>
                                         </div>
                                         <div>
                                             <div className="rounded-lg bg-white dark:bg-black">
-                                                {isMounted ? (
+                                                {state.isMounted ? (
                                                     <ReactApexChart options={categoryChart.options} series={categoryChart.series} type="bar" height={360} width={'100%'} />
                                                 ) : (
                                                     <div className="grid min-h-[325px] place-content-center bg-white-light/30 dark:bg-dark dark:bg-opacity-[0.08] ">
@@ -1020,29 +1211,33 @@ const Expense = () => {
                                     <div className="mb-5 flex items-center justify-between">
                                         <h5 className="text-lg font-semibold dark:text-white-light">Recent Expenses</h5>
                                     </div>
-                                    <div className="table-responsive">
-                                        <table>
-                                            <thead>
-                                                <tr>
-                                                    <th className="ltr:rounded-l-md rtl:rounded-r-md">Expense User</th>
-                                                    <th>Date</th>
-                                                    <th>Category</th>
-                                                    <th>Amount</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {expenses.map((item: any, rowIndex) => (
-                                                    <tr key={rowIndex} className="group text-white-dark hover:text-black dark:hover:text-white-light/90">
-                                                        <td>{item.expense_user}</td>
-                                                        <td>{dayjs(item.date).format('MMMM DD, YYYY')}</td>
-                                                        <td>{item.expense_category_name}</td>
-
-                                                        <td>{roundNumber(item.amount)}</td>
+                                    {state.expenseList?.length > 0 ? (
+                                        <div className="table-responsive">
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th className="ltr:rounded-l-md rtl:rounded-r-md">Expense User</th>
+                                                        <th>Date</th>
+                                                        <th>Category</th>
+                                                        <th>Amount</th>
                                                     </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                                </thead>
+                                                <tbody>
+                                                    {state.expenseList?.map((item: any, rowIndex: number) => (
+                                                        <tr key={rowIndex} className="group text-white-dark hover:text-black dark:hover:text-white-light/90">
+                                                            <td>{item?.expense_user}</td>
+                                                            <td>{dayjs(item?.date).format('MMMM DD, YYYY')}</td>
+                                                            <td>{item?.expense_category_name}</td>
+
+                                                            <td>{roundNumber(item?.amount)}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    ) : (
+                                        <div>No Expense Found</div>
+                                    )}
                                 </div>
                             </div>
                         </>

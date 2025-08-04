@@ -176,7 +176,7 @@ const PendingPaymentReport = () => {
             },
         },
         {
-            title: 'After Tax',
+            title: 'Total Amount',
             dataIndex: 'after_tax_amount',
             key: 'after_tax_amount',
             className: 'singleLineCell',

@@ -127,10 +127,10 @@ const InvoiceReport = () => {
         {
             title: 'Total Amount',
             // dataIndex: 'total_amount',
-            key: 'total_amount',
+            key: 'after_tax_amount',
             className: 'singleLineCell',
             render: (record: any) => {
-                return <div>{roundNumber(record.invoice.total_amount)}</div>;
+                return <div>{roundNumber(record.invoice.after_tax_amount)}</div>;
             },
         },
         {
