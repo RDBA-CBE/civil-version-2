@@ -34,7 +34,7 @@ const Preview = () => {
         }
     };
 
-    const testList = async (page = 1) => {
+    const testList = async () => {
         try {
             const res: any = await Models.invoice.testList(id);
             setState({ testList: res });
@@ -387,10 +387,17 @@ const Preview = () => {
                                                     </>
                                                 ) : null} */}
 
-                                            {state.detail?.invoice_discounts?.length > 0 && state.detail?.invoice_discounts[0]?.discount > 0 ? (
+                                            {/* {state.detail?.invoice_discounts?.length > 0 && state.detail?.invoice_discounts[0]?.discount > 0 ? (
                                                 <>
                                                     <td style={{ textAlign: 'right' }}>Discount (%) </td>
                                                     <td style={{ textAlign: 'right' }}>{roundNumber(state.detail?.invoice_discounts[0]?.discount)}</td>
+                                                </>
+                                            ) : null} */}
+
+                                            {state.detail?.invoice_discounts?.length > 0 && state.detail?.invoice_discounts[0]?.discount > 0 ? (
+                                                <>
+                                                    <td style={{ textAlign: 'right' }}>Discount {roundNumber(state.detail?.invoice_discounts[0]?.discount)}% </td>
+                                                    <td style={{ textAlign: 'right' }}>{roundNumber(state.detail?.discount)}</td>
                                                 </>
                                             ) : null}
                                         </>
