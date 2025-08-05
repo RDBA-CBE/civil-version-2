@@ -14,12 +14,10 @@ const Print = () => {
         getTestReport();
     }, [id]);
 
-
     const getTestReport = async () => {
         try {
             const res: any = await Models.testReport.invoiceTestReport(id);
-            console.log('✌️res --->', res);
-            const table = res?.invoice_test?.report_template;
+            const table = res?.invoice_test?.final_html;
             if (table) {
                 let tempDiv = document.createElement('div');
                 tempDiv.innerHTML = table;
