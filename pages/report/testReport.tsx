@@ -287,8 +287,8 @@ const TestReport = () => {
 
         const body = {
             test: state.searchValue?.test ? state.searchValue.test?.value : '',
-            from_date: state.searchValue?.from_date ? dayjs(state.searchValue?.from_date).format('DD-MM-YYYY') : '',
-            to_date: state.searchValue?.to_date ? dayjs(state.searchValue?.to_date).format('DD-MM-YYYY') : '',
+            from_date: state.searchValue?.from_date ? dayjs(state.searchValue?.from_date).format('YYYY-MM-DD') : '',
+            to_date: state.searchValue?.to_date ? dayjs(state.searchValue?.to_date).format('YYYY-MM-DD') : '',
             customer: state.searchValue?.customer ? state.searchValue.customer?.value : '',
             material: state.searchValue?.material ? state.searchValue.material?.value : '',
             invoice_no: state.searchValue?.invoice_no ? state.searchValue?.invoice_no : '',

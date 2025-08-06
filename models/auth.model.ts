@@ -100,6 +100,26 @@ const auth = {
         });
         return promise;
     },
+
+    dashboard: () => {
+        let promise = new Promise((resolve, reject) => {
+            let url = `dashboard/`;
+            instance()
+                .get(url)
+                .then((res) => {
+                    resolve(res.data);
+                })
+                .catch((error) => {
+                    console.log('errorsss: ', error.response.data);
+                    if (error.response) {
+                        reject(error.response.data);
+                    } else {
+                        reject(error);
+                    }
+                });
+        });
+        return promise;
+    },
 };
 
 export default auth;

@@ -3,7 +3,7 @@ import instance from '@/utils/axios.util';
 const invoiceFile = {
     invoiceFileList: (page: any) => {
         let promise = new Promise((resolve, reject) => {
-            let url = `invoice_file/?page=${page}`;
+            let url = `invoice-file/?page=${page}`;
             instance()
                 .get(url)
                 .then((res) => {

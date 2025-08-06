@@ -32,12 +32,12 @@ const SaleReport = () => {
         invoiceList: [],
         discount: 0,
         searchValue: null,
-        customerList:[]
+        customerList: [],
     });
 
     useEffect(() => {
         initialData(1);
-        customersList()
+        customersList();
     }, []);
 
     const initialData = async (page: any) => {
@@ -479,11 +479,28 @@ const SaleReport = () => {
             worksheet.addRow(columns.map((column) => column.title1));
             allData.forEach((row: any) => {
                 console.log('✌️row --->', row);
+
                 const rowData = columns.map((column: any) => {
                     const key = column.key;
+                    console.log('✌️key --->', key);
 
-                    if (column.dataIndex) {
-                        return row[column.dataIndex] ?? '';
+                    // if (column.dataIndex) {
+                    //     return row[column.dataIndex] ?? '';
+                    // }
+                    if (key === 'date') {
+                        return row.date || '';
+                    }
+
+                    if (key === 'project_name') {
+                        return row.project_name || '';
+                    }
+
+                    if (key === 'invoice_no') {
+                        return row.invoice_no || '';
+                    }
+
+                    if (key === 'completed') {
+                        return row.completed || '';
                     }
 
                     if (key === 'customer_name') {
@@ -500,8 +517,14 @@ const SaleReport = () => {
                         return row.customer?.gstin_no || '';
                     }
 
-                    if (key === 'advance' || key === 'balance' || key === 'after_tax_amount') {
-                        return roundNumber(row[key]);
+                    if (key == 'advance') {
+                        return roundNumber(row.advance);
+                    }
+                    if (key == 'balance') {
+                        return roundNumber(row.balance);
+                    }
+                    if (key == 'after_tax_amount') {
+                        return roundNumber(row.after_tax_amount);
                     }
 
                     if (key === 'invoice_file') {
@@ -556,8 +579,7 @@ const SaleReport = () => {
     };
 
     const onFinishZip = (values: any) => {
-
-        setState({zipBtnloading:true})
+        setState({ zipBtnloading: true });
 
         // Get the selected month and year from the DatePicker value
         const selectedDate = values.month; // The value from the DatePicker
@@ -608,7 +630,7 @@ const SaleReport = () => {
             })
             .finally(() => {
                 // form.resetFields(); // Reset the form after completion
-                setState({zipBtnloading:false})
+                setState({ zipBtnloading: false });
             });
     };
 
@@ -653,7 +675,6 @@ const SaleReport = () => {
                             </Form.Item>
 
                             <Form.Item label="Customer" name="customer" style={{ width: '300px' }}>
-
                                 <CustomSelect
                                     onSearch={(data: any) => customerSearch(data)}
                                     value={state.customer}
@@ -755,7 +776,6 @@ const SaleReport = () => {
                                 </Button>
                                 <Button type="primary" htmlType="submit">
                                     {state.zipBtnloading ? <IconLoader className="shrink-0 ltr:mr-2 rtl:ml-2" /> : 'Submit'}
-                                    
                                 </Button>
                             </Space>
                         </div>

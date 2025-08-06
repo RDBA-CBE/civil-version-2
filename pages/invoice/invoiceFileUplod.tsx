@@ -55,7 +55,7 @@ const InvoiceFileUpload = () => {
                 setFormFields(res?.data);
             })
             .catch((error: any) => {
-                if (error.response.status === 401) {
+                if (error?.response?.status === 401) {
                     router.push('/');
                 }
             });
@@ -88,7 +88,7 @@ const InvoiceFileUpload = () => {
     //             setFilterData(res?.data?.invoice_files);
     //         })
     //         .catch((error: any) => {
-    //             if (error.response.status === 401) {
+    //             if (error?.response?.status === 401) {
     //                 router.push('/');
     //             } else {
     //             }
@@ -284,7 +284,7 @@ const InvoiceFileUpload = () => {
                     onClose();
                 })
                 .catch((error: any) => {
-                    if (error.response.status === 401) {
+                    if (error?.response?.status === 401) {
                         router.push('/');
                     }
                 });
@@ -303,7 +303,7 @@ const InvoiceFileUpload = () => {
                     onClose();
                 })
                 .catch((error: any) => {
-                    if (error.response.status === 401) {
+                    if (error?.response?.status === 401) {
                         router.push('/');
                     }
                 });

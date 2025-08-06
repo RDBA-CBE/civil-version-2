@@ -9,7 +9,6 @@ import { DeleteOutlined, EditOutlined, PrinterOutlined } from '@ant-design/icons
 
 import IconSave from '@/components/Icon/IconSave';
 import { Button, Modal, Form, Input, Select, Space, Drawer, message, Popconfirm, Spin } from 'antd';
-import { baseUrl, ObjIsEmpty } from '@/utils/function.util';
 import IconLoader from '@/components/Icon/IconLoader';
 import InvoiceData from '@/components/invoice/invoiceData';
 import CustomSelect from '@/components/Select';
@@ -250,8 +249,8 @@ export default function Edits() {
                 place_of_testing: state.place_of_testing,
             };
 
-            const advance = Number(state.advance);
-            const afterTax = Number(state.after_tax_amount);
+            const advance = roundNumber(state.advance);
+            const afterTax = roundNumber(state.after_tax_amount);
 
             if (advance == afterTax) {
                 body.fully_paid = true;
@@ -285,8 +284,8 @@ export default function Edits() {
             const invoice: any = await Models.invoice.invoiceDetails(id);
             console.log('✌️invoice --->', invoice);
 
-            const advance = Number(invoice.advance);
-            const afterTax = Number(invoice.after_tax_amount);
+            const advance = roundNumber(invoice.advance);
+            const afterTax = roundNumber(invoice.after_tax_amount);
 
             if (advance == afterTax) {
                 body.fully_paid = true;
@@ -648,7 +647,10 @@ export default function Edits() {
                 return;
             }
 
-            if (Number(state.paymentAmount) > Number(state.balance)) {
+            const paymentAmount = roundNumber(state.paymentAmount);
+            const balance = roundNumber(state.balance);
+
+            if (paymentAmount > balance) {
                 messageApi.open({
                     type: 'error',
                     content: 'Payment amount cannot be greater than balance.',

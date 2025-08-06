@@ -178,8 +178,8 @@ const Preview = () => {
 
                                                 {state.invoiceData?.invoice_discounts?.length > 0 && state.invoiceData?.invoice_discounts[0]?.discount > 0 ? (
                                                     <>
-                                                        <td style={{ textAlign: 'right' }}>Discount (%) </td>
-                                                        <td style={{ textAlign: 'right' }}>{roundNumber(state.invoiceData?.invoice_discounts[0]?.discount)}</td>
+                                                        <td style={{ textAlign: 'right' }}>Discount {roundNumber(state.invoiceData?.invoice_discounts[0]?.discount)}% </td>
+                                                        <td style={{ textAlign: 'right' }}>{roundNumber(state.invoiceData?.discount)}</td>
                                                     </>
                                                 ) : null}
                                             </>

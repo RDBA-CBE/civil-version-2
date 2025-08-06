@@ -34,14 +34,14 @@ const QuotationReport = () => {
         quotationReportList: [],
         search: '',
         btnLoading: false,
-         customerList: [],
+        customerList: [],
         customerHasNext: null,
         customerCurrentPage: null,
     });
 
     // get GetExpenseReport datas
     useEffect(() => {
-         customersList();
+        customersList();
         GetExpenseReport();
         initialData(1);
     }, []);
@@ -114,37 +114,37 @@ const QuotationReport = () => {
         }
     };
 
-     const customersList = async (page = 1) => {
-            try {
-                const res: any = await Models.invoice.customerList(page);
+    const customersList = async (page = 1) => {
+        try {
+            const res: any = await Models.invoice.customerList(page);
+            const dropdown = Dropdown(res?.results, 'customer_name');
+            setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: page });
+        } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const customerSearch = async (text: any) => {
+        try {
+            const res: any = await Models.invoice.customerSearch(text);
+            if (res?.results?.length > 0) {
                 const dropdown = Dropdown(res?.results, 'customer_name');
-                setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: page });
-            } catch (error: any) {
-                console.log('✌️error --->', error);
+                setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: 1 });
             }
-        };
-    
-        const customerSearch = async (text: any) => {
-            try {
-                const res: any = await Models.invoice.customerSearch(text);
-                if (res?.results?.length > 0) {
-                    const dropdown = Dropdown(res?.results, 'customer_name');
-                    setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: 1 });
-                }
-            } catch (error) {
-                console.log('✌️error --->', error);
-            }
-        };
-    
-        const customersLoadMore = async (page = 1) => {
-            try {
-                const res: any = await Models.invoice.customerList(page);
-                const dropdown = Dropdown(res?.results, 'customer_name');
-                setState({ customerList: [...state.customerList, ...dropdown], customerHasNext: res?.next, customerCurrentPage: page });
-            } catch (error: any) {
-                console.log('✌️error --->', error);
-            }
-        };
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const customersLoadMore = async (page = 1) => {
+        try {
+            const res: any = await Models.invoice.customerList(page);
+            const dropdown = Dropdown(res?.results, 'customer_name');
+            setState({ customerList: [...state.customerList, ...dropdown], customerHasNext: res?.next, customerCurrentPage: page });
+        } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
+    };
 
     // Table Headers
     const columns = [
@@ -227,7 +227,6 @@ const QuotationReport = () => {
             customer: state.searchValue?.customer ? state.searchValue?.customer?.value : '',
         };
 
-
         let allData: any[] = [];
         let currentPage = 1;
         let hasNext = true;
@@ -276,8 +275,6 @@ const QuotationReport = () => {
         }
     };
 
-   
-
     // form submit
     const onFinish = async (values: any, page = 1) => {
         try {
@@ -322,7 +319,6 @@ const QuotationReport = () => {
     };
 
     const onFinishFailed = (errorInfo: any) => {};
-
 
     // download
     const handleDownloadAll = async (item: any) => {
@@ -496,7 +492,6 @@ const QuotationReport = () => {
                                     <Button type="primary" htmlType="submit" style={{ width: '100px' }}>
                                         Search
                                     </Button>
-                                    
                                 </Form.Item>
                                 <Form.Item>
                                     <Button
@@ -510,7 +505,6 @@ const QuotationReport = () => {
                                         Clear
                                     </Button>
                                 </Form.Item>
-                                
                             </div>
                         </div>
                     </Form>
@@ -522,7 +516,6 @@ const QuotationReport = () => {
                     <div>
                         <Space>
                             {button.map((item) => {
-
                                 return (
                                     <Button
                                         key={item.id}
@@ -560,7 +553,6 @@ const QuotationReport = () => {
                 {state.quotationReportList?.length > 0 && (
                     <div>
                         <div
-                            
                             style={{
                                 display: 'flex',
                                 justifyContent: 'center',

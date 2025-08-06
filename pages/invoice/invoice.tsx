@@ -216,7 +216,7 @@ const Invoice = () => {
                     <span onClick={() => handleEditClick(record)} style={{ cursor: 'pointer' }} className="edit-icon">
                         <EditOutlined rev={undefined} />
                     </span>
-                    <DeleteOutlined style={{ color: 'red', cursor: 'pointer' }} onClick={() => handleDelete(record)} className="delete-icon" rev={undefined} />
+                    {/* <DeleteOutlined style={{ color: 'red', cursor: 'pointer' }} onClick={() => handleDelete(record)} className="delete-icon" rev={undefined} /> */}
                 </Space>
             ),
         },
@@ -563,9 +563,9 @@ const Invoice = () => {
                             + Create Invoice
                         </button>
 
-                        <button type="button" className="create-button" onClick={() => exportToExcel()}>
+                        {/* <button type="button" className="create-button" onClick={() => exportToExcel()}>
                             {state.excelBtnLoading ? <IconLoader /> : 'Excel to export'}
-                        </button>
+                        </button> */}
                     </div>
                 </div>
                 <div className="table-responsive">

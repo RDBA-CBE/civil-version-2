@@ -109,7 +109,15 @@ const ExpenseFileReport = () => {
         worksheet.addRow(['Expense User', 'Expense Amount', 'Expense Date', 'File']);
 
         allData.forEach((item: any) => {
-            worksheet.addRow([item.expense_user, item.expence_amount, dayjs(item.created_date).format('DD-MM-YYYY'), item.file_url]);
+            worksheet.addRow([
+                item.expense_user,
+                item.expence_amount,
+                dayjs(item.created_date).format('DD-MM-YYYY'),
+                {
+                    text: 'Download',
+                    hyperlink: item.file_url,
+                },
+            ]);
         });
 
         // Generate a Blob containing the Excel file
@@ -125,7 +133,6 @@ const ExpenseFileReport = () => {
 
         setState({ excelBtnLoading: false });
     };
-
 
     // form submit
     const onFinish = async (values: any) => {
@@ -159,7 +166,6 @@ const ExpenseFileReport = () => {
     };
 
     const onFinishFailed = (errorInfo: any) => {};
-
 
     const handleDownloadAll = async () => {
         setState({ pdfLoading: true });
@@ -317,7 +323,6 @@ const ExpenseFileReport = () => {
                     {state.expenceList?.length > 0 && (
                         <div>
                             <div
-                                
                                 style={{
                                     display: 'flex',
                                     justifyContent: 'center',
