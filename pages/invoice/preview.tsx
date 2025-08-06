@@ -244,7 +244,7 @@ const Preview = () => {
                                     <div className="sign-footer mt-0 grid-cols-9 space-y-1 text-right text-right text-sm text-white-dark">
                                         <img src="/assets/images/sign.png" alt="img" style={{ marginLeft: 'auto' }} />
                                         <br />
-                                        Authorised Signatory,
+                                        Managing Directory,
                                         <br /> Covai Civil Lab Private Limited.
                                         {/* Covai Civil Lab Private Limited <br /> R.TIRUMALAI (TECHNICAL DIRECTOR) */}
                                         {/* <img src="/assets/images/logo_3.jpg" alt="img" style={{ marginLeft: "auto" }} /> */}

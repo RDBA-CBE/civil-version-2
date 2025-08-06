@@ -1476,7 +1476,30 @@ border: 1px solid #972e25 !important;
     .pagebreak { page-break-before: always; } /* page-break-after works, as well */
 }
 
-
+@media print {
+    @page {
+        size: auto;
+        margin: 20mm;
+        @bottom-right {
+          content: "Page " counter(page);
+          font-size: 12px;
+        }
+      }
+  
+    body {
+      counter-reset: page;
+    }
+  
+    .page-number::after {
+      counter-increment: page;
+      /* content: "Page " counter(page); */
+      position: fixed;
+      bottom: 0;
+      right: 0;
+      font-size: 12px;
+      padding: 5mm;
+    }
+  }
 
 @media print {
     table {
