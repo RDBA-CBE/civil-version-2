@@ -1481,7 +1481,7 @@ border: 1px solid #972e25 !important;
         size: auto;
         margin: 20mm;
         @bottom-right {
-          content: "Page " counter(page);
+          content: "Page " counter(page) " of " counter(pages);
           font-size: 12px;
         }
       }

@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import { baseUrl } from '@/utils/function.util';
 import Models from '@/imports/models.import';
 
-const Print = () => {
+const Print3 = () => {
     const router = useRouter();
     const { id } = router.query;
 
@@ -18,8 +18,12 @@ const Print = () => {
         try {
             // const res: any = await Models.testReport.invoiceTestReport(id);
             const res: any = await Models.invoice.getTest(id);
+            console.log('✌️res --->', res);
 
-            const table = res?.final_html;
+            const table = res?.without_header_footer;
+
+
+
             if (table) {
                 let tempDiv = document.createElement('div');
                 tempDiv.innerHTML = table;
@@ -99,4 +103,4 @@ const Print = () => {
     );
 };
 
-export default Print;
+export default Print3;

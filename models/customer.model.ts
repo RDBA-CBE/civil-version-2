@@ -68,7 +68,30 @@ const customer = {
         return promise;
     },
 
-   detail: (label:string,id: any) => {
+    isActiveEmployeeList: (page: any, body: any) => {
+        let promise = new Promise((resolve, reject) => {
+            let url = `employee/?page=${page}&is_active=true`;
+            if (body?.search) {
+                url += `&search=${encodeURIComponent(body.search)}`;
+            }
+            instance()
+                .get(url)
+                .then((res) => {
+                    resolve(res.data);
+                })
+                .catch((error) => {
+                    console.log('errorsss: ', error);
+                    if (error.response) {
+                        reject(error.response.data);
+                    } else {
+                        reject(error);
+                    }
+                });
+        });
+        return promise;
+    },
+
+    detail: (label: string, id: any) => {
         let promise = new Promise((resolve, reject) => {
             let url = `${label}/${id}/`;
             instance()

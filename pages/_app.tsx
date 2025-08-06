@@ -25,7 +25,7 @@ const App = ({ Component, pageProps }: AppPropsWithLayout) => {
 
     const getLayout = Component.getLayout ?? ((page) => <DefaultLayout>{page}</DefaultLayout>);
 
-    const pwh = ['/invoice/preview', '/invoice/print1','/invoice/print2', '/invoice/print', '/invoice/viewtestreport', '/invoice/viewinvoicereport', '/invoice/quotationPreview', '/invoice/viewQuotationPreview'];
+    const pwh = ['/invoice/preview', '/invoice/print1','/invoice/print2','/invoice/print3','/invoice/print4', '/invoice/print', '/invoice/viewtestreport', '/invoice/viewinvoicereport', '/invoice/quotationPreview', '/invoice/viewQuotationPreview'];
 
     const pagesWithoutLayout = ['preview', 'print', 'print1', 'print2', 'r', 'u', 'n', 'c'];
 
