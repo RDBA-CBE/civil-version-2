@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/router';
-import { baseUrl } from '@/utils/function.util'; // Ensure baseUrl is correctly imported
+import { baseUrl, commomDateFormat, roundNumber } from '@/utils/function.util'; // Ensure baseUrl is correctly imported
 import BlankLayout from '@/components/Layouts/BlankLayout';
 import { BorderBottomOutlined } from '@ant-design/icons';
+import Models from '@/imports/models.import';
 
 const QuotationPreview = () => {
     const router = useRouter();
@@ -20,40 +21,21 @@ const QuotationPreview = () => {
     }, [id]);
 
     // Function to fetch invoice data
-    const getInvoiceTestData = () => {
-        axios
-            .get(`${baseUrl}/quotations/${id}/`, {
-                headers: {
-                    Authorization: `Token ${localStorage.getItem('token')}`,
-                },
-            })
-            .then((res) => {
-                setInvoiceReport(res.data); // Set invoice report after fetching data
-                // Extract the necessary tax info
-                const selectedPercentages = res.data?.tax?.filter((item: any) => res.data.tax.includes(item.id));
-                const totalTaxPercentage = selectedPercentages?.reduce((acc: number, item: any) => acc + parseFloat(item.tax_percentage), 0) || 0;
-
-                const totalAmount = res.data?.total_amount || 0; // Fallback to 0 if no total_amount in the response
-                // Calculate tax and after-tax amounts
-                const TaxAmount = (totalAmount * totalTaxPercentage) / 100;
-                const AfterTaxAmount = totalAmount + TaxAmount;
-
-                // Set tax values into state
-                setTaxAmount(TaxAmount);
-                setAfterTaxAmount(AfterTaxAmount);
-            })
-            .catch((error) => {
-                if (error.response?.status === 401) {
-                    router.push('/');
-                }
-            });
+    const getInvoiceTestData = async () => {
+        try {
+            const res: any = await Models.qoutation.qoutationDetail(id);
+            setInvoiceReport(res);
+            const TaxAmount = roundNumber(res?.after_tax) - roundNumber(res?.before_tax);
+            setTaxAmount(TaxAmount);
+            setAfterTaxAmount(roundNumber(res?.after_tax));
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
     };
 
     const formatTotal = () => {
-
-        const selectedPercentages = invoiceReport?.tax?.filter((item: any) => invoiceReport.tax.includes(item.id));
-        if (selectedPercentages?.length > 0) {
-            const formattedTaxDetails = selectedPercentages.map((item: any) => `${item.tax_name} (${parseFloat(item.tax_percentage)}%)`);
+        if (invoiceReport?.tax?.length > 0) {
+            const formattedTaxDetails = invoiceReport?.tax.map((item: any) => `${item.tax_name} (${parseFloat(item.tax_percentage)}%)`);
             return formattedTaxDetails.join('+ ');
         }
     };
@@ -132,7 +114,7 @@ const QuotationPreview = () => {
                     <tbody>
                         <tr>
                             <td style={{ ...styles.tableCell, textAlign: 'center', fontWeight: 'bold', width: '60%' }}>QUOTATION</td>
-                            <td style={{ ...styles.tableCell, textAlign: 'right' }}>Date: 13-12-2024</td>
+                            <td style={{ ...styles.tableCell, textAlign: 'right' }}>Date: {commomDateFormat(invoiceReport?.date_created)}</td>
                         </tr>
                         <tr>
                             <td style={{ ...styles.tableCell, paddingTop: '10px', fontWeight: 'bold' }}>
@@ -171,7 +153,7 @@ const QuotationPreview = () => {
                                 <td style={styles.tableCell}>{index + 1}</td>
                                 <td style={styles.tableCell}>{item.test}</td>
                                 <td style={styles.tableCell}>{item.quantity}</td>
-                                <td style={styles.tableCell}>{item.price_per_sample}</td>
+                                <td style={styles.tableCell}>{roundNumber(item.price_per_sample)}</td>
                                 <td style={styles.tableCell}>{item.total}</td>
                             </tr>
                         ))}
@@ -180,7 +162,7 @@ const QuotationPreview = () => {
                             <td colSpan={4} style={{ ...styles.tableCell }}>
                                 Sub Total
                             </td>
-                            <td style={styles.tableCell}>{invoiceReport?.total_amount}</td>
+                            <td style={styles.tableCell}>{roundNumber(invoiceReport?.before_tax)}</td>
                         </tr>
                         <tr>
                             <td colSpan={4} style={{ ...styles.tableCell }}>
