@@ -206,6 +206,7 @@ const ExpenseFileReport = () => {
                 item.file_url,
             ];
         });
+        console.log('✌️tableData --->', tableData);
 
         doc.autoTable({
             head: [headers],
@@ -220,7 +221,7 @@ const ExpenseFileReport = () => {
                 3: { cellWidth: 150 },
             },
             didDrawCell: (data: any) => {
-                if (data.column.index === 7) {
+                if (data.column.index === 3) {
                     const fileUrl = data.cell.raw;
                     if (fileUrl) {
                         doc.setTextColor(0, 0, 255);

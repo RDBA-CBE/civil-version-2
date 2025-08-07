@@ -527,7 +527,7 @@ const InvoiceReport = () => {
                 8: { cellWidth: 20 },
             },
             didDrawCell: (data: any) => {
-                if (data.column.index === 7) {
+                if (data.column.index === 4) {
                     const fileUrl = data.cell.raw;
                     if (fileUrl) {
                         doc.setTextColor(0, 0, 255);

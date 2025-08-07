@@ -313,7 +313,7 @@ const InvoiceFileReport = () => {
                 6: { cellWidth: 60 },
             },
             didDrawCell: (data: any) => {
-                if (data.column.index === 7) {
+                if (data.column.index === 5) {
                     const fileUrl = data.cell.raw;
                     if (fileUrl) {
                         doc.setTextColor(0, 0, 255);
