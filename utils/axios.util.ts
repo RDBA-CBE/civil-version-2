@@ -19,7 +19,7 @@ export const instance = () => {
             const originalRequest = error.config;
             const accessToken = localStorage.getItem('token');
 
-            if (error.response?.status === 401 && !originalRequest._retry && accessToken) {
+            if (error.response?.status === 401 && !originalRequest._retry) {
                 originalRequest._retry = true;
 
                 try {
@@ -42,11 +42,12 @@ export const instance = () => {
                 window.location.href = '/';
 
                 return Promise.reject(error);
-            } else {
-                localStorage.clear();
+            } 
+            // else {
+            //     localStorage.clear();
 
-                window.location.href = '/';
-            }
+            //     window.location.href = '/';
+            // }
 
             return Promise.reject(error);
         }
