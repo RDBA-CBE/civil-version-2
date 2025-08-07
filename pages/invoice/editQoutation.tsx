@@ -858,7 +858,7 @@ const Edit = () => {
 
     // Print
     const handlePrint = (item: any) => {
-        window.location.href = `/invoice/invoiceReport?id=${item.id}`;
+        window.location.href = `/invoice/invoiceReports?id=${item.id}`;
     };
 
     const handlePrintEmployee = (item: any) => {

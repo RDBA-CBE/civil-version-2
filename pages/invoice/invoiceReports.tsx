@@ -207,15 +207,10 @@ export default function InvoiceReports() {
             let without_primary_signature = false;
             let without_secondary_signature = false;
             if (values?.signature == 'with-signature') {
-                console.log('✌️ if  --->');
                 if (values?.signature1 == 'with-signature') {
-                    console.log('✌️ if if  --->');
-
                     without_primary_signature = false;
                     without_secondary_signature = false;
                 } else {
-                    console.log('✌️ if else  --->');
-
                     without_primary_signature = false;
                     without_secondary_signature = true;
                 }
@@ -224,21 +219,14 @@ export default function InvoiceReports() {
 
                 // window.open(url, '_blank');
             } else if (values?.signature == 'without-signature') {
-                console.log('✌️ else if  --->');
-
                 if (values?.signature1 == 'with-signature') {
-                    console.log('✌️ else if  --->');
-
                     without_primary_signature = true;
                     without_secondary_signature = false;
                 } else {
-                    console.log('✌️ else else  --->');
-
                     without_primary_signature = true;
                     without_secondary_signature = true;
                 }
             }
-            console.log('✌️without_primary_signature --->', without_primary_signature, without_secondary_signature);
 
             const body = {
                 without_primary_signature,
@@ -246,16 +234,12 @@ export default function InvoiceReports() {
             };
 
             const res: any = await Models.invoice.updateTest(id, body);
-            console.log('✌️res --->', res);
             setState({ btn2Loading: false });
-            // let ids: any = state.invoiceTest.id;
             let url = `/invoice/print4?id=${id}`;
-
             window.open(url, '_blank');
-            // setState({ isOpen: false });
+            setState({ isOpen: false });
         } catch (error: any) {
             setState({ btn2Loading: false });
-
             console.log('✌️error --->', error);
         }
     };
@@ -281,11 +265,25 @@ export default function InvoiceReports() {
         }
     };
 
-    const handlePrint = () => {
-        var id: any = state.invoiceTest.id;
-        var url = `/invoice/print?id=${id}`;
+    const handlePrint = async () => {
+        try {
+            setState({printLoading:true})
+            const body = {
+                without_primary_signature: false,
+                without_secondary_signature: false,
+            };
 
-        window.open(url, '_blank');
+            const res: any = await Models.invoice.updateTest(id, body);
+            setState({printLoading:false})
+
+            let url = `/invoice/print?id=${id}`;
+
+            window.open(url, '_blank');
+            setState({printLoading:false})
+
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
     };
 
     const disableBtn = () => {
@@ -381,7 +379,7 @@ export default function InvoiceReports() {
                         <Form.Item>
                             <div className="form-btn-main">
                                 <Space>
-                                    <Button type="primary" onClick={() => handlePrint()} disabled={disableBtn()}>
+                                    <Button type="primary" onClick={() => handlePrint()} disabled={disableBtn()} loading={state.printLoading}>
                                         Print
                                     </Button>
                                     <Button type="primary" onClick={() => handlePrint1()} disabled={disableBtn()}>
