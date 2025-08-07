@@ -321,6 +321,7 @@ const QuotationReport = () => {
         const headers = [
             'Quotation No',
             'Customer',
+            'File',
             // 'Project Name',
             // 'Discount',
             // 'Advance Amount',
@@ -343,12 +344,14 @@ const QuotationReport = () => {
                 // item.discount,
                 // item.advance,
                 // item.balance,
+                 item.quotation.quotation_file,
                 item.quotation.total_amount,
+               
                 // item.tds_amount,
 
-                item.quotation.place_of_testing,
-                item.quotation.completed,
-                commomDateFormat(item.quotation.date), // Expense Date (formatted)
+                // item.quotation.place_of_testing,
+                // item.quotation.completed,
+                // commomDateFormat(item.quotation.date), // Expense Date (formatted)
                 // {
                 //     content: item.file, // URL to the file
                 //     link: item.file, // URL should be a clickable link in the PDF
