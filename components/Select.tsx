@@ -19,7 +19,8 @@ const CustomSelect = (props: any) => {
         loadMore, 
         menuOpen, 
         onSearch,
-        height = '33px' // New prop for controlling height
+        height = '33px', // New prop for controlling height
+        isClearable
     } = props;
 
     const customStyles = {
@@ -79,7 +80,7 @@ const CustomSelect = (props: any) => {
                     onChange={onChange}
                     isSearchable={isSearchable}
                     isMulti={isMulti}
-                    isClearable={true}
+                    isClearable={isClearable ?? true} 
                     styles={customStyles}
                     onMenuOpen={() => menuOpen && menuOpen(true)}
                     onMenuClose={() => menuOpen && menuOpen(false)}

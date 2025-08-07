@@ -201,38 +201,44 @@ export default function InvoiceReports() {
     };
 
     const handleSubmit = async (values: any) => {
-        console.log('✌️values --->', values);
         try {
             setState({ btn2Loading: true });
             let without_primary_signature = false;
             let without_secondary_signature = false;
-            if (values?.signature == 'with-signature') {
-                if (values?.signature1 == 'with-signature') {
-                    without_primary_signature = false;
-                    without_secondary_signature = false;
-                } else {
-                    without_primary_signature = false;
-                    without_secondary_signature = true;
+            
+            if(values?.signature){
+                if (values?.signature == 'with-signature') {
+                    if (values?.signature1 == 'with-signature') {
+                        without_primary_signature = false;
+                        without_secondary_signature = false;
+                    } else {
+                        without_primary_signature = false;
+                        without_secondary_signature = true;
+                    }
+                } else if (values?.signature == 'without-signature') {
+                    if (values?.signature1 == 'with-signature') {
+                        without_primary_signature = true;
+                        without_secondary_signature = false;
+                    } else {
+                        without_primary_signature = true;
+                        without_secondary_signature = true;
+                    }
                 }
-                // var id: any = state.invoiceTest.id;
-                // var url = `/invoice/print1?id=${id}`;
-
-                // window.open(url, '_blank');
-            } else if (values?.signature == 'without-signature') {
+            } else {
                 if (values?.signature1 == 'with-signature') {
-                    without_primary_signature = true;
+                    without_primary_signature = false;
                     without_secondary_signature = false;
-                } else {
-                    without_primary_signature = true;
+                } else if (values?.signature1 == 'without-signature') {
+                    without_primary_signature = false;
                     without_secondary_signature = true;
                 }
             }
-
+    
             const body = {
                 without_primary_signature,
                 without_secondary_signature,
             };
-
+    
             const res: any = await Models.invoice.updateTest(id, body);
             setState({ btn2Loading: false });
             let url = `/invoice/print4?id=${id}`;
@@ -350,6 +356,7 @@ export default function InvoiceReports() {
                                         setState({ employeeLeft: selectedOption });
                                         testUpdate(selectedOption, 'left');
                                     }}
+                                    isClearable={false}
                                     filterOption={(input: string, option: any) => option.label.toLowerCase().includes(input.toLowerCase())}
                                 />
                             </div>
@@ -372,6 +379,7 @@ export default function InvoiceReports() {
                                         setState({ employeeRight: selectedOption });
                                         testUpdate(selectedOption, 'right');
                                     }}
+                                    isClearable={false}
                                     filterOption={(input: string, option: any) => option.label.toLowerCase().includes(input.toLowerCase())}
                                 />
                             </div>
