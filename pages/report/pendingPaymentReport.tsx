@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { DatePicker, Form, InputNumber, Select, Space, Table, Spin, Button, Input } from 'antd';
-import axios from 'axios';
 import * as FileSaver from 'file-saver';
 import ExcelJS from 'exceljs';
 import router from 'next/router';
 import dayjs from 'dayjs';
-import { baseUrl, ObjIsEmpty, roundNumber, useSetState , Dropdown} from '@/utils/function.util';
+import { baseUrl, ObjIsEmpty, roundNumber, useSetState, Dropdown } from '@/utils/function.util';
 import Models from '@/imports/models.import';
 import Pagination from '@/components/pagination/pagination';
 import IconLoader from '@/components/Icon/IconLoader';
@@ -29,7 +28,7 @@ const PendingPaymentReport = () => {
         pagePrev: null,
         paymentPendingList: [],
         searchValue: null,
-        btnloading:false,
+        btnloading: false,
         customerList: [],
         customerHasNext: null,
         customerCurrentPage: null,
@@ -37,7 +36,7 @@ const PendingPaymentReport = () => {
 
     useEffect(() => {
         initialData(1);
-        customersList()
+        customersList();
     }, []);
 
     const initialData = async (page: any) => {
@@ -59,39 +58,37 @@ const PendingPaymentReport = () => {
         }
     };
 
-   
-
     const customersList = async (page = 1) => {
-            try {
-                const res: any = await Models.invoice.customerList(page);
+        try {
+            const res: any = await Models.invoice.customerList(page);
+            const dropdown = Dropdown(res?.results, 'customer_name');
+            setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: page });
+        } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const customerSearch = async (text: any) => {
+        try {
+            const res: any = await Models.invoice.customerSearch(text);
+            if (res?.results?.length > 0) {
                 const dropdown = Dropdown(res?.results, 'customer_name');
-                setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: page });
-            } catch (error: any) {
-                console.log('✌️error --->', error);
+                setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: 1 });
             }
-        };
-    
-        const customerSearch = async (text: any) => {
-            try {
-                const res: any = await Models.invoice.customerSearch(text);
-                if (res?.results?.length > 0) {
-                    const dropdown = Dropdown(res?.results, 'customer_name');
-                    setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: 1 });
-                }
-            } catch (error) {
-                console.log('✌️error --->', error);
-            }
-        };
-    
-        const customersLoadMore = async (page = 1) => {
-            try {
-                const res: any = await Models.invoice.customerList(page);
-                const dropdown = Dropdown(res?.results, 'customer_name');
-                setState({ customerList: [...state.customerList, ...dropdown], customerHasNext: res?.next, customerCurrentPage: page });
-            } catch (error: any) {
-                console.log('✌️error --->', error);
-            }
-        };
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const customersLoadMore = async (page = 1) => {
+        try {
+            const res: any = await Models.invoice.customerList(page);
+            const dropdown = Dropdown(res?.results, 'customer_name');
+            setState({ customerList: [...state.customerList, ...dropdown], customerHasNext: res?.next, customerCurrentPage: page });
+        } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
+    };
 
     const bodyData = () => {
         const body: any = {};
@@ -265,6 +262,17 @@ const PendingPaymentReport = () => {
                     if (column.key == 'advance' || column.key == 'after_tax_amount' || column.key == 'balance') {
                         return roundNumber(row[column.key]);
                     }
+
+                    if (column.key === 'invoice_file') {
+                        if (row.invoice_file) {
+                            return {
+                                text: 'Download',
+                                hyperlink: row.invoice_file,
+                                tooltip: 'Click to download invoice file',
+                            };
+                        }
+                        return 'No File';
+                    }
                     if (column.dataIndex) {
                         return row[column.dataIndex];
                     } else if (column.key === 'customer_name') {
@@ -291,13 +299,13 @@ const PendingPaymentReport = () => {
                 'Pending-payment-Report.xlsx'
             );
         } catch (error) {
-             console.error('❌ Error exporting Excel:', error);
-        }
-        finally {
+            console.error('❌ Error exporting Excel:', error);
+            setState({ btnloading: false });
+
+        } finally {
             setState({ btnloading: false });
         }
     };
-
 
     // search
 
@@ -357,7 +365,7 @@ const PendingPaymentReport = () => {
                             </Form.Item>
 
                             <Form.Item label="Customer" name="customer" style={{ width: '250px' }}>
-                                 <CustomSelect
+                                <CustomSelect
                                     onSearch={(data: any) => customerSearch(data)}
                                     value={state.customer}
                                     options={state.customerList}
@@ -441,7 +449,6 @@ const PendingPaymentReport = () => {
                 {state.paymentPendingList?.length > 0 && (
                     <div>
                         <div
-                            
                             style={{
                                 display: 'flex',
                                 justifyContent: 'center',

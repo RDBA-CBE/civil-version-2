@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useRouter } from 'next/router';
 import { baseUrl } from '@/utils/function.util';
 import Models from '@/imports/models.import';

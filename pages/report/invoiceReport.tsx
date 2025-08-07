@@ -1,16 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Space, Form, Select, DatePicker, Spin, InputNumber, Tooltip, Modal } from 'antd';
 import { Input } from 'antd';
-import axios from 'axios';
 import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import dayjs from 'dayjs';
-import router from 'next/router';
 import { baseUrl, ObjIsEmpty, roundNumber, useSetState, Dropdown } from '@/utils/function.util';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
-import IconEye from '@/components/Icon/IconEye';
-import { DownloadOutlined, EyeOutlined } from '@ant-design/icons';
 import html2canvas from 'html2canvas';
 import Models from '@/imports/models.import';
 import Pagination from '@/components/pagination/pagination';
@@ -21,10 +17,7 @@ import CustomSelect from '@/components/Select';
 
 const InvoiceReport = () => {
     const [form] = Form.useForm();
-    const [dataSource, setDataSource] = useState([]);
-    const [saleFormData, setSaleFormData] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [formFields, setFormFields] = useState<any>([]);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const [state, setState] = useSetState({
@@ -44,45 +37,116 @@ const InvoiceReport = () => {
 
     // get GetExpenseReport datas
     useEffect(() => {
+        initialData();
         customersList();
-        GetExpenseReport();
     }, []);
 
-    const GetExpenseReport = () => {
-        const Token = localStorage.getItem('token');
-
-        axios
-            .get(`${baseUrl}/expense_report/`, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res) => {
-                setSaleFormData(res.data?.expense_category);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
+    const initialData = async (page = 1) => {
+        try {
+            setState({
+                loading: true,
             });
+
+            const res: any = await Models.invoiceReport.invoiceReportList(page);
+            setState({
+                invoiceReportList: res?.results,
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
+            });
+        } catch (error) {
+            setState({ loading: false });
+            console.log('✌️error --->', error);
+        }
     };
 
-    useEffect(() => {
-        axios
-            .get(`${baseUrl}/create_invoice/`, {
-                headers: {
-                    Authorization: `Token ${localStorage.getItem('token')}`,
-                },
-            })
-            .then((res) => {
-                setFormFields(res.data);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
+    const customersList = async (page = 1) => {
+        try {
+            const res: any = await Models.invoice.customerList(page);
+            const dropdown = Dropdown(res?.results, 'customer_name');
+            setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: page });
+        } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const customerSearch = async (text: any) => {
+        try {
+            const res: any = await Models.invoice.customerSearch(text);
+            if (res?.results?.length > 0) {
+                const dropdown = Dropdown(res?.results, 'customer_name');
+                setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: 1 });
+            }
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const customersLoadMore = async (page = 1) => {
+        try {
+            const res: any = await Models.invoice.customerList(page);
+            const dropdown = Dropdown(res?.results, 'customer_name');
+            setState({ customerList: [...state.customerList, ...dropdown], customerHasNext: res?.next, customerCurrentPage: page });
+        } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const bodyData = () => {
+        const body: any = {};
+        if (state.searchValue) {
+            if (state.searchValue?.customer) {
+                body.customer = state.searchValue.customer;
+            }
+            if (state.searchValue?.start_date) {
+                body.from_date = state.searchValue.start_date;
+            }
+
+            if (state.searchValue?.project_name) {
+                body.project_name = state.searchValue.project_name;
+            }
+            if (state.searchValue?.end_date) {
+                body.to_date = state.searchValue.end_date;
+            }
+            if (state.searchValue?.invoice_no) {
+                body.invoice_no = state.searchValue.invoice_no;
+            }
+        }
+
+        return body;
+    };
+
+    // form submit
+    const onFinish = async (values: any, page = 1) => {
+        try {
+            setState({ loading: true });
+            const body = {
+                from_date: values?.start_date ? dayjs(values?.start_date).format('YYYY-MM-DD') : '',
+                to_date: values?.end_date ? dayjs(values?.end_date).format('YYYY-MM-DD') : '',
+                invoice_no: values?.invoice_no ? values?.invoice_no : '',
+                project_name: values?.project_name ? values?.project_name : '',
+                customer: values?.customer ? values?.customer?.value : '',
+            };
+
+            const res: any = await Models.invoiceReport.filter(body, page);
+
+            setState({
+                invoiceReportList: res?.results,
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
+                searchValue: values,
             });
-    }, []);
+        } catch (error) {
+            setState({ loading: false });
+
+            console.log('✌️error --->', error);
+        }
+    };
 
     // Table Headers
     const columns = [
@@ -183,38 +247,6 @@ const InvoiceReport = () => {
             },
         },
     ];
-
-    const customersList = async (page = 1) => {
-        try {
-            const res: any = await Models.invoice.customerList(page);
-            const dropdown = Dropdown(res?.results, 'customer_name');
-            setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: page });
-        } catch (error: any) {
-            console.log('✌️error --->', error);
-        }
-    };
-
-    const customerSearch = async (text: any) => {
-        try {
-            const res: any = await Models.invoice.customerSearch(text);
-            if (res?.results?.length > 0) {
-                const dropdown = Dropdown(res?.results, 'customer_name');
-                setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: 1 });
-            }
-        } catch (error) {
-            console.log('✌️error --->', error);
-        }
-    };
-
-    const customersLoadMore = async (page = 1) => {
-        try {
-            const res: any = await Models.invoice.customerList(page);
-            const dropdown = Dropdown(res?.results, 'customer_name');
-            setState({ customerList: [...state.customerList, ...dropdown], customerHasNext: res?.next, customerCurrentPage: page });
-        } catch (error: any) {
-            console.log('✌️error --->', error);
-        }
-    };
 
     // export to excel format
 
@@ -404,85 +436,6 @@ const InvoiceReport = () => {
     // };
 
     const onFinishFailedZip = (errorInfo: any) => {};
-
-    useEffect(() => {
-        initialData();
-    }, []);
-
-    const initialData = async (page = 1) => {
-        try {
-            setState({
-                loading: true,
-            });
-
-            const res: any = await Models.invoiceReport.invoiceReportList(page);
-            setState({
-                invoiceReportList: res?.results,
-                currentPage: page,
-                pageNext: res?.next,
-                pagePrev: res?.previous,
-                total: res?.count,
-                loading: false,
-            });
-        } catch (error) {
-            setState({ loading: false });
-            console.log('✌️error --->', error);
-        }
-    };
-
-    const bodyData = () => {
-        const body: any = {};
-        if (state.searchValue) {
-            if (state.searchValue?.customer) {
-                body.customer = state.searchValue.customer;
-            }
-            if (state.searchValue?.start_date) {
-                body.from_date = state.searchValue.start_date;
-            }
-
-            if (state.searchValue?.project_name) {
-                body.project_name = state.searchValue.project_name;
-            }
-            if (state.searchValue?.end_date) {
-                body.to_date = state.searchValue.end_date;
-            }
-            if (state.searchValue?.invoice_no) {
-                body.invoice_no = state.searchValue.invoice_no;
-            }
-        }
-
-        return body;
-    };
-
-    // form submit
-    const onFinish = async (values: any, page = 1) => {
-        try {
-            setState({ loading: true });
-            const body = {
-                from_date: values?.start_date ? dayjs(values?.start_date).format('YYYY-MM-DD') : '',
-                to_date: values?.end_date ? dayjs(values?.end_date).format('YYYY-MM-DD') : '',
-                invoice_no: values?.invoice_no ? values?.invoice_no : '',
-                project_name: values?.project_name ? values?.project_name : '',
-                customer: values?.customer ? values?.customer?.value : '',
-            };
-
-            const res: any = await Models.invoiceReport.filter(body, page);
-
-            setState({
-                invoiceReportList: res?.results,
-                currentPage: page,
-                pageNext: res?.next,
-                pagePrev: res?.previous,
-                total: res?.count,
-                loading: false,
-                searchValue: values,
-            });
-        } catch (error) {
-            setState({ loading: false });
-
-            console.log('✌️error --->', error);
-        }
-    };
 
     const handlePageChange = (number: any) => {
         setState({ currentPage: number });

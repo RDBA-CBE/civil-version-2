@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import axios from 'axios';
-import { baseUrl, roundNumber, useSetState } from '@/utils/function.util';
+import { baseUrl, commomDateFormat, roundNumber, useSetState } from '@/utils/function.util';
 import Models from '@/imports/models.import';
 import PageLoader from 'next/dist/client/page-loader';
 import CommonLoader from '@/components/commonLoader';
+import moment from 'moment';
 
 const Preview = () => {
     const router = useRouter();
@@ -112,7 +113,7 @@ const Preview = () => {
                                     <div className=" ">
                                         <div className="mb-1 flex w-full items-center justify-between">
                                             <div className="text-white-dark">Date:</div>
-                                            <div>{state.invoiceData?.date}</div>
+                                            <div>{commomDateFormat(state.invoiceData?.date)}</div>
                                         </div>
 
                                         <div className="mb-1 flex w-full items-center justify-between">

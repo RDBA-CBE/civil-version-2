@@ -52,7 +52,6 @@ export default function InvoiceReports() {
     const getTestReport = async () => {
         try {
             const res: any = await Models.invoice.getTest(id);
-            console.log('✌️res --->', res);
             setState({
                 invoiceData: res?.invoice,
                 completed: res?.completed,
@@ -138,7 +137,6 @@ export default function InvoiceReports() {
     };
 
     const handleUpdate = async () => {
-        console.log('✌️handleUpdate --->');
         try {
             setState({ btnLoading: true });
             const body: any = {
@@ -205,8 +203,8 @@ export default function InvoiceReports() {
             setState({ btn2Loading: true });
             let without_primary_signature = false;
             let without_secondary_signature = false;
-            
-            if(values?.signature){
+
+            if (values?.signature) {
                 if (values?.signature == 'with-signature') {
                     if (values?.signature1 == 'with-signature') {
                         without_primary_signature = false;
@@ -233,17 +231,17 @@ export default function InvoiceReports() {
                     without_secondary_signature = true;
                 }
             }
-    
+
             const body = {
                 without_primary_signature,
                 without_secondary_signature,
             };
-    
+
             const res: any = await Models.invoice.updateTest(id, body);
-            setState({ btn2Loading: false });
+            setState({ btn2Loading: false, isOpen: false });
+
             let url = `/invoice/print4?id=${id}`;
             window.open(url, '_blank');
-            setState({ isOpen: false });
         } catch (error: any) {
             setState({ btn2Loading: false });
             console.log('✌️error --->', error);
@@ -273,20 +271,19 @@ export default function InvoiceReports() {
 
     const handlePrint = async () => {
         try {
-            setState({printLoading:true})
+            setState({ printLoading: true });
             const body = {
                 without_primary_signature: false,
                 without_secondary_signature: false,
             };
 
             const res: any = await Models.invoice.updateTest(id, body);
-            setState({printLoading:false})
+            setState({ printLoading: false });
 
             let url = `/invoice/print?id=${id}`;
 
             window.open(url, '_blank');
-            setState({printLoading:false})
-
+            setState({ printLoading: false });
         } catch (error) {
             console.log('✌️error --->', error);
         }

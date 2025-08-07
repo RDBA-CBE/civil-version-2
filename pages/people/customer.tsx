@@ -384,7 +384,7 @@ const Customer = () => {
             console.log('body', body);
 
             if (editRecord) {
-                const res: any = await Models.customer.eidtCustomer(editRecord.id, body);
+                const res: any = await Models.customer.updateCustomer(editRecord.id, body);
                 form.resetFields();
                 getCustomer(1);
                 setEditRecord(null);

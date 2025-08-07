@@ -1,16 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Space, Form, Select, DatePicker, Spin, InputNumber, Tooltip } from 'antd';
-import { Input } from 'antd';
-import axios from 'axios';
 import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import dayjs from 'dayjs';
-import router from 'next/router';
 import { baseUrl, ObjIsEmpty, roundNumber, useSetState, Dropdown } from '@/utils/function.util';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
-import IconEye from '@/components/Icon/IconEye';
-import { DownloadOutlined, EyeOutlined } from '@ant-design/icons';
 import Models from '@/imports/models.import';
 import Pagination from '@/components/pagination/pagination';
 import IconLoader from '@/components/Icon/IconLoader';
@@ -19,10 +14,6 @@ import CustomSelect from '@/components/Select';
 
 const QuotationReport = () => {
     const [form] = Form.useForm();
-    const [dataSource, setDataSource] = useState([]);
-    const [saleFormData, setSaleFormData] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [formFields, setFormFields] = useState<any>([]);
 
     const [state, setState] = useSetState({
         page: 1,
@@ -42,45 +33,10 @@ const QuotationReport = () => {
     // get GetExpenseReport datas
     useEffect(() => {
         customersList();
-        GetExpenseReport();
         initialData(1);
     }, []);
 
-    const GetExpenseReport = () => {
-        const Token = localStorage.getItem('token');
-
-        axios
-            .get(`${baseUrl}/expense_report/`, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res) => {
-                setSaleFormData(res.data?.expense_category);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
-            });
-    };
-
-    useEffect(() => {
-        axios
-            .get(`${baseUrl}/create_invoice/`, {
-                headers: {
-                    Authorization: `Token ${localStorage.getItem('token')}`,
-                },
-            })
-            .then((res) => {
-                setFormFields(res.data);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
-            });
-    }, []);
+    
 
     const button = [
         {

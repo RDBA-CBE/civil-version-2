@@ -1,4 +1,5 @@
 import { message } from 'antd';
+import moment from 'moment';
 import { useState } from 'react';
 import { AnyIfEmpty } from 'react-redux';
 
@@ -65,8 +66,6 @@ export function capitalizeFLetter(text: string): string {
     return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
 }
 
-
-
 export const FormatTaxDisplay = (selectedTaxes: any[], total: number) => {
     if (selectedTaxes.length === 0) return '';
 
@@ -74,4 +73,13 @@ export const FormatTaxDisplay = (selectedTaxes: any[], total: number) => {
     const percentages = selectedTaxes.map((tax) => `${Math.round(parseFloat(tax.tax_percentage))}%`).join(' + ');
 
     return `${names} : ${percentages} = ${Math.round(total)}`;
+};
+
+export const commomDateFormat = (date: string) => {
+    if (date) {
+        const dates = moment(date).format('DD/MM/YYYY');
+        return dates;
+    } else {
+        return '';
+    }
 };

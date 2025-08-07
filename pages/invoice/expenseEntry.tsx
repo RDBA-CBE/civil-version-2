@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Space, Table, Modal, InputNumber, Button, Drawer, Form, Input, Select, DatePicker, Spin } from 'antd';
 import { DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
-import axios from 'axios';
 import dayjs from 'dayjs';
-import router from 'next/router';
 import { baseUrl, roundNumber, ObjIsEmpty, useSetState, Dropdown } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import Models from '@/imports/models.import';
@@ -92,6 +90,7 @@ const ExpenseEntry = () => {
     const onClose = () => {
         setOpen(false);
         form.resetFields();
+        setState({ btnLoading: false });
     };
 
     const expenseCatList = async (page = 1) => {
@@ -187,13 +186,6 @@ const ExpenseEntry = () => {
                         <EditOutlined style={{ cursor: 'pointer', display: 'none' }} onClick={() => showDrawer(record)} className="edit-icon" rev={undefined} />
                     )}
                     {/* <DeleteOutlined style={{ color: 'red', cursor: 'pointer' }} onClick={() => handleDelete(record)} className="delete-icon" rev={undefined} /> */}
-                    {/* <EditOutlined
-            style={{ cursor: "pointer" }}
-            onClick={() => showDrawer(record)}
-            className='edit-icon' rev={undefined} />
-          <DeleteOutlined
-            style={{ color: "red", cursor: "pointer" }}
-            onClick={() => handleDelete(record)} className='delete-icon' rev={undefined} /> */}
                 </Space>
             ),
         },
@@ -224,56 +216,31 @@ const ExpenseEntry = () => {
     // };
 
     // form submit
-    const onFinish = (values: any) => {
-        const Token = localStorage.getItem('token');
+    const handleSubmit = async (values: any) => {
+        try {
+            setState({ btnLoading: true });
+            const formattedData = {
+                ...values,
+                expense_user: values.expense_user,
+                date: dayjs(values.date), // Updated date formatting
+                expense_category: values.expense_category.value,
+                amount: values.amount,
+                narration: values.narration,
+            };
+            if (editRecord) {
+                const res = await Models.expenseEntry.update(editRecord.id, formattedData);
+                initialData(1);
+                onClose();
+            } else {
+                const res = await Models.expenseEntry.create(formattedData);
+                initialData(1);
+                onClose();
+            }
+        } catch (error) {
+            setState({ btnLoading: false });
 
-        const formattedData = {
-            ...values,
-            expense_user: values.expense_user,
-            date: dayjs(values.date), // Updated date formatting
-            expense_category: values.expense_category.value,
-            amount: values.amount,
-            narration: values.narration,
-        };
-
-        // Check if editing or creating
-        if (editRecord) {
-            axios
-                .put(`${baseUrl}/edit_expense_entry/${editRecord.id}/`, formattedData, {
-                    headers: {
-                        Authorization: `Token ${Token}`,
-                    },
-                })
-                .then((res: any) => {
-                    initialData(1);
-                    setOpen(false);
-                })
-                .catch((error: any) => {
-                    if (error.response.status === 401) {
-                        router.push('/');
-                    } else {
-                    }
-                });
-        } else {
-            axios
-                .post(`${baseUrl}/create_expense_entry/`, formattedData, {
-                    headers: {
-                        Authorization: `Token ${Token}`,
-                    },
-                })
-                .then((res: any) => {
-                    initialData(1);
-                    setOpen(false);
-                })
-                .catch((error: any) => {
-                    if (error.response.status === 401) {
-                        router.push('/');
-                    } else {
-                    }
-                });
-            form.resetFields();
+            console.log('✌️error --->', error);
         }
-        onClose();
     };
 
     const onFinishFailed = (errorInfo: any) => {};
@@ -317,7 +284,7 @@ const ExpenseEntry = () => {
             },
             {
                 label: 'Amount:',
-                value: roundNumber(viewRecord?.amount )|| 'N/A',
+                value: roundNumber(viewRecord?.amount) || 'N/A',
             },
             {
                 label: 'Narration:',
@@ -390,8 +357,6 @@ const ExpenseEntry = () => {
 
     // form submit
     const onFinish2 = async (values: any, page = 1) => {
-        console.log('values', values);
-
         try {
             setState({ loading: true });
 
@@ -401,7 +366,6 @@ const ExpenseEntry = () => {
                 expense_user: values.expense_user ? values.expense_user : '',
                 expense_category: values.expense_category ? values.expense_category?.value : '',
             };
-
 
             const res: any = await Models.expenseEntry.filter(body, page);
             setState({
@@ -536,7 +500,15 @@ const ExpenseEntry = () => {
                 )}
 
                 <Drawer title={drawerTitle} placement="right" width={600} onClose={onClose} open={open}>
-                    <Form name="basic" layout="vertical" form={form} initialValues={{ remember: true }} onFinish={onFinish} onFinishFailed={onFinishFailed} autoComplete="off">
+                    <Form
+                        name="basic"
+                        layout="vertical"
+                        form={form}
+                        initialValues={{ remember: true }}
+                        onFinish={(value: any) => handleSubmit(value)}
+                        onFinishFailed={onFinishFailed}
+                        autoComplete="off"
+                    >
                         <Form.Item label="Expense User" name="expense_user" required={true} rules={[{ required: true, message: 'Expense User field is required.' }]}>
                             <Input />
                         </Form.Item>
@@ -579,7 +551,7 @@ const ExpenseEntry = () => {
                                     <Button danger htmlType="submit" onClick={() => onClose()}>
                                         Cancel
                                     </Button>
-                                    <Button type="primary" htmlType="submit">
+                                    <Button type="primary" htmlType="submit" loading={state.btnLoading}>
                                         Submit
                                     </Button>
                                 </Space>

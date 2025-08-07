@@ -4,7 +4,6 @@ import React, { useEffect } from 'react';
 import IconSave from '@/components/Icon/IconSave';
 import IconEye from '@/components/Icon/IconEye';
 import { Button, Modal, Form, Input, Select, Space, Drawer, message, Popconfirm } from 'antd';
-import axios from 'axios';
 import { useRouter } from 'next/router';
 import { DeleteOutlined, EditOutlined, PrinterOutlined } from '@ant-design/icons';
 import { baseUrl, Success } from '@/utils/function.util';

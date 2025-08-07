@@ -132,7 +132,7 @@ const customer = {
         return promise;
     },
 
-    eidtCustomer: (id: any, body: any) => {
+    updateCustomer: (id: any, body: any) => {
         let promise = new Promise((resolve, reject) => {
             let url = `customer/${id}/`;
 

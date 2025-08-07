@@ -7,7 +7,6 @@ import { toggleSidebar, toggleRTL } from '../../store/themeConfigSlice';
 import { useTranslation } from 'react-i18next';
 import Dropdown from '../Dropdown';
 import { Modal } from 'antd';
-import axios from 'axios';
 import Models from '@/imports/models.import';
 
 const Header = () => {

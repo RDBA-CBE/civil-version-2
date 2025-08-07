@@ -3,8 +3,6 @@ import { Space, Table, Modal, Spin, Select } from 'antd';
 import { Button, Drawer } from 'antd';
 import { Form, Input } from 'antd';
 import { EditOutlined, EyeOutlined } from '@ant-design/icons';
-import axios from 'axios';
-import router from 'next/router';
 import { baseUrl, Dropdown, Failure, Success, useSetState } from '@/utils/function.util';
 import Models from '@/imports/models.import';
 import Pagination from '@/components/pagination/pagination';

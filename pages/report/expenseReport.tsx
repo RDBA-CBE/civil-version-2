@@ -16,9 +16,6 @@ import CustomSelect from '@/components/Select';
 
 const ExpenseReport = () => {
     const [form] = Form.useForm();
-    const [dataSource, setDataSource] = useState([]);
-    const [saleFormData, setSaleFormData] = useState<any>([]);
-    const [loading, setLoading] = useState(false);
 
     const [state, setState] = useSetState({
         page: 1,
@@ -37,61 +34,60 @@ const ExpenseReport = () => {
 
     // get GetExpenseReport datas
     useEffect(() => {
-        // GetExpenseReport();
         initialData(1);
         expenseCatList(1);
     }, []);
 
-    // const GetExpenseReport = () => {
-    //     const Token = localStorage.getItem('token');
+    const initialData = async (page: any) => {
+        try {
+            setState({ loading: true });
 
-    //     axios
-    //         .get(`${baseUrl}/create_expense_entry/`, {
-    //             headers: {
-    //                 Authorization: `Token ${Token}`,
-    //             },
-    //         })
-    //         .then((res) => {
-    //             setSaleFormData(res.data);
-    //         })
-    //         .catch((error: any) => {
-    //             if (error.response.status === 401) {
-    //                 router.push('/');
-    //             }
-    //         });
-    // };
+            const res: any = await Models.expenseEntry.expenseEntryList(page);
+            setState({
+                expenseList: res?.results,
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
+            });
+        } catch (error) {
+            setState({ loading: false });
+            console.log('✌️error --->', error);
+        }
+    };
 
     const expenseCatList = async (page = 1) => {
-            try {
-                const res: any = await Models.expense.expenseList(page, undefined);
+        try {
+            const res: any = await Models.expense.expenseList(page, undefined);
+            const dropdown = Dropdown(res?.results, 'expense_name');
+            setState({ expenseCatList: dropdown, expenseCatHasNext: res?.next, expenseCatCurrentPage: page });
+        } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const expenseCatSearch = async (text: any) => {
+        try {
+            const res: any = await Models.expense.expenseSearch(text);
+            if (res?.results?.length > 0) {
                 const dropdown = Dropdown(res?.results, 'expense_name');
-                setState({ expenseCatList: dropdown, expenseCatHasNext: res?.next, expenseCatCurrentPage: page });
-            } catch (error: any) {
-                console.log('✌️error --->', error);
+                setState({ expenseCatList: dropdown, expenseCatHasNext: res?.next, expenseCatCurrentPage: 1 });
             }
-        };
-    
-        const expenseCatSearch = async (text: any) => {
-            try {
-                const res: any = await Models.expense.expenseSearch(text);
-                if (res?.results?.length > 0) {
-                    const dropdown = Dropdown(res?.results, 'expense_name');
-                    setState({ expenseCatList: dropdown, expenseCatHasNext: res?.next, expenseCatCurrentPage: 1 });
-                }
-            } catch (error) {
-                console.log('✌️error --->', error);
-            }
-        };
-    
-        const expenseCatLoadMore = async (page = 1) => {
-            try {
-                const res: any = await Models.expense.expenseList(page, undefined);
-                const dropdown = Dropdown(res?.results, 'expense_name');
-                setState({ expenseCatList: [...state.expenseCatList, ...dropdown], expenseCatHasNext: res?.next, expenseCatCurrentPage: page });
-            } catch (error: any) {
-                console.log('✌️error --->', error);
-            }
-        };
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const expenseCatLoadMore = async (page = 1) => {
+        try {
+            const res: any = await Models.expense.expenseList(page, undefined);
+            const dropdown = Dropdown(res?.results, 'expense_name');
+            setState({ expenseCatList: [...state.expenseCatList, ...dropdown], expenseCatHasNext: res?.next, expenseCatCurrentPage: page });
+        } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
+    };
 
     // Table Headers
     const columns = [
@@ -132,36 +128,6 @@ const ExpenseReport = () => {
             },
         },
     ];
-
-    const button = [
-        {
-            id: 1,
-            name: 'Export to Excel',
-        },
-        {
-            id: 2,
-            name: 'Download PDF',
-        },
-    ];
-
-    const initialData = async (page: any) => {
-        try {
-            setState({ loading: true });
-
-            const res: any = await Models.expenseEntry.expenseEntryList(page);
-            setState({
-                expenseList: res?.results,
-                currentPage: page,
-                pageNext: res?.next,
-                pagePrev: res?.previous,
-                total: res?.count,
-                loading: false,
-            });
-        } catch (error) {
-            setState({ loading: false });
-            console.log('✌️error --->', error);
-        }
-    };
 
     const bodyData = () => {
         const body: any = {};
@@ -253,34 +219,6 @@ const ExpenseReport = () => {
             setState({ btnloading: false, id: null });
         }
     };
-
-    useEffect(() => {
-        const Token = localStorage.getItem('token');
-        setLoading(true);
-        const body = {
-            expense_user: '',
-            from_date: '',
-            to_date: '',
-            expense_category: '',
-        };
-
-        axios
-            .post(`${baseUrl}/expense_report/`, body, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res: any) => {
-                setDataSource(res?.data?.reports);
-                setLoading(false);
-            })
-            .catch((error: any) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
-                setLoading(false);
-            });
-    }, []);
 
     // form submit
     const onFinish = async (values: any, page = 1) => {
@@ -418,7 +356,6 @@ const ExpenseReport = () => {
                 {state.expenseList?.length > 0 && (
                     <div>
                         <div
-                            
                             style={{
                                 display: 'flex',
                                 justifyContent: 'center',

@@ -7,7 +7,7 @@ import { IRootState } from '../../store';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { Modal } from 'antd';
-import axios from 'axios';
+import Models from '@/imports/models.import';
 
 const Sidebar = () => {
     const router = useRouter();
@@ -61,33 +61,30 @@ const Sidebar = () => {
     const { confirm } = Modal;
 
     const showConfirm = () => {
-        confirm({
-            title: 'Logout',
-            content: 'Do you Want to Logout ?',
-            onOk() {
-                const Token = localStorage.getItem('token');
-
-                if (!Token) {
-                } else {
-                    axios
-                        .get('http://files.covaiciviltechlab.com/logout/', {
-                            headers: {
-                                Authorization: `Token ${Token}`,
-                            },
-                        })
-                        .then((res) => {
-                            localStorage.removeItem('token');
-                            router.push('/');
-                        })
-                        .catch((error: any) => {
-                            localStorage.removeItem('token');
-                            router.push('/');
-                        });
-                }
-            },
-            onCancel() {},
-        });
-    };
+           confirm({
+               title: 'Logout',
+               content: 'Do you Want to Logout ?',
+               onOk() {
+                   const Token = localStorage.getItem('token');
+   
+                   if (!Token) {
+                   } else {
+                       logout();
+                   }
+               },
+               onCancel() {},
+           });
+       };
+   
+       const logout = async () => {
+           try {
+               const res = await Models.auth.logout();
+               localStorage.clear();
+               router.push('/');
+           } catch (error) {
+               console.log('✌️error --->', error);
+           }
+       };
 
     return (
         <div className={semidark ? 'dark' : ''}>
