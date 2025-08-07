@@ -1,5 +1,5 @@
 import moment from 'moment';
-import { roundNumber } from './function.util';
+import { commomDateFormat, roundNumber } from './function.util';
 
 export const PAYMENT_MODE_OPTIONS = [
     { value: 'cash', label: 'cash' },
@@ -45,7 +45,7 @@ export const employeeData = (viewRecord: any) => {
         },
         {
             label: 'Date Of Birth:',
-            value: viewRecord?.dob ? moment(viewRecord?.dob).format('DD-MM-YYYY') : 'N/A',
+            value: viewRecord?.dob ? commomDateFormat(viewRecord?.dob) : 'N/A',
         },
         {
             label: 'Gender:',
@@ -65,7 +65,7 @@ export const employeeData = (viewRecord: any) => {
         },
         {
             label: 'Date Of Joining:',
-            value: viewRecord?.dob ? moment(viewRecord?.joining_date).format('DD-MM-YYYY') : 'N/A',
+            value: viewRecord?.dob ? commomDateFormat(viewRecord?.joining_date) : 'N/A',
         },
         {
             label: 'Address:',
@@ -74,12 +74,12 @@ export const employeeData = (viewRecord: any) => {
 
         {
             label: 'Created Date:',
-            value: viewRecord?.dob ? moment(viewRecord?.created_date).format('DD-MM-YYYY') : 'N/A',
+            value: viewRecord?.dob ? commomDateFormat(viewRecord?.created_date) : 'N/A',
         },
 
         {
             label: 'Modified Date:',
-            value: viewRecord?.dob ? moment(viewRecord?.modified_date).format('DD-MM-YYYY') : 'N/A',
+            value: viewRecord?.dob ? commomDateFormat(viewRecord?.modified_date) : 'N/A',
         },
     ];
 
@@ -147,12 +147,12 @@ export const customerData = (viewRecord: any) => {
 
         {
             label: 'Created Date:',
-            value: viewRecord?.created_date ? moment(viewRecord?.created_date).format('DD-MM-YYYY') : 'N/A',
+            value: viewRecord?.created_date ? commomDateFormat(viewRecord?.created_date) : 'N/A',
         },
 
         {
             label: 'Modified Date:',
-            value: viewRecord?.modified_date ? moment(viewRecord?.modified_date).format('DD-MM-YYYY') : 'N/A',
+            value: viewRecord?.modified_date ? commomDateFormat(viewRecord?.modified_date): 'N/A',
         },
     ];
 
@@ -176,12 +176,12 @@ export const discountData = (viewRecord: any) => {
         },
         {
             label: 'Created Date:',
-            value: viewRecord?.created_date ? moment(viewRecord?.created_date).format('DD-MM-YYYY') : 'N/A',
+            value: viewRecord?.created_date ? commomDateFormat(viewRecord?.created_date) : 'N/A',
         },
 
         {
             label: 'Modified Date:',
-            value: viewRecord?.modified_date ? moment(viewRecord?.modified_date).format('DD-MM-YYYY') : 'N/A',
+            value: viewRecord?.modified_date ? commomDateFormat(viewRecord?.modified_date) : 'N/A',
         },
     ];
 
@@ -207,7 +207,7 @@ export const invoiceDisData = (viewRecord: any) => {
         },
         {
             label: 'Invoice Date:',
-            value: viewRecord?.invoice?.date ? moment(viewRecord?.invoice?.date).format('DD-MM-YYYY') : 'N/A',
+            value: viewRecord?.invoice?.date ? commomDateFormat(viewRecord?.invoice?.date) : 'N/A',
         },
         {
             label: 'Customer:',
@@ -275,7 +275,7 @@ export const invoicePaymentData = (viewRecord: any) => {
         },
         {
             label: 'Invoice Date:',
-            value: viewRecord?.invoice_no?.date ? moment(viewRecord?.invoice_no?.date).format('DD-MM-YYYY') : 'N/A',
+            value: viewRecord?.invoice_no?.date ? commomDateFormat(viewRecord?.invoice_no?.date) : 'N/A',
         },
 
         {
@@ -342,11 +342,11 @@ export const testData = (viewRecord: any) => {
 
         {
             label: 'Created Date:',
-            value: moment(viewRecord?.created_date).format('DD-MM-YYYY') || 'N/A',
+            value: commomDateFormat(viewRecord?.created_date) || 'N/A',
         },
         {
             label: 'Modified Data:',
-            value: moment(viewRecord?.modified_date).format('DD-MM-YYYY') || 'N/A',
+            value: commomDateFormat(viewRecord?.modified_date) || 'N/A',
         },
     ];
 
@@ -367,11 +367,11 @@ export const expenseCatData = (viewRecord: any) => {
 
         {
             label: 'Created Date:',
-            value: moment(viewRecord?.created_date).format('DD-MM-YYYY') || 'N/A',
+            value: commomDateFormat(viewRecord?.created_date)|| 'N/A',
         },
         {
             label: 'Modified Data:',
-            value: moment(viewRecord?.modified_date).format('DD-MM-YYYY') || 'N/A',
+            value: commomDateFormat(viewRecord?.modified_date)|| 'N/A',
         },
     ];
 
@@ -398,11 +398,11 @@ export const expenseEntryData = (viewRecord: any) => {
 
         {
             label: 'Created Date:',
-            value: moment(viewRecord?.created_date).format('DD-MM-YYYY') || 'N/A',
+            value: commomDateFormat(viewRecord?.created_date)|| 'N/A',
         },
         {
             label: 'Modified Data:',
-            value: moment(viewRecord?.modified_date).format('DD-MM-YYYY') || 'N/A',
+            value: commomDateFormat(viewRecord?.modified_date)|| 'N/A',
         },
     ];
 
@@ -439,11 +439,11 @@ export const invoiceFileData = (viewRecord: any) => {
        
         {
             label: 'Created Date:',
-            value: moment(viewRecord?.created_date).format('DD-MM-YYYY') || 'N/A',
+            value: commomDateFormat(viewRecord?.created_date) || 'N/A',
         },
         {
             label: 'Modified Data:',
-            value: moment(viewRecord?.modified_date).format('DD-MM-YYYY') || 'N/A',
+            value: commomDateFormat(viewRecord?.modified_date)|| 'N/A',
         },
     ];
 
@@ -519,11 +519,11 @@ export const quotationData = (viewRecord: any) => {
 
         {
             label: 'Created Date:',
-            value: moment(viewRecord?.test?.created_date).format('DD-MM-YYYY') || 'N/A',
+            value: commomDateFormat(viewRecord?.test?.created_date) || 'N/A',
         },
         {
             label: 'Modified Data:',
-            value: moment(viewRecord?.modified_date).format('DD-MM-YYYY') || 'N/A',
+            value: commomDateFormat(viewRecord?.modified_date) || 'N/A',
         },
     ];
 
@@ -549,7 +549,7 @@ export const userData = (viewRecord: any) => {
 
         {
             label: 'DOB:',
-            value: viewRecord?.dob ? moment(viewRecord?.dob)?.format('DD-MM-YYYY') : 'N/A',
+            value: viewRecord?.dob ? commomDateFormat(viewRecord?.dob) : 'N/A',
         },
         {
             label: 'Address:',

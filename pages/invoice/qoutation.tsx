@@ -4,7 +4,7 @@ import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import router from 'next/router';
 import dayjs from 'dayjs';
-import { baseUrl, ObjIsEmpty, roundNumber, useSetState, Dropdown } from '@/utils/function.util';
+import { baseUrl, ObjIsEmpty, roundNumber, useSetState, Dropdown, commomDateFormat } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import useDebounce from '@/components/useDebounce/useDebounce';
 import Models from '@/imports/models.import';
@@ -135,7 +135,7 @@ const Quotations = () => {
             width: 150,
             render: (text: any, record: any) => {
                 if (text) {
-                    return dayjs(text).format('DD-MM-YYYY');
+                    return commomDateFormat(text);
                 } else {
                     return '';
                 }
@@ -350,7 +350,7 @@ const Quotations = () => {
     //             setTaxData(res?.data);
     //         })
     //         .catch((error: any) => {
-    //             if (error.response?.status === 401) {
+    //             if (error?.response?.status === 401) {
     //                 router.push('/');
     //             }
     //         });

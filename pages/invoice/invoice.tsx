@@ -4,7 +4,7 @@ import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import router from 'next/router';
 import dayjs from 'dayjs';
-import { baseUrl, ObjIsEmpty, roundNumber, useSetState, Dropdown } from '@/utils/function.util';
+import { baseUrl, ObjIsEmpty, roundNumber, useSetState, Dropdown, commomDateFormat } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import Models from '@/imports/models.import';
 import { scrollConfig } from '@/utils/constant';
@@ -54,7 +54,7 @@ const Invoice = () => {
                 setFormFields(res.data);
             })
             .catch((error: any) => {
-                if (error.response?.status === 401) {
+                if (error?.response?.status === 401) {
                     router.push('/');
                 }
             });
@@ -137,7 +137,7 @@ const Invoice = () => {
             width: 100,
             render: (text: any, record: any) => {
                 if (text) {
-                    return dayjs(text).format('DD-MM-YYYY');
+                    return commomDateFormat(text);
                 } else {
                     return '';
                 }
@@ -248,7 +248,7 @@ const Invoice = () => {
         worksheet.addRow(['Invoice No', 'Date', 'Customer Name', 'Project Name', 'After Tax Amount', 'Balance']);
 
         allData.forEach((item: any) => {
-            worksheet.addRow([item.invoice_no, dayjs(item.date).format('DD-MM-YYYY'), item.customer?.customer_name, item?.project_name, item?.after_tax_amount, item?.balance]);
+            worksheet.addRow([item.invoice_no, commomDateFormat(item.date), item.customer?.customer_name, item?.project_name, item?.after_tax_amount, item?.balance]);
         });
 
         // Generate a Blob containing the Excel file

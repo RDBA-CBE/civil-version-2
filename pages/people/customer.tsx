@@ -81,7 +81,7 @@ const Customer = () => {
     //             setLoading(false)
     //         })
     //         .catch((error: any) => {
-    //             if (error.response?.status === 401) {
+    //             if (error?.response?.status === 401) {
     //                 router.push('/');
     //             }
     //             setLoading(false)
@@ -121,7 +121,7 @@ const Customer = () => {
                 setFormFields(res.data);
             })
             .catch((error) => {
-                if (error.response?.status === 401) {
+                if (error?.response?.status === 401) {
                     // Navigate to the home page
                     router.push('/');
                 }

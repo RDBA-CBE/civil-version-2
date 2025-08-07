@@ -1,7 +1,7 @@
 import IconEye from '@/components/Icon/IconEye';
 import Models from '@/imports/models.import';
 import { setPageTitle } from '@/store/themeConfigSlice';
-import { Dropdown, DropdownArrayString, roundNumber, useSetState } from '@/utils/function.util';
+import { commomDateFormat, Dropdown, DropdownArrayString, roundNumber, useSetState } from '@/utils/function.util';
 import { useRouter } from 'next/router';
 import React, { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
@@ -408,8 +408,12 @@ export default function Edits() {
             payment_number:
                 item?.payment_mode == 'upi' ? item?.upi : item?.payment_mode == 'neft' ? item?.neft : item?.payment_mode == 'tds' ? item?.tds : item?.payment_mode == 'cheque' ? item?.cheque : null,
             paymentDate: item?.date ? moment(item?.date).format('YYYY-MM-DD') : '',
+           
         });
     };
+
+    console.log("paymentDate", state.paymentDate);
+    
 
     const PaymentModal = () => {
         const BalanceCheck = parseInt(state.balance, 10);
@@ -1005,7 +1009,7 @@ export default function Edits() {
                                                     <td>{item?.neft} </td>
                                                     <td>{item?.tds} </td>
                                                     <td>{roundNumber(item?.amount)}</td>
-                                                    <td>{item?.date ? moment(item?.date).format('DD-MM-YYYY') : ''}</td>
+                                                    <td>{item?.date ? commomDateFormat(item?.date) : ''}</td>
                                                     <td>
                                                         <Space>
                                                             <EditOutlined rev={undefined} className="edit-icon" onClick={() => showPaymentDrawer(item)} />

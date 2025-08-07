@@ -4,7 +4,7 @@ import { Button, Drawer } from 'antd';
 import { Form, Input } from 'antd';
 import { DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
 import moment from 'moment';
-import { baseUrl, Success, useSetState } from '@/utils/function.util';
+import { baseUrl, commomDateFormat, Success, useSetState } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import useDebounce from '@/components/useDebounce/useDebounce';
 import Models from '@/imports/models.import';
@@ -224,7 +224,7 @@ const Expense = () => {
             key: 'created_date',
             className: 'singleLineCell',
             render: (text: any) => {
-                const formattedDate = moment(text, 'YYYY-MM-DD').isValid() ? moment(text).format('DD-MM-YYYY') : ''; // Empty string for invalid dates
+                const formattedDate = moment(text, 'YYYY-MM-DD').isValid() ? commomDateFormat(text) : ''; // Empty string for invalid dates
                 return formattedDate;
             },
         },

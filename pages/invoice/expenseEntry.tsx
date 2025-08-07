@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Space, Table, Modal, InputNumber, Button, Drawer, Form, Input, Select, DatePicker, Spin } from 'antd';
 import { DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { baseUrl, roundNumber, ObjIsEmpty, useSetState, Dropdown } from '@/utils/function.util';
+import { baseUrl, roundNumber, ObjIsEmpty, useSetState, Dropdown, commomDateFormat } from '@/utils/function.util';
 import Pagination from '@/components/pagination/pagination';
 import Models from '@/imports/models.import';
 import { scrollConfig } from '@/utils/constant';
@@ -169,7 +169,7 @@ const ExpenseEntry = () => {
             key: 'date',
             className: 'singleLineCell',
             render: (text: any, record: any) => {
-                return dayjs(text).format('DD-MM-YYYY');
+                return commomDateFormat(text);
             },
         },
         {

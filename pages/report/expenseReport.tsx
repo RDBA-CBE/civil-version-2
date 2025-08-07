@@ -6,7 +6,7 @@ import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import dayjs from 'dayjs';
 import router from 'next/router';
-import { baseUrl, ObjIsEmpty, roundNumber, useSetState, Dropdown } from '@/utils/function.util';
+import { baseUrl, ObjIsEmpty, roundNumber, useSetState, Dropdown, commomDateFormat } from '@/utils/function.util';
 import Models from '@/imports/models.import';
 import Pagination from '@/components/pagination/pagination';
 import IconLoader from '@/components/Icon/IconLoader';
@@ -124,7 +124,7 @@ const ExpenseReport = () => {
             key: 'date',
             className: 'singleLineCell',
             render: (record: any) => {
-                return <div>{record ? moment(record).format('DD-MM-YYYY') : ''}</div>;
+                return <div>{record ? commomDateFormat(record) : ''}</div>;
             },
         },
     ];
@@ -196,7 +196,7 @@ const ExpenseReport = () => {
                     }
 
                     if (col.dataIndex === 'date') {
-                        return moment(value).format('DD-MM-YYYY');
+                        return commomDateFormat(value);
                     }
 
                     return value ?? ''; // fallback if null/undefined

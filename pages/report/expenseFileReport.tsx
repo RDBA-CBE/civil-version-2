@@ -6,7 +6,7 @@ import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import dayjs from 'dayjs';
 import router from 'next/router';
-import { baseUrl, ObjIsEmpty, roundNumber, useSetState } from '@/utils/function.util';
+import { baseUrl, commomDateFormat, ObjIsEmpty, roundNumber, useSetState } from '@/utils/function.util';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import Models from '@/imports/models.import';
@@ -79,7 +79,7 @@ const ExpenseFileReport = () => {
             dataIndex: 'created_date',
             key: 'created_date',
             className: 'singleLineCell',
-            render: (text: any, record: any) => <div>{record?.created_date ? dayjs(record?.created_date).format('DD-MM-YYYY') : 'N/A'}</div>,
+            render: (text: any, record: any) => <div>{record?.created_date ? commomDateFormat(record?.created_date) : 'N/A'}</div>,
         },
     ];
 
@@ -112,7 +112,7 @@ const ExpenseFileReport = () => {
             worksheet.addRow([
                 item.expense_user,
                 item.expence_amount,
-                dayjs(item.created_date).format('DD-MM-YYYY'),
+                commomDateFormat(item.created_date),
                 {
                     text: 'Download',
                     hyperlink: item.file_url,
@@ -202,7 +202,7 @@ const ExpenseFileReport = () => {
             return [
                 item.expense_user, // Expense User
                 item.expence_amount, // Expense Amount
-                dayjs(item.created_date).format('DD-MM-YYYY'), // Expense Date (formatted)
+                commomDateFormat(item.created_date), // Expense Date (formatted)
                 item.file_url,
             ];
         });

@@ -7,7 +7,7 @@ import axios from 'axios';
 import 'react-quill/dist/quill.snow.css';
 import moment from 'moment';
 import router from 'next/router';
-import { baseUrl, Failure, Success, useSetState } from '@/utils/function.util';
+import { baseUrl, commomDateFormat, Failure, Success, useSetState } from '@/utils/function.util';
 import Models from '@/imports/models.import';
 import Pagination from '@/components/pagination/pagination';
 import useDebounce from '@/components/useDebounce/useDebounce';
@@ -170,7 +170,7 @@ const Material = () => {
             key: 'created_date',
             className: 'singleLineCell',
             render: (text: any) => {
-                const formattedDate = moment(text, 'YYYY-MM-DD').isValid() ? moment(text).format('DD-MM-YYYY') : ''; // Empty string for invalid dates
+                const formattedDate = moment(text, 'YYYY-MM-DD').isValid() ? commomDateFormat(text) : ''; // Empty string for invalid dates
                 return formattedDate;
             },
         },

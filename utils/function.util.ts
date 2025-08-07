@@ -83,3 +83,13 @@ export const commomDateFormat = (date: string) => {
         return '';
     }
 };
+
+
+export const apiDateFormat = (date: string) => {
+    if (date) {
+        const dates = moment(date).format('YYYY-MM-DD');
+        return dates;
+    } else {
+        return '';
+    }
+};

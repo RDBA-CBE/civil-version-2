@@ -4,7 +4,7 @@ import { Input } from 'antd';
 import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import dayjs from 'dayjs';
-import { baseUrl, ObjIsEmpty, roundNumber, useSetState, Dropdown } from '@/utils/function.util';
+import { baseUrl, ObjIsEmpty, roundNumber, useSetState, Dropdown, commomDateFormat } from '@/utils/function.util';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import html2canvas from 'html2canvas';
@@ -213,7 +213,7 @@ const InvoiceReport = () => {
             className: 'singleLineCell',
             width: 150,
             render: (record: any) => {
-                return <div>{record?.invoice?.date ? moment(record?.invoice?.date).format('DD-MM-YYYY') : ''}</div>;
+                return <div>{record?.invoice?.date ? commomDateFormat(record?.invoice?.date) : ''}</div>;
             },
         },
         {
@@ -305,7 +305,7 @@ const InvoiceReport = () => {
                 roundNumber(row.invoice.advance),
                 roundNumber(row.invoice.after_tax_amount),
                 roundNumber(row.invoice.balance),
-                row.invoice.date,
+                commomDateFormat(row.invoice.date),
                 {
                     text: 'Download',
                     hyperlink: row.invoice.invoice_file,
@@ -503,7 +503,7 @@ const InvoiceReport = () => {
                 item.invoice.advance,
                 item.invoice.total_amount,
                 item.invoice.balance,
-                dayjs(item.invoice.date).format('DD-MM-YYYY'),
+                commomDateFormat(item.invoice.date),
                 item.invoice.invoice_file,
                 item.invoice.completed,
             ];

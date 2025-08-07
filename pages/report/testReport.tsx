@@ -4,7 +4,7 @@ import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import dayjs from 'dayjs';
 import router from 'next/router';
-import { baseUrl, Dropdown, ObjIsEmpty, useSetState } from '@/utils/function.util';
+import { baseUrl, commomDateFormat, Dropdown, ObjIsEmpty, useSetState } from '@/utils/function.util';
 import Models from '@/imports/models.import';
 import Pagination from '@/components/pagination/pagination';
 import IconLoader from '@/components/Icon/IconLoader';
@@ -207,7 +207,7 @@ const TestReport = () => {
             key: 'created_date',
             className: 'singleLineCell',
             render: (record: any) => {
-                return <div>{record ? moment(record).format('DD-MM-YYYY') : ''}</div>;
+                return <div>{record ? commomDateFormat(record) : ''}</div>;
             },
         },
     ];

@@ -5,7 +5,7 @@ import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import dayjs from 'dayjs';
 import router from 'next/router';
-import { baseUrl, capitalizeFLetter, Dropdown, ObjIsEmpty, roundNumber, useSetState } from '@/utils/function.util';
+import { baseUrl, capitalizeFLetter, commomDateFormat, Dropdown, ObjIsEmpty, roundNumber, useSetState } from '@/utils/function.util';
 import { saveAs } from 'file-saver';
 import { message } from 'antd';
 import Models from '@/imports/models.import';
@@ -114,6 +114,9 @@ const SaleReport = () => {
             dataIndex: 'date',
             key: 'date',
             className: 'singleLineCell',
+            render: (record: any) => {
+                            return <div>{ commomDateFormat(record) }</div>;
+                        },
         },
         {
             title: (
@@ -488,7 +491,7 @@ const SaleReport = () => {
                     //     return row[column.dataIndex] ?? '';
                     // }
                     if (key === 'date') {
-                        return row.date || '';
+                        return commomDateFormat(row.date)  || '';
                     }
 
                     if (key === 'project_name') {
@@ -617,9 +620,9 @@ const SaleReport = () => {
             })
             .catch((error: any) => {
                 console.log('✌️error --->', error);
-                if (error.response?.status === 401) {
+                if (error?.response?.status === 401) {
                     router.push('/');
-                } else if (error.response?.status === 404) {
+                } else if (error?.response?.status === 404) {
                     messageApi.open({
                         type: 'error',
                         content: 'No invoice found for the selected month and year.',

@@ -3,7 +3,7 @@ import { Table, Button, Space, Form, Select, DatePicker, Spin, InputNumber, Tool
 import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import dayjs from 'dayjs';
-import { baseUrl, ObjIsEmpty, roundNumber, useSetState, Dropdown } from '@/utils/function.util';
+import { baseUrl, ObjIsEmpty, roundNumber, useSetState, Dropdown, commomDateFormat } from '@/utils/function.util';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import Models from '@/imports/models.import';
@@ -348,7 +348,7 @@ const QuotationReport = () => {
 
                 item.quotation.place_of_testing,
                 item.quotation.completed,
-                dayjs(item.quotation.date).format('DD-MM-YYYY'), // Expense Date (formatted)
+                commomDateFormat(item.quotation.date), // Expense Date (formatted)
                 // {
                 //     content: item.file, // URL to the file
                 //     link: item.file, // URL should be a clickable link in the PDF

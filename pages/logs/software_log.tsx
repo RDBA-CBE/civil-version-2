@@ -538,7 +538,7 @@ const Software_Logs = () => {
                 title: 'Date',
                 dataIndex: 'history_date',
                 key: 'date',
-                render: (date: any) => (date ? moment(date)?.format('DD-MM-YYYY HH:mm a') : ''),
+                render: (date: any) => (date ? moment(date)?.format('DD/MM/YYYY HH:mm a') : ''),
             },
             {
                 title: 'User',

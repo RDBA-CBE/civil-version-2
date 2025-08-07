@@ -6,7 +6,7 @@ import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import dayjs from 'dayjs';
 import router from 'next/router';
-import { baseUrl, Dropdown, roundNumber, useSetState } from '@/utils/function.util';
+import { baseUrl, commomDateFormat, Dropdown, roundNumber, useSetState } from '@/utils/function.util';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import Models from '@/imports/models.import';
@@ -125,7 +125,7 @@ const InvoiceFileReport = () => {
             dataIndex: 'invoice_date',
             key: 'invoice_date',
             className: 'singleLineCell',
-            render: (text: any, record: any) => <div>{record?.created_date ? dayjs(record?.created_date).format('DD-MM-YYYY') : 'N/A'}</div>,
+            render: (text: any, record: any) => <div>{record?.created_date ? commomDateFormat(record?.created_date) : 'N/A'}</div>,
         },
     ];
 
@@ -218,7 +218,7 @@ const InvoiceFileReport = () => {
                 item.project_name,
                 item.customer,
                 item.invoice_amount,
-                dayjs(item.created_date).format('DD-MM-YYYY'),
+                commomDateFormat(item.created_date),
                 {
                     text: 'Download',
                     hyperlink: item.file_url,
@@ -294,7 +294,7 @@ const InvoiceFileReport = () => {
         const headers = ['Invoice No', 'Project Name', 'Customer', 'Invoice Amount', 'Invoice Date', 'File'];
 
         const tableData = allData.map((item: any) => {
-            return [item.invoice_no, item.project_name, item.customer, item.invoice_amount, dayjs(item.created_date).format('DD-MM-YYYY'), item.file_url];
+            return [item.invoice_no, item.project_name, item.customer, item.invoice_amount, commomDateFormat(item.created_date), item.file_url];
         });
 
         doc.autoTable({
