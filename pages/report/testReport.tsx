@@ -4,7 +4,7 @@ import ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import dayjs from 'dayjs';
 import router from 'next/router';
-import { baseUrl, commomDateFormat, Dropdown, ObjIsEmpty, useSetState } from '@/utils/function.util';
+import { baseUrl, commomDateFormat, Dropdown, ObjIsEmpty, roundNumber, useSetState } from '@/utils/function.util';
 import Models from '@/imports/models.import';
 import Pagination from '@/components/pagination/pagination';
 import IconLoader from '@/components/Icon/IconLoader';
@@ -320,8 +320,28 @@ const TestReport = () => {
             worksheet.addRow(columns.map((column) => column.title));
 
             // Add data rows
-            allData.forEach((row: any) => {
-                worksheet.addRow(columns.map((column: any) => row[column.dataIndex]));
+          allData.forEach((row: any) => {
+                const rowData = columns.map((column: any) => {
+                    // Handle date formatting
+                    if (column.key === 'created_date') {
+                        return commomDateFormat(row.created_date) ;
+                    }
+                    
+                    // Handle special cases
+                    if (column.key === 'customer_name') {
+                        return row.customer?.customer_name || '';
+                    }
+                    
+                    // Handle numeric formatting
+                    if (column.key === 'advance' || column.key === 'after_tax_amount' || column.key === 'balance') {
+                        return roundNumber(row[column.key]);
+                    }
+                    
+                    // Default case - use dataIndex
+                    return row[column.dataIndex] || '';
+                });
+                
+                worksheet.addRow(rowData);
             });
 
             // Generate a Blob containing the Excel file
