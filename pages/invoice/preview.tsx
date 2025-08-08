@@ -15,24 +15,35 @@ const Preview = () => {
     const [state, setState] = useSetState({
         previewData: {},
         invoiceData: {},
+        testList:[]
     });
 
     useEffect(() => {
-        previewData();
+        if(id){
+            testList();
         getInvoice();
+    }
     }, [id]);
 
-    const previewData = async () => {
-        try {
-            setState({ loading: true });
+    // const previewData = async () => {
+    //     try {
+    //         setState({ loading: true });
+    //         const res = await Models.preview.invoicePreview(id);
+    //         setState({ previewData: res, loading: false });
+    //     } catch (error) {
+    //         setState({ loading: false });
+    //         // console.log('✌️error --->', error);
+    //     }
+    // };
 
-            const res = await Models.preview.invoicePreview(id);
-            setState({ previewData: res, loading: false });
-        } catch (error) {
-            setState({ loading: false });
-            // console.log('✌️error --->', error);
-        }
-    };
+       const testList = async (page = 1) => {
+            try {
+                const res: any = await Models.invoice.testList(id);
+                setState({ testList: res });
+            } catch (error: any) {
+                console.log('✌️error --->', error);
+            }
+        };
 
     const getInvoice = async () => {
         try {
@@ -152,7 +163,7 @@ const Preview = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {state.previewData?.invoice_tests?.map((invoice: any, index: any) => {
+                                        {state.testList?.map((invoice: any, index: any) => {
                                             return (
                                                 <>
                                                     <tr style={{ border: '1px solid black' }}>

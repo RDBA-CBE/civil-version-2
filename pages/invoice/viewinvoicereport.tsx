@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { baseUrl, roundNumber, useSetState } from '@/utils/function.util';
+import { baseUrl, commomDateFormat, roundNumber, useSetState } from '@/utils/function.util';
 import Models from '@/imports/models.import';
 
 const Preview = () => {
@@ -13,39 +13,53 @@ const Preview = () => {
     });
 
     useEffect(() => {
-        getData();
+        getInvoice();
         testList();
     }, [id]);
 
-   
+    // const getData = async () => {
+    //     try {
+    //         const res: any = await Models.invoice.invoiceDetails(id);
+    //         if (res?.tax?.length > 0) {
+    //             const taxNames = res?.tax.map((tax: any) => tax.tax_name);
+    //             const taxPercentages = res?.tax.map((tax: any) => tax.tax_percentage.split('.')[0] + '%');
+    //             const result = `${taxNames.join(' + ')} : ${taxPercentages.join(' + ')}`;
+    //             const totalPercentage = res?.after_tax_amount - res?.before_tax_amount;
+    //             setState({ taxData: result, totalPercentage: roundNumber(totalPercentage) });
+    //         }
+    //         setState({ detail: res });
+    //     } catch (error) {
+    //         console.log('✌️error --->', error);
+    //     }
+    // };
 
-     const getData = async () => {
-            try {
-                setState({ loading: true });
-                const res: any = await Models.invoice.invoiceDetails(id);
-                
-                if (res?.invoice_taxes?.length > 0) {
-                    const taxes = res.invoice_taxes.filter((item:any) => item.enabled);
-                    const taxNames = taxes.map((tax:any) => tax.tax_name);
-                    const taxPercentages = taxes.map((val:any) => `${val.tax_percentage}%`);
-                    const result = `${taxNames.join(' + ')} : ${taxPercentages.join(' + ')}`;
-                    const totalPercentage = res.after_tax_amount - res.before_tax_amount;
-                    setState({ 
-                        taxData: result, 
-                        totalPercentage: roundNumber(totalPercentage) 
-                    });
-                }
-        
-                setState({ 
-                    invoiceData: res, 
-                    loading: false 
+    const getInvoice = async () => {
+        try {
+            setState({ loading: true });
+            const res: any = await Models.invoice.invoiceDetails(id);
+
+            if (res?.invoice_taxes?.length > 0) {
+                const taxes = res.invoice_taxes.filter((item) => item.enabled);
+                const taxNames = taxes.map((tax) => tax.tax_name);
+                const taxPercentages = taxes.map((val) => `${val.tax_percentage}%`);
+                const result = `${taxNames.join(' + ')} : ${taxPercentages.join(' + ')}`;
+                const totalPercentage = res.after_tax_amount - res.before_tax_amount;
+                setState({
+                    taxData: result,
+                    totalPercentage: roundNumber(totalPercentage),
                 });
-            } catch (error) {
-                setState({ loading: false });
-                console.error('Error fetching invoice:', error);
             }
-        };
-    
+
+            setState({
+                invoiceData: res,
+                loading: false,
+                detail: res,
+            });
+        } catch (error) {
+            setState({ loading: false });
+            console.error('Error fetching invoice:', error);
+        }
+    };
 
     const testList = async () => {
         try {
@@ -296,7 +310,7 @@ const Preview = () => {
                                     <div className="invoice-right">
                                         <b>An ISO/IEC 17025:2017 CERTIFIED LAB</b>
                                         <br></br>
-                                        411/4, ,Vijayalakshmi Nagar,<br></br>
+                                        411/4, Vijayalakshmi Nagar,<br></br>
                                         Neelikonampalayam Po, Coimbatore - 6410333.<br></br>
                                         <b>GSTIN : 33AALCC7761L1Z7</b>
                                         <br />
@@ -327,7 +341,7 @@ const Preview = () => {
                                 <div className=" ">
                                     <div className="mb-1 flex w-full items-center justify-between">
                                         <div className="text-white-dark">Date:</div>
-                                        <div>{state.detail?.date}</div>
+                                        <div>{commomDateFormat(state.detail?.date)}</div>
                                     </div>
 
                                     <div className="mb-1 flex w-full items-center justify-between">
