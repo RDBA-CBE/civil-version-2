@@ -72,22 +72,24 @@ export default function EditQoutations() {
         }
     };
 
+    const formatTaxDisplay = (selectedTaxes: any[], total: number) => {
+        if (selectedTaxes.length === 0) return '';
+
+        const names = selectedTaxes.map((tax) => tax.tax_name).join(' + ');
+        const percentages = selectedTaxes.map((tax) => `${Math.round(parseFloat(tax.tax_percentage))}%`).join(' + ');
+
+        return `${names} : ${percentages} = ${Math.round(total)}`;
+    };
+
     const getData = async () => {
         try {
             const res: any = await Models.qoutation.qoutationDetail(id);
-            const taxList: any = await Models.tax.taxList();
 
-            if (res?.tax?.length > 0 && taxList?.length > 0) {
-                const initialCheckedState = taxList?.reduce((acc: any, tax:any) => {
-                    acc[tax.id] = res?.tax.some((selectedTax: any) => selectedTax.id === tax.id);
-                    return acc;
-                }, {} as Record<number, boolean>);
-                setState({ checkedItems: initialCheckedState });
-
-                const selectedTaxes = taxList?.filter((tax:any) => initialCheckedState[tax.id]);
-                const totalPercentage = res?.after_tax - res?.before_tax;
-                const taxData = FormatTaxDisplay(selectedTaxes, totalPercentage);
-                console.log('✌️taxData --->', taxData);
+            if (res?.quotation_taxes?.length > 0) {
+                const filter = res?.quotation_taxes?.filter((item: any) => item.enabled == true);
+                setState({ checkedItems: filter, taxes: res?.quotation_taxes });
+                const totalPercentage = roundNumber(res?.after_tax) - roundNumber(res?.before_tax);
+                const taxData = formatTaxDisplay(filter, totalPercentage);
                 setState({ taxData });
             } else {
                 setState({ checkedItems: [], taxData: null });
@@ -101,7 +103,6 @@ export default function EditQoutations() {
     const quotationItems = async () => {
         try {
             const res: any = await Models.qoutation.quotationItemsList(id);
-            console.log('quotationItems --->', res);
             setState({ quotationItems: res });
         } catch (error) {
             console.log('✌️error --->', error);
@@ -210,49 +211,28 @@ export default function EditQoutations() {
         window.open(url, '_blank');
     };
 
-    const handleChange = async (taxId: number) => {
+    const handleChange = async (clickedTaxName: string) => {
         try {
-            if (state.checkedItems[taxId]) {
-                return;
-            }
+            const isIGST = clickedTaxName === 'IGST';
+            const checked = state.taxes.map((tax: any) => ({
+                ...tax,
+                enabled: isIGST ? tax.tax_name === 'IGST' : ['CGST', 'SGST'].includes(tax.tax_name),
+            }));
 
-            let newCheckedItems = { ...state.checkedItems };
+            setState({ taxes: checked });
 
-            if (taxId === 3) {
-                newCheckedItems = {
-                    1: false,
-                    2: false,
-                    3: true,
-                };
-            } else if (taxId === 1) {
-                newCheckedItems = {
-                    1: true,
-                    2: true,
-                    3: false,
-                };
-            } else if (taxId === 2) {
-                newCheckedItems = {
-                    1: true,
-                    2: true,
-                    3: false,
-                };
-            }
+            await Promise.all(
+                checked.map((tax: any) =>
+                    Models.qoutation.updateQuotationTax(tax?.id, {
+                        enabled: tax.enabled,
+                    })
+                )
+            );
 
-            const selectedTaxIds = Object.keys(newCheckedItems)
-                .filter((key) => newCheckedItems[Number(key)])
-                .map(Number);
-
-            const body = {
-                tax: selectedTaxIds,
-            };
-            setState({
-                checkedItems: newCheckedItems,
-            });
-
-            await Models.qoutation.quotationUpdate(id, body);
             await getData();
         } catch (error) {
-            console.log('✌️error --->', error);
+            console.error('Error in handleChange:', error);
+            setState({ taxes: state.taxes });
         }
     };
 
@@ -502,17 +482,11 @@ export default function EditQoutations() {
                                 Tax
                             </label>
 
-                            {TAX?.map((item: any) => {
+                            {state.taxes?.map((item: any) => {
                                 return (
                                     <div key={item.id}>
                                         <label>
-                                            <input
-                                                type="checkbox"
-                                                value={item.tax_name}
-                                                checked={state.checkedItems[item?.id]}
-                                                onChange={() => handleChange(item?.id)}
-                                                style={{ marginRight: '5px' }}
-                                            />
+                                            <input type="checkbox" value={item.tax_name} checked={item?.enabled} onChange={() => handleChange(item.tax_name)} style={{ marginRight: '5px' }} />
                                             {item.tax_name}
                                         </label>
                                     </div>

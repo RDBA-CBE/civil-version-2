@@ -48,12 +48,14 @@ const Quotations = () => {
 
     useEffect(() => {
         customersList();
+        initialData(1);
     }, []);
 
-    const getQuotation = async (page: number) => {
+    const initialData = async (page: any) => {
         try {
-            const res: any = await Models.qoutation.qoutationList(page);
+            setState({ loading: true });
 
+            const res: any = await Models.qoutation.qoutationList(page);
             setState({
                 qoutationList: res?.results,
                 currentPage: page,
@@ -63,25 +65,7 @@ const Quotations = () => {
                 loading: false,
             });
         } catch (error) {
-            console.log('✌️error --->', error);
-        }
-    };
-
-    // drawer
-    const showDrawer = () => {
-        setOpen(true);
-    };
-
-    const onClose = () => {
-        setOpen(false);
-        form.resetFields();
-        setCustomerAddress('');
-    };
-
-    const handleDelete = async (record: any) => {
-        try {
-            const res = await Models.qoutation.delete(record?.id);
-        } catch (error) {
+            setState({ loading: false });
             console.log('✌️error --->', error);
         }
     };
@@ -114,6 +98,93 @@ const Quotations = () => {
             const dropdown = Dropdown(res?.results, 'customer_name');
             setState({ customerList: [...state.customerList, ...dropdown], customerHasNext: res?.next, customerCurrentPage: page });
         } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const getQuotation = async (page: number) => {
+        try {
+            const res: any = await Models.qoutation.qoutationList(page);
+
+            setState({
+                qoutationList: res?.results,
+                currentPage: page,
+                pageNext: res?.next,
+                pagePrev: res?.previous,
+                total: res?.count,
+                loading: false,
+            });
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const onFinish = (values: any) => {
+        const Token = localStorage.getItem('token');
+
+        axios
+            .post(`${baseUrl}/customers/`, values, {
+                headers: { Authorization: `Token ${Token}` },
+            })
+            .then((res) => {
+                CreateQuotations(res.data.id);
+                // initialData();
+                // window.location.href = `/invoice/editQoutation?id=${res?.data?.id}`;
+                // setOpen(false);
+            })
+            .catch((error) => {
+                if (error.response.status === 401) {
+                    router.push('/');
+                }
+            });
+
+        form.resetFields();
+        onClose();
+    };
+
+    const CreateQuotations = (id: any) => {
+        const Token = localStorage.getItem('token');
+
+        const body = {
+            customer: id,
+            tax: [1, 2],
+
+            // project_name: values.project_name ? values.project_name : '',
+            // taxes: Object.keys(checkedItems),
+        };
+        axios
+            .post(`${baseUrl}/quotations/create/`, body, {
+                headers: {
+                    Authorization: `Token ${Token}`,
+                },
+            })
+            .then((res) => {
+                initialData(1);
+                window.location.href = `/invoice/editQoutations?id=${res?.data?.id}`;
+                setOpen(false);
+            })
+            .catch((error) => {
+                if (error.response.status === 401) {
+                    router.push('/');
+                }
+            });
+    };
+
+    // drawer
+    const showDrawer = () => {
+        setOpen(true);
+    };
+
+    const onClose = () => {
+        setOpen(false);
+        form.resetFields();
+        setCustomerAddress('');
+    };
+
+    const handleDelete = async (record: any) => {
+        try {
+            const res = await Models.qoutation.delete(record?.id);
+        } catch (error) {
             console.log('✌️error --->', error);
         }
     };
@@ -230,56 +301,6 @@ const Quotations = () => {
     };
 
     // form submit
-    const onFinish = (values: any) => {
-        const Token = localStorage.getItem('token');
-
-        axios
-            .post(`${baseUrl}/customers/`, values, {
-                headers: { Authorization: `Token ${Token}` },
-            })
-            .then((res) => {
-                CreateQuotations(res.data.id);
-                // initialData();
-                // window.location.href = `/invoice/editQoutation?id=${res?.data?.id}`;
-                // setOpen(false);
-            })
-            .catch((error) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
-            });
-
-        form.resetFields();
-        onClose();
-    };
-
-    const CreateQuotations = (id: any) => {
-        const Token = localStorage.getItem('token');
-
-        const body = {
-            customer: id,
-            tax:[1,2]
-
-            // project_name: values.project_name ? values.project_name : '',
-            // taxes: Object.keys(checkedItems),
-        };
-        axios
-            .post(`${baseUrl}/quotations/create/`, body, {
-                headers: {
-                    Authorization: `Token ${Token}`,
-                },
-            })
-            .then((res) => {
-                initialData(1);
-                window.location.href = `/invoice/editQoutations?id=${res?.data?.id}`;
-                setOpen(false);
-            })
-            .catch((error) => {
-                if (error.response.status === 401) {
-                    router.push('/');
-                }
-            });
-    };
 
     const onFinishFailed = (errorInfo: any) => {};
 
@@ -291,30 +312,6 @@ const Quotations = () => {
     };
 
     // search
-
-    useEffect(() => {
-        initialData(1);
-        // TaxList();
-    }, []);
-
-    const initialData = async (page: any) => {
-        try {
-            setState({ loading: true });
-
-            const res: any = await Models.qoutation.qoutationList(page);
-            setState({
-                qoutationList: res?.results,
-                currentPage: page,
-                pageNext: res?.next,
-                pagePrev: res?.previous,
-                total: res?.count,
-                loading: false,
-            });
-        } catch (error) {
-            setState({ loading: false });
-            console.log('✌️error --->', error);
-        }
-    };
 
     const bodyData = () => {
         const body: any = {};
@@ -336,25 +333,6 @@ const Quotations = () => {
 
         return body;
     };
-
-    // const TaxList = () => {
-    //     const Token = localStorage.getItem('token');
-    //     axios
-    //         .get(`${baseUrl}/enable_tax_list/`, {
-    //             headers: {
-    //                 Authorization: `Token ${Token}`,
-    //             },
-    //         })
-    //         .then((res) => {
-    //             console.log('✌️res --->', res);
-    //             setTaxData(res?.data);
-    //         })
-    //         .catch((error: any) => {
-    //             if (error?.response?.status === 401) {
-    //                 router.push('/');
-    //             }
-    //         });
-    // };
 
     // form submit
     const onFinish2 = async (values: any, page = 1) => {
@@ -401,8 +379,6 @@ const Quotations = () => {
 
         return number;
     };
-
-    // console.log('taxData', taxData);
 
     return (
         <>

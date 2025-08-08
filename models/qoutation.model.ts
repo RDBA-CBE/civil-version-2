@@ -65,7 +65,7 @@ const qoutation = {
         let promise = new Promise((resolve, reject) => {
             let url = `quotation-items/create/`;
             instance()
-                .post(url,body)
+                .post(url, body)
                 .then((res) => {
                     resolve(res.data);
                 })
@@ -81,11 +81,11 @@ const qoutation = {
         return promise;
     },
 
-    update: (id: any,body:any) => {
+    update: (id: any, body: any) => {
         let promise = new Promise((resolve, reject) => {
             let url = `quotation-items/${id}/update/`;
             instance()
-                .patch(url,body)
+                .patch(url, body)
                 .then((res) => {
                     resolve(res.data);
                 })
@@ -101,11 +101,11 @@ const qoutation = {
         return promise;
     },
 
-    quotationUpdate: (id: any,body:any) => {
+    quotationUpdate: (id: any, body: any) => {
         let promise = new Promise((resolve, reject) => {
             let url = `quotations/${id}/update/`;
             instance()
-                .patch(url,body)
+                .patch(url, body)
                 .then((res) => {
                     resolve(res.data);
                 })
@@ -199,6 +199,25 @@ const qoutation = {
 
             instance()
                 .get(url, body)
+                .then((res) => {
+                    resolve(res.data);
+                })
+                .catch((error) => {
+                    console.log('errorsss: ', error);
+                    if (error.response) {
+                        reject(error.response.data);
+                    } else {
+                        reject(error);
+                    }
+                });
+        });
+        return promise;
+    },
+    updateQuotationTax: (id: any, data: any) => {
+        let promise = new Promise((resolve, reject) => {
+            let url = `quotation-taxes/${id}/`;
+            instance()
+                .patch(url, data)
                 .then((res) => {
                     resolve(res.data);
                 })

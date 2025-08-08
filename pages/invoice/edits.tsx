@@ -161,7 +161,7 @@ export default function Edits() {
             if (res?.invoice_taxes?.length > 0) {
                 const filter = res?.invoice_taxes?.filter((item:any) => item.enabled == true);
                 setState({ checkedItems: filter, taxes: res?.invoice_taxes });
-                const totalPercentage = res?.after_tax_amount - res?.before_tax_amount;
+                const totalPercentage = roundNumber(res?.after_tax_amount )- roundNumber(res?.before_tax_amount);
                 const taxData = formatTaxDisplay(filter, totalPercentage);
                 setState({ taxData });
             } else {
@@ -347,7 +347,6 @@ export default function Edits() {
     };
 
     const formatTaxDisplay = (selectedTaxes: any[], total: number) => {
-        console.log('✌️selectedTaxes --->', selectedTaxes);
         if (selectedTaxes.length === 0) return '';
 
         const names = selectedTaxes.map((tax) => tax.tax_name).join(' + ');
