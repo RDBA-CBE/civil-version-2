@@ -23,7 +23,7 @@ const invoiceFile = {
 
     filter: (body: any, page: any) => {
         let promise = new Promise((resolve, reject) => {
-            let url = `invoice_file/?page=${page}`;
+            let url = `invoice-file/?page=${page}`;
 
             if (body?.category_name) {
                 url += `&category=${encodeURIComponent(body.category_name)}`;
