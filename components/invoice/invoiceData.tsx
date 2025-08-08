@@ -208,12 +208,12 @@ export default function invoiceData(props: any) {
                                     Tax
                                 </label>
 
-                                {data?.tax?.map((item: any) => {
+                                {data?.invoice_taxes?.map((item: any) => {
                                     return (
                                         <div key={item.id}>
                                             <label>
-                                                <input type="checkbox" value={item.tax_name} checked={checkedItems[item.id]} style={{ marginRight: '5px' }} />
-                                                {item.tax_name}
+                                                <input type="checkbox" value={item?.tax_name} checked={item?.enabled} style={{ marginRight: '5px' }} />
+                                                {item?.tax_name}
                                             </label>
                                         </div>
                                     );

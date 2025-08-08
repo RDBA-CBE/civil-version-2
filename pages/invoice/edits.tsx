@@ -49,6 +49,8 @@ export default function Edits() {
         deletingId: null,
         discount: null,
         loading: false,
+        invoiceTax: [],
+        taxes: [],
     });
 
     useEffect(() => {
@@ -128,7 +130,6 @@ export default function Edits() {
         try {
             setState({ loading: true });
             const res: any = await Models.invoice.invoiceDetails(id);
-            const taxList: any = await Models.tax.taxList();
             setState({
                 details: res,
                 customerName: { value: res?.customer?.id, label: res?.customer?.customer_name },
@@ -155,19 +156,13 @@ export default function Edits() {
             }
             form2.setFieldsValue({
                 invoice_no: res?.invoice_no || '',
-                // customer: res?.customer?.customer_name || '',
                 discount: res?.invoice_discounts?.length > 0 ? roundNumber(res?.invoice_discounts[0]?.discount) || 0 : 0,
             });
-            if (res?.tax?.length > 0 && taxList?.length > 0) {
-                const initialCheckedState = taxList?.reduce((acc: any, tax: any) => {
-                    acc[tax.id] = res?.tax.some((selectedTax: any) => selectedTax.id === tax.id);
-                    return acc;
-                }, {} as Record<number, boolean>);
-                setState({ checkedItems: initialCheckedState });
-
-                const selectedTaxes = taxList?.filter((tax: any) => initialCheckedState[tax.id]);
+            if (res?.invoice_taxes?.length > 0) {
+                const filter = res?.invoice_taxes?.filter((item:any) => item.enabled == true);
+                setState({ checkedItems: filter, taxes: res?.invoice_taxes });
                 const totalPercentage = res?.after_tax_amount - res?.before_tax_amount;
-                const taxData = formatTaxDisplay(selectedTaxes, totalPercentage);
+                const taxData = formatTaxDisplay(filter, totalPercentage);
                 setState({ taxData });
             } else {
                 setState({ checkedItems: [], taxData: null });
@@ -274,15 +269,11 @@ export default function Edits() {
     const invoiceUpdate = async () => {
         try {
             const body: any = {
-                date: state.date,
-                completed: state.completed,
-                place_of_testing: state.place_of_testing,
             };
 
             await Models.invoice.editInvoice(id, body);
 
             const invoice: any = await Models.invoice.invoiceDetails(id);
-            console.log('✌️invoice --->', invoice);
 
             const advance = roundNumber(invoice.advance);
             const afterTax = roundNumber(invoice.after_tax_amount);
@@ -408,12 +399,10 @@ export default function Edits() {
             payment_number:
                 item?.payment_mode == 'upi' ? item?.upi : item?.payment_mode == 'neft' ? item?.neft : item?.payment_mode == 'tds' ? item?.tds : item?.payment_mode == 'cheque' ? item?.cheque : null,
             paymentDate: item?.date ? moment(item?.date).format('YYYY-MM-DD') : '',
-           
         });
     };
 
-    console.log("paymentDate", state.paymentDate);
-    
+    console.log('paymentDate', state.paymentDate);
 
     const PaymentModal = () => {
         const BalanceCheck = parseInt(state.balance, 10);
@@ -429,50 +418,41 @@ export default function Edits() {
         }
     };
 
-    const handleChange = async (taxId: number) => {
+    const handleChange = async (clickedTaxName: string) => {
         try {
-            if (state.checkedItems[taxId]) {
-                return;
-            }
+            const isIGST = clickedTaxName === 'IGST';
+            const checked = state.taxes.map((tax:any) => ({
+                ...tax,
+                enabled: isIGST
+                    ? tax.tax_name === 'IGST'
+                    : ['CGST', 'SGST'].includes(tax.tax_name),
+            }));
+    
+            setState({ taxes: checked });
+    
+            await Promise.all(
+                checked.map((tax: any) => 
+                    Models.invoice.updateInvoiceTax(tax?.id, {
+                        enabled: tax.enabled
+                    })
+                )
+            );
+    
+            await invoiceUpdate();
+            await getInvoice()
+            
+        } catch (error) {
+            console.error('Error in handleChange:', error);
+            setState({ taxes: state.taxes });
+        }
+    };
 
-            let newCheckedItems = { ...state.checkedItems };
-
-            if (taxId === 3) {
-                newCheckedItems = {
-                    1: false,
-                    2: false,
-                    3: true,
-                };
-            } else if (taxId === 1) {
-                newCheckedItems = {
-                    1: true,
-                    2: true,
-                    3: false,
-                };
-            } else if (taxId === 2) {
-                newCheckedItems = {
-                    1: true,
-                    2: true,
-                    3: false,
-                };
-            }
-
-            const selectedTaxIds = Object.keys(newCheckedItems)
-                .filter((key) => newCheckedItems[Number(key)])
-                .map(Number);
-
-            const body = {
-                tax: selectedTaxIds,
-            };
-
-            await Models.invoice.editInvoice(id, body);
-            setState({
-                checkedItems: newCheckedItems,
-            });
-
+    const updateInvoiceTax = async (body: any) => {
+        try {
+            const res: any = await Models.invoice.updateInvoiceTax(id, body);
             getInvoice();
             invoiceUpdate();
-        } catch (error) {
+        } catch (error: any) {
             console.log('✌️error --->', error);
         }
     };
@@ -1103,17 +1083,11 @@ export default function Edits() {
                                         Tax
                                     </label>
 
-                                    {TAX?.map((item: any) => {
+                                    {state.taxes?.map((item: any) => {
                                         return (
                                             <div key={item.id}>
                                                 <label>
-                                                    <input
-                                                        type="checkbox"
-                                                        value={item.tax_name}
-                                                        checked={state.checkedItems[item.id]}
-                                                        onChange={() => handleChange(item.id)}
-                                                        style={{ marginRight: '5px' }}
-                                                    />
+                                                    <input type="checkbox" value={item.tax_name} checked={item?.enabled} onChange={() => handleChange(item.tax_name)} style={{ marginRight: '5px' }} />
                                                     {item.tax_name}
                                                 </label>
                                             </div>

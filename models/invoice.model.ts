@@ -21,25 +21,25 @@ const invoice = {
         return promise;
     },
 
-     invoiceSearch: (name: any) => {
-                let promise = new Promise((resolve, reject) => {
-                    let url = `invoice/?search=${name}`;
-                    instance()
-                        .get(url)
-                        .then((res) => {
-                            resolve(res.data);
-                        })
-                        .catch((error) => {
-                            console.log('errorsss: ', error);
-                            if (error.response) {
-                                reject(error.response.data);
-                            } else {
-                                reject(error);
-                            }
-                        });
+    invoiceSearch: (name: any) => {
+        let promise = new Promise((resolve, reject) => {
+            let url = `invoice/?search=${name}`;
+            instance()
+                .get(url)
+                .then((res) => {
+                    resolve(res.data);
+                })
+                .catch((error) => {
+                    console.log('errorsss: ', error);
+                    if (error.response) {
+                        reject(error.response.data);
+                    } else {
+                        reject(error);
+                    }
                 });
-                return promise;
-            },
+        });
+        return promise;
+    },
 
     createInvoiceDiscount: (data: any) => {
         let promise = new Promise((resolve, reject) => {
@@ -321,8 +321,6 @@ const invoice = {
         return promise;
     },
 
-   
-
     getInvoiceDetails: (id: any) => {
         let promise = new Promise((resolve, reject) => {
             let url = `edit_invoice/${id}/`;
@@ -523,7 +521,6 @@ const invoice = {
         return promise;
     },
 
-
     getPayment: (id: any) => {
         let promise = new Promise((resolve, reject) => {
             let url = `receipt/${id}/`;
@@ -544,6 +541,25 @@ const invoice = {
         return promise;
     },
 
+    updateInvoiceTax: (invoiceId: any, body: any) => {
+        let promise = new Promise((resolve, reject) => {
+            let url = `invoice-taxes/${invoiceId}/`;
+            instance()
+                .patch(url, body)
+                .then((res) => {
+                    resolve(res.data);
+                })
+                .catch((error) => {
+                    console.log('errorsss: ', error);
+                    if (error.response) {
+                        reject(error.response.data);
+                    } else {
+                        reject(error);
+                    }
+                });
+        });
+        return promise;
+    },
 };
 
 export default invoice;
