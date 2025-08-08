@@ -51,9 +51,9 @@ const Preview = () => {
             const res: any = await Models.invoice.invoiceDetails(id);
             
             if (res?.invoice_taxes?.length > 0) {
-                const taxes = res.invoice_taxes.filter(item => item.enabled);
-                const taxNames = taxes.map(tax => tax.tax_name);
-                const taxPercentages = taxes.map(val => `${val.tax_percentage}%`);
+                const taxes = res.invoice_taxes.filter((item:any) => item.enabled);
+                const taxNames = taxes.map((tax:any) => tax.tax_name);
+                const taxPercentages = taxes.map((val:any) => `${val.tax_percentage}%`);
                 const result = `${taxNames.join(' + ')} : ${taxPercentages.join(' + ')}`;
                 const totalPercentage = res.after_tax_amount - res.before_tax_amount;
                 setState({ 
