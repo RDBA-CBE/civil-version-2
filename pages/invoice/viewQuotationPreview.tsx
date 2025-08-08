@@ -113,7 +113,8 @@ const QuotationPreview = () => {
                 <table className="t-head" style={styles.table}>
                     <tbody>
                         <tr>
-                            <td style={{ ...styles.tableCell, textAlign: 'center', fontWeight: 'bold', width: '60%' }}>QUOTATION</td>
+                            <td style={{ ...styles.tableCell,  fontWeight: 'bold', width: '60%' }}>QUOTATION - {invoiceReport?.quotation_number}</td>
+
                             <td style={{ ...styles.tableCell, textAlign: 'right' }}>Date: {commomDateFormat(invoiceReport?.date_created)}</td>
                         </tr>
                         <tr>

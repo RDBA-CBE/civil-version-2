@@ -326,12 +326,12 @@ const Tax = () => {
                             <InputNumber style={{ width: '100%' }} />
                         </Form.Item>
 
-                        <Form.Item label="Tax Status" name="tax_status" required={true} rules={[{ required: true, message: 'Tax Status field is required.' }]}>
+                        {/* <Form.Item label="Tax Status" name="tax_status" required={true} rules={[{ required: true, message: 'Tax Status field is required.' }]}>
                             <Radio.Group>
                                 <Radio value="E"> Enable </Radio>
                                 <Radio value="D"> Disable </Radio>
                             </Radio.Group>
-                        </Form.Item>
+                        </Form.Item> */}
 
                         <Form.Item>
                             <div className="form-btn-main">
