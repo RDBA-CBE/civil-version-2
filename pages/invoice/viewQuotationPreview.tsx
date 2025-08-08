@@ -34,8 +34,9 @@ const QuotationPreview = () => {
     };
 
     const formatTotal = () => {
-        if (invoiceReport?.tax?.length > 0) {
-            const formattedTaxDetails = invoiceReport?.tax.map((item: any) => `${item.tax_name} (${parseFloat(item.tax_percentage)}%)`);
+        if (invoiceReport?.quotation_taxes?.length > 0) {
+            const taxes = invoiceReport?.quotation_taxes?.filter((item: any) => item.enabled);
+            const formattedTaxDetails = taxes.map((item: any) => `${item.tax_name} (${parseFloat(item.tax_percentage)}%)`);
             return formattedTaxDetails.join('+ ');
         }
     };
