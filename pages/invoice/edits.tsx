@@ -447,15 +447,6 @@ export default function Edits() {
         }
     };
 
-    const updateInvoiceTax = async (body: any) => {
-        try {
-            const res: any = await Models.invoice.updateInvoiceTax(id, body);
-            getInvoice();
-            invoiceUpdate();
-        } catch (error: any) {
-            console.log('✌️error --->', error);
-        }
-    };
 
     const inputUpdate = (e: any) => {
         if (e.target.value == 'Yes') {

@@ -17,21 +17,35 @@ const Preview = () => {
         testList();
     }, [id]);
 
-    const getData = async () => {
-        try {
-            const res: any = await Models.invoice.invoiceDetails(id);
-            if (res?.tax?.length > 0) {
-                const taxNames = res?.tax.map((tax: any) => tax.tax_name);
-                const taxPercentages = res?.tax.map((tax: any) => tax.tax_percentage.split('.')[0] + '%');
-                const result = `${taxNames.join(' + ')} : ${taxPercentages.join(' + ')}`;
-                const totalPercentage = res?.after_tax_amount - res?.before_tax_amount;
-                setState({ taxData: result, totalPercentage: roundNumber(totalPercentage) });
+   
+
+     const getData = async () => {
+            try {
+                setState({ loading: true });
+                const res: any = await Models.invoice.invoiceDetails(id);
+                
+                if (res?.invoice_taxes?.length > 0) {
+                    const taxes = res.invoice_taxes.filter((item:any) => item.enabled);
+                    const taxNames = taxes.map((tax:any) => tax.tax_name);
+                    const taxPercentages = taxes.map((val:any) => `${val.tax_percentage}%`);
+                    const result = `${taxNames.join(' + ')} : ${taxPercentages.join(' + ')}`;
+                    const totalPercentage = res.after_tax_amount - res.before_tax_amount;
+                    setState({ 
+                        taxData: result, 
+                        totalPercentage: roundNumber(totalPercentage) 
+                    });
+                }
+        
+                setState({ 
+                    invoiceData: res, 
+                    loading: false 
+                });
+            } catch (error) {
+                setState({ loading: false });
+                console.error('Error fetching invoice:', error);
             }
-            setState({ detail: res });
-        } catch (error) {
-            console.log('✌️error --->', error);
-        }
-    };
+        };
+    
 
     const testList = async () => {
         try {
