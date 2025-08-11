@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Space, Table, Modal, message, InputNumber, Spin } from 'antd';
 import { Button, Drawer } from 'antd';
 import { Form, Input, Radio, DatePicker } from 'antd';
-import { CheckCircleOutlined, CloseCircleOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, CloseCircleOutlined, DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import router from 'next/router';
@@ -291,10 +291,7 @@ const Employee = () => {
                             }}
                         />
                     )}
-                    {/* <EditOutlined
-                        style={{ cursor: "pointer" }}
-                        onClick={() => showDrawer(record)}
-                        className='edit-icon' rev={undefined} /> */}
+                    {/* <DeleteOutlined style={{ cursor: 'pointer' }} onClick={() => handleDelete(record)} className="edit-icon" rev={undefined} /> */}
                     {/* {
                         localStorage.getItem('admin') === 'true' ? (
                             <DeleteOutlined
@@ -349,8 +346,7 @@ const Employee = () => {
                         }
                     });
             },
-            onCancel() {
-            },
+            onCancel() {},
         });
     };
 
@@ -416,8 +412,6 @@ const Employee = () => {
         // Append the signature file if exists
         if (fileInputData) {
             formData.append('signature', fileInputData);
-        } else {
-            formData.append('signature', null);
         }
 
         if (fileInputData == undefined || fileInputData == null) {
@@ -540,6 +534,15 @@ const Employee = () => {
         return data;
     };
 
+    const handleDelete = async (record: any) => {
+        try {
+            await Models.customer.empDelete(record.id);
+        } catch (error) {
+            setState({ testDeleteLoading: false });
+            console.log('✌️error --->', error);
+        }
+    };
+
     return (
         <>
             <div className="panel ">
@@ -572,7 +575,6 @@ const Employee = () => {
                 {filterData?.length > 0 && (
                     <div>
                         <div
-                            
                             style={{
                                 display: 'flex',
                                 justifyContent: 'center',

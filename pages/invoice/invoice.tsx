@@ -37,6 +37,7 @@ const Invoice = () => {
         customerList: [],
         customerHasNext: null,
         customerCurrentPage: null,
+        customerAddress: null,
     });
 
     useEffect(() => {
@@ -63,7 +64,6 @@ const Invoice = () => {
     const getInvoice = async (page: number) => {
         try {
             const res: any = await Models.invoice.invoiceList(page);
-
             setState({
                 invoiceList: res?.results,
                 currentPage: page,
@@ -77,11 +77,111 @@ const Invoice = () => {
         }
     };
 
+    const getTestData = async (results: any[]) => {
+        console.log('✌️results --->', results);
+        try {
+            if (!results?.length) return []; // Return empty if no input
+
+            // Fetch all test data in parallel
+            const allResponses = await Promise.all(results.map((item) => Models.invoice.testList(item.id)));
+            console.log('✌️allResponses --->', allResponses);
+            // exportToExcels(allResponses);
+
+            // Extract results from each response and flatten
+            const combinedArray = allResponses.flatMap((response: any) => response || []);
+
+            console.log('Combined test data:', combinedArray);
+            return combinedArray;
+        } catch (error) {
+            console.error('Error in getTestData:', error);
+            return [];
+        }
+    };
+
+    const exportToExcels = async (nestedData: any[]) => {
+        // Flatten the nested arrays into a single array
+        const flatData = nestedData.flat();
+
+        // Create workbook and worksheet
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Invoice Report');
+
+        // Define headers and column widths
+        worksheet.columns = [
+            { header: 'Invoice ID', key: 'invoice', width: 15 },
+            { header: 'Invoice No', key: 'invoice_no', width: 20 },
+            { header: 'Test ID', key: 'id', width: 10 },
+            { header: 'Tax Amount', key: 'total', width: 15 },
+            { header: 'Customer', key: 'customer', width: 25 },
+            { header: 'Material', key: 'material_name', width: 25 },
+            { header: 'Test Name', key: 'test_name', width: 30 },
+            { header: 'Quantity', key: 'qty', width: 10 },
+            { header: 'Price', key: 'price_per_sample', width: 15 },
+            { header: 'Completed', key: 'completed', width: 15 },
+            { header: 'Date', key: 'created_date', width: 15 },
+        ];
+
+        // Add data rows
+        flatData.forEach((item) => {
+            worksheet.addRow({
+                invoice: item.invoice,
+                invoice_no: item.invoice_no,
+                id: item.id,
+                total: item.total,
+                customer: item.customer,
+                material_name: item.material_name,
+                test_name: item.test_name,
+                qty: item.qty,
+                price_per_sample: item.price_per_sample,
+                completed: item.completed,
+                created_date: item.created_date,
+            });
+        });
+
+        // Style headers
+        worksheet.getRow(1).eachCell((cell) => {
+            cell.font = { bold: true };
+            cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FFD3D3D3' },
+            };
+            cell.border = {
+                top: { style: 'thin' },
+                left: { style: 'thin' },
+                bottom: { style: 'thin' },
+                right: { style: 'thin' },
+            };
+        });
+
+        // Generate Excel file
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        // saveAs(blob, 'Invoice_Report.xlsx');
+        FileSaver.saveAs(
+            new Blob([blob], {
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            }),
+            `Invoice-test.xlsx`
+        );
+    };
+
+    // Usage
+
     const customersList = async (page = 1) => {
         try {
             const res: any = await Models.invoice.customerList(page);
             const dropdown = Dropdown(res?.results, 'customer_name');
             setState({ customerList: dropdown, customerHasNext: res?.next, customerCurrentPage: page });
+        } catch (error: any) {
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const customerDetails = async (data: any) => {
+        try {
+            const res: any = await Models.invoice.customerDetails(data?.value);
+            setState({ customerAddress: res?.address1 });
         } catch (error: any) {
             console.log('✌️error --->', error);
         }
@@ -352,14 +452,6 @@ const Invoice = () => {
 
     const onFinishFailed = (errorInfo: any) => {};
 
-    const handleSelectChange = (customerId: any) => {
-        const selectedCustomer = formFields?.customer?.find((customer: any) => customer.id === customerId);
-
-        setSelectedCustomerId(customerId);
-        setCustomerAddress(selectedCustomer?.address1 || '');
-        getCustomerDiscount(customerId);
-    };
-
     const getCustomerDiscount = async (id: any) => {
         try {
             const res: any = await Models.discount.getCustomerDiscount(id);
@@ -392,6 +484,8 @@ const Invoice = () => {
                 total: res?.count,
                 loading: false,
             });
+            // const arr = await getTestData(res?.results);
+            // console.log('✌️arr --->', arr);
         } catch (error) {
             setState({ loading: false });
             console.log('✌️error --->', error);
@@ -606,6 +700,11 @@ const Invoice = () => {
                                 onChange={(selectedOption: any) => {
                                     form.setFieldsValue({ customer: selectedOption });
                                     customersList(1);
+                                    if (selectedOption) {
+                                        customerDetails(selectedOption);
+                                    } else {
+                                        setState({ customerAddress: null });
+                                    }
                                 }}
                                 loadMore={() => {
                                     if (state.customerHasNext) {
@@ -618,7 +717,7 @@ const Invoice = () => {
                         </Form.Item>
 
                         <Form.Item>
-                            <Input.TextArea rows={4} value={customerAddress} />
+                            <Input.TextArea rows={4} value={state.customerAddress} disabled />
                         </Form.Item>
 
                         <Form.Item label="Discount" name="Discount" required={false}>

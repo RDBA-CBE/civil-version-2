@@ -404,7 +404,7 @@ export default function Edits() {
     console.log('paymentDate', state.paymentDate);
 
     const PaymentModal = () => {
-        const BalanceCheck = parseInt(state.balance, 10);
+        const BalanceCheck = roundNumber(state.balance);
         if (BalanceCheck <= 0) {
             messageApi.open({
                 type: 'error',

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Space, Table, Modal, Select, Spin } from 'antd';
 import { Button, Drawer } from 'antd';
 import { Form, Input } from 'antd';
-import { EditOutlined, EyeOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import 'react-quill/dist/quill.snow.css';
 import moment from 'moment';
@@ -156,6 +156,16 @@ const Material = () => {
         form.resetFields();
     };
 
+      const handleDelete = async (record: any) => {
+            console.log('✌️record --->', record);
+            try {
+                await Models.material.delete(record.id);
+            } catch (error) {
+                setState({ testDeleteLoading: false });
+                console.log('✌️error --->', error);
+            }
+        };
+
     const columns = [
         {
             title: 'Material Name',
@@ -181,6 +191,7 @@ const Material = () => {
             render: (text: any, record: any) => (
                 <Space size="middle">
                     <EyeOutlined style={{ cursor: 'pointer' }} onClick={() => showModal(record)} className="view-icon" rev={undefined} />
+                    {/* <DeleteOutlined style={{ cursor: 'pointer'}} onClick={() => handleDelete(record)} className="edit-icon" rev={undefined} /> */}
 
                     {localStorage.getItem('admin') === 'true' ? (
                         <EditOutlined style={{ cursor: 'pointer' }} onClick={() => showDrawer(record)} className="edit-icon" rev={undefined} />

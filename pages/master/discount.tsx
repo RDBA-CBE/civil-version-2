@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Space, Table, Modal, Spin, Select } from 'antd';
 import { Button, Drawer } from 'antd';
 import { Form, Input } from 'antd';
-import { EditOutlined, EyeOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
 import { baseUrl, Dropdown, Failure, Success, useSetState } from '@/utils/function.util';
 import Models from '@/imports/models.import';
 import Pagination from '@/components/pagination/pagination';
@@ -80,6 +80,16 @@ const Discount = () => {
         } catch (error) {
             setState({ loading: false });
 
+            console.log('✌️error --->', error);
+        }
+    };
+
+    const handleDelete = async (record: any) => {
+        console.log('✌️record --->', record);
+        try {
+            await Models.discount.customerDiscountDelete(record.id);
+        } catch (error) {
+            setState({ testDeleteLoading: false });
             console.log('✌️error --->', error);
         }
     };
@@ -184,9 +194,12 @@ const Discount = () => {
                       key: 'actions',
                       className: 'singleLineCell',
                       render: (text: any, record: any) => (
-                          <Space size="middle">
-                              <EditOutlined style={{ cursor: 'pointer' }} onClick={() => showDrawer(record)} className="edit-icon" rev={undefined} />
-                          </Space>
+                          <>
+                              <Space size="middle">
+                                  <EditOutlined style={{ cursor: 'pointer' }} onClick={() => showDrawer(record)} className="edit-icon" rev={undefined} />
+                              </Space>
+                              {/* <DeleteOutlined style={{ cursor: 'pointer' }} onClick={() => handleDelete(record)} className="edit-icon" rev={undefined} /> */}
+                          </>
                       ),
                   },
               ]
@@ -320,7 +333,6 @@ const Discount = () => {
                     {state.discountList?.length > 0 && (
                         <div>
                             <div
-                                
                                 style={{
                                     display: 'flex',
                                     justifyContent: 'center',
@@ -336,7 +348,6 @@ const Discount = () => {
                 <Drawer title={drawerTitle} placement="right" width={600} onClose={onClose} open={open}>
                     <Form name="basic-form" layout="vertical" initialValues={{ remember: true }} onFinish={onFinish} onFinishFailed={onFinishFailed} autoComplete="off" form={form}>
                         <Form.Item label="Customer Name" name="customer" required={false} rules={[{ required: true, message: 'Please select customer name!' }]}>
-
                             <CustomSelect
                                 onSearch={(data: any) => customerSearch(data)}
                                 value={state.customer}
