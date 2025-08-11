@@ -5,14 +5,16 @@ import IconEye from '@/components/Icon/IconEye';
 import Link from 'next/link';
 import { IRootState } from '../store';
 import dynamic from 'next/dynamic';
-const ReactApexChart = dynamic(() => import('react-apexcharts').then((mod) => mod.default), { ssr: false });
 import { useRouter } from 'next/router';
 import dayjs from 'dayjs';
 import { baseUrl, roundNumber, useSetState } from '@/utils/function.util';
 import Models from '@/imports/models.import';
+const ReactApexChart = dynamic(() => import('react-apexcharts'), {
+    ssr: false,
+});
+import { ApexOptions } from 'apexcharts';
 
 const Expense = () => {
-    const router = useRouter();
     const [state, setState] = useSetState({
         data: null,
         cardData: [],
@@ -22,18 +24,16 @@ const Expense = () => {
         expenceTotal: 0,
         admin: 'false',
         isMounted: false,
-        revenueChart: {},
+        monthPaymentChart: {},
+        monthBarChart: {},
+        expenseChart: {},
+        monthExpenseChart: {},
     });
 
-    const [invoiceMonthData, setInvoiceMonthData] = useState([]);
-    const [expenseChart, setExpenseChart] = useState<any>(null);
-    const [expenseMonthWise, setexpenseMonthWise] = useState([]);
-    const [payments_sum, setpayments_sum] = useState(0);
+
 
     const [monthName, setMonthName] = useState(['April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', 'January', 'February', 'March']);
-    const [total, setTotal] = useState([13080.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-    const [paid, setPaid] = useState([1710.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-    const [unpaid, setUnPaid] = useState([18269.7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+
 
     const isDark = useSelector((state: IRootState) => state.themeConfig.theme === 'dark' || state.themeConfig.isDarkMode);
 
@@ -49,340 +49,7 @@ const Expense = () => {
     useEffect(() => {
         setState({ isMounted: true });
         getExpense();
-    }, [payments_sum]);
-
-    useEffect(() => {
-        updateChart();
-    }, [payments_sum, expenseMonthWise, invoiceMonthData]);
-
-    const [initialSeriesData] = [
-        {
-            name: 'Total',
-            data: total,
-        },
-        {
-            name: 'Paid Amount',
-            data: paid,
-        },
-        {
-            name: 'Unpaid Amount',
-            data: unpaid,
-        },
-    ];
-
-    const [initialOptions] = [
-        {
-            chart: {
-                height: 325,
-                type: 'area',
-                fontFamily: 'Nunito, sans-serif',
-                zoom: {
-                    enabled: false,
-                },
-                toolbar: {
-                    show: false,
-                },
-            },
-
-            dataLabels: {
-                enabled: false,
-            },
-            stroke: {
-                show: true,
-                curve: 'smooth',
-                width: 2,
-                lineCap: 'square',
-            },
-            dropShadow: {
-                enabled: true,
-                opacity: 0.2,
-                blur: 10,
-                left: -7,
-                top: 22,
-            },
-            colors: isDark ? ['#2196F3', '#E7515A', '#e670f8'] : ['#1B55E2', '#E7515A', '#e670f8'],
-            markers: {
-                discrete: [
-                    {
-                        seriesIndex: 0,
-                        dataPointIndex: 6,
-                        fillColor: '#1B55E2',
-                        strokeColor: 'transparent',
-                        size: 7,
-                    },
-                    {
-                        seriesIndex: 1,
-                        dataPointIndex: 5,
-                        fillColor: '#E7515A',
-                        strokeColor: 'transparent',
-                        size: 7,
-                    },
-                    {
-                        seriesIndex: 2,
-                        dataPointIndex: 5,
-                        fillColor: '#e670f8',
-                        strokeColor: 'transparent',
-                        size: 7,
-                    },
-                ],
-            },
-            labels: monthName,
-            xaxis: {
-                axisBorder: {
-                    show: false,
-                },
-                axisTicks: {
-                    show: false,
-                },
-                crosshairs: {
-                    show: true,
-                },
-                labels: {
-                    offsetX: isRtl ? 2 : 0,
-                    offsetY: 5,
-                    style: {
-                        fontSize: '12px',
-                        cssClass: 'apexcharts-xaxis-title',
-                    },
-                },
-            },
-            yaxis: {
-                tickAmount: 7,
-                labels: {
-                    formatter: (value: number) => {
-                        return value;
-                    },
-                    offsetX: isRtl ? -30 : -10,
-                    offsetY: 0,
-                    style: {
-                        fontSize: '12px',
-                        cssClass: 'apexcharts-yaxis-title',
-                    },
-                },
-                opposite: isRtl ? true : false,
-            },
-            grid: {
-                borderColor: isDark ? '#191E3A' : '#E0E6ED',
-                strokeDashArray: 5,
-                xaxis: {
-                    lines: {
-                        show: false,
-                    },
-                },
-                yaxis: {
-                    lines: {
-                        show: true,
-                    },
-                },
-                padding: {
-                    top: 0,
-                    right: 0,
-                    bottom: 0,
-                    left: 0,
-                },
-            },
-            legend: {
-                position: 'top',
-                horizontalAlign: 'right',
-                fontSize: '16px',
-                markers: {
-                    width: 10,
-                    height: 10,
-                    offsetX: -2,
-                },
-                itemMargin: {
-                    horizontal: 10,
-                    vertical: 5,
-                },
-            },
-            tooltip: {
-                marker: {
-                    show: true,
-                },
-                x: {
-                    show: false,
-                },
-            },
-            fill: {
-                type: 'gradient',
-                gradient: {
-                    shadeIntensity: 1,
-                    inverseColors: !1,
-                    opacityFrom: isDark ? 0.19 : 0.28,
-                    opacityTo: 0.05,
-                    stops: isDark ? [100, 100] : [45, 100],
-                },
-            },
-        },
-    ];
-
-    const [revenueChart, setRevenueChart] = useState({
-        series: initialSeriesData,
-        options: initialOptions,
-    });
-
-    const [salesinitdata] = [
-        {
-            chart: {
-                type: 'donut',
-                height: 460,
-                fontFamily: 'Nunito, sans-serif',
-            },
-            dataLabels: {
-                enabled: false,
-            },
-            stroke: {
-                show: true,
-                width: 25,
-                colors: isDark ? '#0e1726' : '#fff',
-            },
-            colors: isDark ? ['#5c1ac3', '#e2a03f', '#e7515a', '#e2a03f'] : ['#e2a03f', '#5c1ac3', '#e7515a'],
-            legend: {
-                position: 'bottom',
-                horizontalAlign: 'center',
-                fontSize: '14px',
-                markers: {
-                    width: 10,
-                    height: 10,
-                    offsetX: -2,
-                },
-                height: 50,
-                offsetY: 20,
-            },
-            plotOptions: {
-                pie: {
-                    donut: {
-                        size: '65%',
-                        background: 'transparent',
-                        labels: {
-                            show: true,
-                            name: {
-                                show: true,
-                                fontSize: '29px',
-                                offsetY: -10,
-                            },
-                            value: {
-                                show: true,
-                                fontSize: '26px',
-                                color: isDark ? '#bfc9d4' : undefined,
-                                offsetY: 16,
-                                formatter: (val: any) => {
-                                    return val;
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-            labels: ['Total Amount', 'Paid Amount', 'Unpaid Amount'],
-            states: {
-                hover: {
-                    filter: {
-                        type: 'none',
-                        value: 0.15,
-                    },
-                },
-                active: {
-                    filter: {
-                        type: 'none',
-                        value: 0.15,
-                    },
-                },
-            },
-        },
-    ];
-
-    const [salesByCategory, setsalesByCategory] = useState({
-        series: [],
-        options: salesinitdata,
-    });
-
-    const [categoryinitdata] = [
-        {
-            chart: {
-                height: 360,
-                type: 'bar',
-                fontFamily: 'Nunito, sans-serif',
-                toolbar: {
-                    show: false,
-                },
-            },
-            dataLabels: {
-                enabled: false,
-            },
-            stroke: {
-                width: 2,
-                colors: ['transparent'],
-            },
-            colors: ['#5c1ac3', '#ffbb44'],
-            dropShadow: {
-                enabled: true,
-                blur: 3,
-                color: '#515365',
-                opacity: 0.4,
-            },
-            plotOptions: {
-                bar: {
-                    horizontal: false,
-                    columnWidth: '55%',
-                    borderRadius: 8,
-                    borderRadiusApplication: 'end',
-                },
-            },
-            legend: {
-                position: 'bottom',
-                horizontalAlign: 'center',
-                fontSize: '14px',
-                itemMargin: {
-                    horizontal: 8,
-                    vertical: 8,
-                },
-            },
-            grid: {
-                borderColor: isDark ? '#191e3a' : '#e0e6ed',
-                padding: {
-                    left: 20,
-                    right: 20,
-                },
-            },
-            xaxis: {
-                categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                axisBorder: {
-                    show: true,
-                    color: isDark ? '#3b3f5c' : '#e0e6ed',
-                },
-            },
-            yaxis: {
-                tickAmount: 6,
-                opposite: isRtl ? true : false,
-                labels: {
-                    offsetX: isRtl ? -10 : 0,
-                },
-            },
-            fill: {
-                type: 'gradient',
-                gradient: {
-                    shade: isDark ? 'dark' : 'light',
-                    type: 'vertical',
-                    shadeIntensity: 0.3,
-                    inverseColors: false,
-                    opacityFrom: 1,
-                    opacityTo: 0.8,
-                    stops: [0, 100],
-                },
-            },
-            tooltip: {
-                marker: {
-                    show: true,
-                },
-            },
-        },
-    ];
-
-    const [categoryChart, setcategoryChart] = useState<any>({
-        series: [],
-        options: initialOptions,
-    });
+    }, []);
 
     const getExpense = async () => {
         try {
@@ -588,248 +255,87 @@ const Expense = () => {
                 },
             ];
 
-            const pendingPayment = {
-                total: roundNumber(res?.pending_payment),
-                monthData: roundNumber(res?.pending_payment_this_month),
-            };
-            setState({
-                cardData,
-                pendingPayment,
-                currentMonth: res?.this_month_name,
-                invoiceList: res?.invoices,
-                expenseList: res?.expenses,
-                expenceTotal: res?.expense_amount_sum,
-                revenueChart: {
-                    series: revenueSeries,
-                    options: revenueOptions,
+            const paymentCharts: ApexOptions = {
+                chart: {
+                    type: 'donut',
+                    height: 460,
+                    fontFamily: 'Nunito, sans-serif',
                 },
-            });
-        } catch (error) {
-            console.log('✌️error --->', error);
-        }
-        const Token = localStorage.getItem('token');
-
-        axios
-            .get(`${baseUrl}/dashboard/`, {
-                headers: {
-                    Authorization: `Token ${Token}`,
+                dataLabels: {
+                    enabled: false,
                 },
-            })
-            .then((res) => {
-                setMonthName(res.data.months_name);
-                setTotal(res.data.total_amount);
-                setPaid(res.data.paid_amount);
-                setUnPaid(res.data.banlance_amount);
-                setInvoiceMonthData(res.data.payments);
-                setexpenseMonthWise(res.data.expense_amount_list);
-                setpayments_sum(res.data.payments_sum);
-
-                setsalesByCategory((prevData) => ({
-                    series: res.data.payments,
-                    options: {
-                        chart: {
-                            type: 'donut',
-                            height: 460,
-                            fontFamily: 'Nunito, sans-serif',
-                        },
-                        dataLabels: {
-                            enabled: false,
-                        },
-                        stroke: {
-                            show: true,
-                            width: 25,
-                            colors: isDark ? '#0e1726' : '#fff',
-                        },
-                        colors: isDark ? ['#5c1ac3', '#e2a03f', '#e7515a', '#e2a03f'] : ['#e2a03f', '#5c1ac3', '#e7515a'],
-                        legend: {
-                            position: 'bottom',
-                            horizontalAlign: 'center',
-                            fontSize: '14px',
-                            markers: {
-                                width: 10,
-                                height: 10,
-                                offsetX: -2,
-                            },
-                            height: 50,
-                            offsetY: 20,
-                        },
-                        plotOptions: {
-                            pie: {
-                                donut: {
-                                    size: '65%',
-                                    background: 'transparent',
-                                    labels: {
-                                        show: true,
-                                        name: {
-                                            show: true,
-                                            fontSize: '29px',
-                                            offsetY: -10,
-                                        },
-                                        value: {
-                                            show: true,
-                                            fontSize: '26px',
-                                            color: isDark ? '#bfc9d4' : undefined,
-                                            offsetY: 16,
-                                            formatter: (val: any) => {
-                                                return val;
-                                            },
-                                        },
-                                        total: {
-                                            show: true,
-                                            label: 'Total Amount',
-                                            color: '#888ea8',
-                                            fontSize: '29px',
-                                            formatter: (w: any) => {
-                                                return res.data.payments_sum;
-                                            },
-                                        },
+                stroke: {
+                    show: true,
+                    width: 25,
+                },
+                colors: isDark ? ['#5c1ac3', '#e2a03f', '#e7515a', '#e2a03f'] : ['#e2a03f', '#5c1ac3', '#e7515a'],
+                legend: {
+                    position: 'bottom',
+                    horizontalAlign: 'center',
+                    fontSize: '14px',
+                    markers: {
+                        offsetX: -2,
+                    },
+                    height: 50,
+                    offsetY: 20,
+                },
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            size: '65%',
+                            background: 'transparent',
+                            labels: {
+                                show: true,
+                                name: {
+                                    show: true,
+                                    fontSize: '29px',
+                                    offsetY: -10,
+                                },
+                                value: {
+                                    show: true,
+                                    fontSize: '26px',
+                                    color: isDark ? '#bfc9d4' : undefined,
+                                    offsetY: 16,
+                                    formatter: (val: any) => {
+                                        return val;
+                                    },
+                                },
+                                total: {
+                                    show: true,
+                                    label: 'Total Amount',
+                                    color: '#888ea8',
+                                    fontSize: '29px',
+                                    formatter: (w: any) => {
+                                        return res.payments_sum;
                                     },
                                 },
                             },
                         },
-                        labels: ['Total Amount', 'Paid Amount', 'Unpaid Amount'],
-                        states: {
-                            hover: {
-                                filter: {
-                                    type: 'none',
-                                    value: 0.15,
-                                },
-                            },
-                            active: {
-                                filter: {
-                                    type: 'none',
-                                    value: 0.15,
-                                },
-                            },
+                    },
+                },
+                labels: ['Total Amount', 'Paid Amount', 'Unpaid Amount'],
+                states: {
+                    hover: {
+                        filter: {
+                            type: 'none',
                         },
                     },
-                }));
-
-                setcategoryChart(() => ({
-                    series: [
-                        {
-                            name: 'Amount',
-                            data: res.data.expenses_data,
-                        },
-                    ],
-
-                    options: {
-                        chart: {
-                            height: 360,
-                            type: 'bar',
-                            fontFamily: 'Nunito, sans-serif',
-                            toolbar: {
-                                show: false,
-                            },
-                        },
-                        dataLabels: {
-                            enabled: false,
-                        },
-                        stroke: {
-                            width: 2,
-                            colors: ['transparent'],
-                        },
-                        colors: ['#5c1ac3', '#ffbb44'],
-                        dropShadow: {
-                            enabled: true,
-                            blur: 3,
-                            color: '#515365',
-                            opacity: 0.4,
-                        },
-                        plotOptions: {
-                            bar: {
-                                horizontal: false,
-                                columnWidth: '55%',
-                                borderRadius: 8,
-                                borderRadiusApplication: 'end',
-                            },
-                        },
-                        legend: {
-                            position: 'bottom',
-                            horizontalAlign: 'center',
-                            fontSize: '14px',
-                            itemMargin: {
-                                horizontal: 8,
-                                vertical: 8,
-                            },
-                        },
-                        grid: {
-                            borderColor: isDark ? '#191e3a' : '#e0e6ed',
-                            padding: {
-                                left: 20,
-                                right: 20,
-                            },
-                        },
-                        xaxis: {
-                            categories: res.data.expenses_name,
-                            axisBorder: {
-                                show: true,
-                                color: isDark ? '#3b3f5c' : '#e0e6ed',
-                            },
-                        },
-                        yaxis: {
-                            tickAmount: 6,
-                            opposite: isRtl ? true : false,
-                            labels: {
-                                offsetX: isRtl ? -10 : 0,
-                            },
-                        },
-                        fill: {
-                            type: 'gradient',
-                            gradient: {
-                                shade: isDark ? 'dark' : 'light',
-                                type: 'vertical',
-                                shadeIntensity: 0.3,
-                                inverseColors: false,
-                                opacityFrom: 1,
-                                opacityTo: 0.8,
-                                stops: [0, 100],
-                            },
-                        },
-                        tooltip: {
-                            marker: {
-                                show: true,
-                            },
+                    active: {
+                        filter: {
+                            type: 'none',
                         },
                     },
-                }));
-            })
-            .catch((error: any) => {
-                if (error?.response?.status === 401) {
-                    router.push('/');
-                }
-            });
-
-        updateChart();
-    };
-
-    const updateChart = () => {
-        setRevenueChart((prevData: any) => ({
-            ...prevData,
-            series: [
-                {
-                    name: 'Total',
-                    data: total,
                 },
-                {
-                    name: 'Paid Amount',
-                    data: paid,
-                },
-                {
-                    name: 'Unpaid Amount',
-                    data: unpaid,
-                },
-            ],
-        }));
+            };
 
-        setExpenseChart({
-            series: [
+            const expenseSeries = [
                 {
                     name: 'Amount',
-                    data: expenseMonthWise,
+                    data: res.expense_amount_list,
                 },
-            ],
-            options: {
+            ];
+
+            const expenseOptions = {
                 chart: {
                     height: 325,
                     type: 'area',
@@ -957,8 +463,137 @@ const Expense = () => {
                         stops: isDark ? [100, 100] : [45, 100],
                     },
                 },
-            },
-        });
+            };
+
+            const monthExpenseSeries = [
+                {
+                    name: 'Amount',
+                    data: res.expenses_data,
+                },
+            ];
+            const monthExpenseOptions = {
+                chart: {
+                    height: 360,
+                    type: 'bar',
+                    fontFamily: 'Nunito, sans-serif',
+                    toolbar: {
+                        show: false,
+                    },
+                },
+                dataLabels: {
+                    enabled: false,
+                },
+                stroke: {
+                    width: 2,
+                    colors: ['transparent'],
+                },
+                colors: ['#5c1ac3', '#ffbb44'],
+                dropShadow: {
+                    enabled: true,
+                    blur: 3,
+                    color: '#515365',
+                    opacity: 0.4,
+                },
+                plotOptions: {
+                    bar: {
+                        horizontal: false,
+                        columnWidth: '55%',
+                        borderRadius: 8,
+                        borderRadiusApplication: 'end',
+                    },
+                },
+                legend: {
+                    position: 'bottom',
+                    horizontalAlign: 'center',
+                    fontSize: '14px',
+                    itemMargin: {
+                        horizontal: 8,
+                        vertical: 8,
+                    },
+                },
+                grid: {
+                    borderColor: isDark ? '#191e3a' : '#e0e6ed',
+                    padding: {
+                        left: 20,
+                        right: 20,
+                    },
+                },
+                xaxis: {
+                    categories: res.expenses_name,
+                    axisBorder: {
+                        show: true,
+                        color: isDark ? '#3b3f5c' : '#e0e6ed',
+                    },
+                },
+                yaxis: {
+                    tickAmount: 6,
+                    opposite: isRtl ? true : false,
+                    labels: {
+                        offsetX: isRtl ? -10 : 0,
+                    },
+                },
+                fill: {
+                    type: 'gradient',
+                    gradient: {
+                        shade: isDark ? 'dark' : 'light',
+                        type: 'vertical',
+                        shadeIntensity: 0.3,
+                        inverseColors: false,
+                        opacityFrom: 1,
+                        opacityTo: 0.8,
+                        stops: [0, 100],
+                    },
+                },
+                tooltip: {
+                    marker: {
+                        show: true,
+                    },
+                },
+            };
+
+            const pendingPayment = {
+                total: roundNumber(res?.pending_payment),
+                monthData: roundNumber(res?.pending_payment_this_month),
+            };
+
+            const monthPaymentChart = {
+                series: res.payments,
+                options: paymentCharts,
+            };
+
+            const monthBarChart = {
+                series: revenueSeries,
+                options: revenueOptions[0],
+            };
+
+            const expenseChart = {
+                series: expenseSeries,
+                options: expenseOptions,
+            };
+
+            const monthExpenseChart = {
+                series: monthExpenseSeries,
+                options: monthExpenseOptions,
+            };
+
+            setState({
+                cardData,
+                pendingPayment,
+                currentMonth: res?.this_month_name,
+                invoiceList: res?.invoices,
+                expenseList: res?.expenses,
+                expenceTotal: res?.expense_amount_sum,
+                monthPaymentChart,
+                monthBarChart,
+                expenseChart,
+                monthExpenseChart,
+            });
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
+
+       
+
     };
 
     return (
@@ -989,68 +624,6 @@ const Expense = () => {
                                         </div>
                                     </Link>
                                 ))}
-                                {/* <Link href="/invoice/invoice">
-                                    <div className="panel bg-gradient-to-r from-violet-500 to-violet-400">
-                                        <div className="flex justify-between">
-                                            <div className="text-md font-semibold ltr:mr-1 rtl:ml-1">Invoices</div>
-                                            <div className="dropdown"></div>
-                                        </div>
-                                        <div className="mt-5 flex items-center">
-                                            <div className="text-3xl font-bold ltr:mr-3 rtl:ml-3">Total : {invoiceTotal} </div>
-                                        </div>
-                                        <div className="mt-5 flex items-center font-semibold">
-                                            <IconEye className="shrink-0 ltr:mr-2 rtl:ml-2" />
-                                            {thisMonthName} Month Created : {invoiceThisMonthTotal}
-                                        </div>
-                                    </div>
-                                </Link>
-
-                                <Link href="/invoice/invoice">
-                                    <div className="panel bg-gradient-to-r from-red-500 to-red-400">
-                                        <div className="flex justify-between">
-                                            <div className="text-md font-semibold ltr:mr-1 rtl:ml-1">Incomplete Invoices</div>
-                                            <div className="dropdown"></div>
-                                        </div>
-                                        <div className="mt-5 flex items-center">
-                                            <div className="text-3xl font-bold ltr:mr-3 rtl:ml-3">Total : {incompleteinvoiceTotal} </div>
-                                        </div>
-                                        <div className="mt-5 flex items-center font-semibold">
-                                            <IconEye className="shrink-0 ltr:mr-2 rtl:ml-2" />
-                                            {thisMonthName} Month Created : {incompleteinvoiceThisMonthTotal}
-                                        </div>
-                                    </div>
-                                </Link>
-
-                                <Link href="/report/testReport">
-                                    <div className="panel bg-gradient-to-r from-rose-500 to-rose-400">
-                                        <div className="flex justify-between">
-                                            <div className="text-md font-semibold ltr:mr-1 rtl:ml-1">Incomplete Tests</div>
-                                            <div className="dropdown"></div>
-                                        </div>
-                                        <div className="mt-5 flex items-center">
-                                            <div className="text-3xl font-bold ltr:mr-3 rtl:ml-3">Total : {incompletetestTotal} </div>
-                                        </div>
-                                        <div className="mt-5 flex items-center font-semibold">
-                                            <IconEye className="shrink-0 ltr:mr-2 rtl:ml-2" />
-                                            {thisMonthName} Month Created : {incompletetestThisMonthTotal}
-                                        </div>
-                                    </div>
-                                </Link>
-
-                                <Link href="/report/expenseReport">
-                                    <div className="panel bg-gradient-to-r from-blue-500 to-blue-400">
-                                        <div className="flex justify-between">
-                                            <div className="text-md font-semibold ltr:mr-1 rtl:ml-1">Expense</div>
-                                        </div>
-                                        <div className="mt-5 flex items-center">
-                                            <div className="text-3xl font-bold ltr:mr-3 rtl:ml-3"> Total : {expenseTotal} </div>
-                                        </div>
-                                        <div className="mt-5 flex items-center font-semibold">
-                                            <IconEye className="shrink-0 ltr:mr-2 rtl:ml-2" />
-                                            {thisMonthName} Month added : {expenseThisMonthTotal}
-                                        </div>
-                                    </div>
-                                </Link> */}
                             </>
                         ) : (
                             <></>
@@ -1083,8 +656,8 @@ const Expense = () => {
                                     <div className=" h-full xl:col-span-2">
                                         <div className="relative">
                                             <div className="rounded-lg bg-white dark:bg-black">
-                                                {state.isMounted ? (
-                                                    <ReactApexChart series={revenueChart.series} options={revenueChart.options} type="area" height={325} width={'100%'} />
+                                                {state.isMounted && state.monthBarChart.series?.length > 0 ? (
+                                                    <ReactApexChart series={state.monthBarChart?.series || []} options={state.monthBarChart?.options || []} type="area" height={325} width={'100%'} />
                                                 ) : (
                                                     <div className="grid min-h-[325px] place-content-center bg-white-light/30 dark:bg-dark dark:bg-opacity-[0.08] ">
                                                         <span className="inline-flex h-5 w-5 animate-spin rounded-full  border-2 border-black !border-l-transparent dark:border-white"></span>
@@ -1102,13 +675,13 @@ const Expense = () => {
                                         </div>
                                         <div>
                                             <div className="rounded-lg bg-white dark:bg-black">
-                                                {state.isMounted && salesByCategory.series?.length > 0 ? (
+                                                {state.isMounted && state.monthPaymentChart.series?.length > 0 ? (
                                                     // <ReactApexChart series={revenueChart.series} options={revenueChart.options} type="area" height={325} width={'100%'} />
 
                                                     <ReactApexChart
                                                         key={state.isMounted ? 'mounted' : 'unmounted'}
-                                                        series={salesByCategory.series}
-                                                        options={salesByCategory.options}
+                                                        series={state.monthPaymentChart?.series || []}
+                                                        options={state.monthPaymentChart?.options || []}
                                                         type="donut"
                                                         height={460}
                                                         width={'100%'}
@@ -1174,8 +747,8 @@ const Expense = () => {
                                     <div className="xl:col-span-2">
                                         <div className="relative">
                                             <div className="rounded-lg bg-white dark:bg-black">
-                                                {state.isMounted ? (
-                                                    <ReactApexChart series={expenseChart.series} options={expenseChart.options} type="area" height={325} width={'100%'} />
+                                                {state.isMounted && state.expenseChart?.series?.length > 0 ? (
+                                                    <ReactApexChart series={state.expenseChart?.series || []} options={state.expenseChart?.options || []} type="area" height={325} width={'100%'} />
                                                 ) : (
                                                     <div className="grid min-h-[325px] place-content-center bg-white-light/30 dark:bg-dark dark:bg-opacity-[0.08] ">
                                                         <span className="inline-flex h-5 w-5 animate-spin rounded-full  border-2 border-black !border-l-transparent dark:border-white"></span>
@@ -1193,8 +766,8 @@ const Expense = () => {
                                         </div>
                                         <div>
                                             <div className="rounded-lg bg-white dark:bg-black">
-                                                {state.isMounted ? (
-                                                    <ReactApexChart options={categoryChart.options} series={categoryChart.series} type="bar" height={360} width={'100%'} />
+                                                {state.isMounted && state.monthExpenseChart?.series?.length > 0 ? (
+                                                    <ReactApexChart options={state.monthExpenseChart?.options} series={state.monthExpenseChart?.series || []} type="bar" height={360} width={'100%'} />
                                                 ) : (
                                                     <div className="grid min-h-[325px] place-content-center bg-white-light/30 dark:bg-dark dark:bg-opacity-[0.08] ">
                                                         <span className="inline-flex h-5 w-5 animate-spin rounded-full  border-2 border-black !border-l-transparent dark:border-white"></span>
