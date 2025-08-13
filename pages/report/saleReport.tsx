@@ -481,11 +481,9 @@ const SaleReport = () => {
             // Add header row
             worksheet.addRow(columns.map((column) => column.title1));
             allData.forEach((row: any) => {
-                console.log('✌️row --->', row);
 
                 const rowData = columns.map((column: any) => {
                     const key = column.key;
-                    console.log('✌️key --->', key);
 
                     // if (column.dataIndex) {
                     //     return row[column.dataIndex] ?? '';

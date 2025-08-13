@@ -253,7 +253,6 @@ const Customer = () => {
                 const res: any = await Models.customer.customer(record.id);
 
                 setEditRecord(record);
-                console.log('showDrawer', res);
 
                 form.setFieldsValue({
                     ...record,
@@ -281,7 +280,6 @@ const Customer = () => {
     };
 
     const handleDelete = async (record: any) => {
-        console.log('✌️record --->', record);
         try {
             await Models.customer.delete(record.id);
         } catch (error) {
@@ -355,7 +353,6 @@ const Customer = () => {
     // form submit
 
     const onFinish = async (values: any) => {
-        console.log('values', values);
         try {
             const body = {
                 customer_name: values.customer_name,
@@ -381,7 +378,6 @@ const Customer = () => {
                 contact_person_email2: values.contact_person_email2,
             };
 
-            console.log('body', body);
 
             if (editRecord) {
                 const res: any = await Models.customer.updateCustomer(editRecord.id, body);
@@ -559,7 +555,6 @@ const Customer = () => {
         return data;
     };
 
-    console.log("form.getFieldValue('city1')?.label", form.getFieldValue('city1'));
 
     return (
         <>
@@ -640,7 +635,6 @@ const Customer = () => {
                                 options={state.cityList}
                                 className=" flex-1"
                                 onChange={(selectedOption: any) => {
-                                    console.log('selectedOption', selectedOption);
 
                                     form.setFieldsValue({ city1: selectedOption });
                                     cityList(1);
@@ -734,7 +728,6 @@ const Customer = () => {
                                 options={state.cityList}
                                 className=" flex-1"
                                 onChange={(selectedOption: any) => {
-                                    console.log('selectedOption', selectedOption);
 
                                     form.setFieldsValue({ city2: selectedOption });
                                     cityList(1);

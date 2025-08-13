@@ -78,19 +78,16 @@ const Invoice = () => {
     };
 
     const getTestData = async (results: any[]) => {
-        console.log('✌️results --->', results);
         try {
             if (!results?.length) return []; // Return empty if no input
 
             // Fetch all test data in parallel
             const allResponses = await Promise.all(results.map((item) => Models.invoice.testList(item.id)));
-            console.log('✌️allResponses --->', allResponses);
             // exportToExcels(allResponses);
 
             // Extract results from each response and flatten
             const combinedArray = allResponses.flatMap((response: any) => response || []);
 
-            console.log('Combined test data:', combinedArray);
             return combinedArray;
         } catch (error) {
             console.error('Error in getTestData:', error);

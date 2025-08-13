@@ -30,10 +30,7 @@ const Expense = () => {
         monthExpenseChart: {},
     });
 
-
-
     const [monthName, setMonthName] = useState(['April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', 'January', 'February', 'March']);
-
 
     const isDark = useSelector((state: IRootState) => state.themeConfig.theme === 'dark' || state.themeConfig.isDarkMode);
 
@@ -54,7 +51,6 @@ const Expense = () => {
     const getExpense = async () => {
         try {
             const res: any = await Models.auth.dashboard();
-            console.log('✌️res --->', res);
 
             const cardData = [
                 {
@@ -591,9 +587,6 @@ const Expense = () => {
         } catch (error) {
             console.log('✌️error --->', error);
         }
-
-       
-
     };
 
     return (

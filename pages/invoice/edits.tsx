@@ -401,7 +401,6 @@ export default function Edits() {
         });
     };
 
-    console.log('paymentDate', state.paymentDate);
 
     const PaymentModal = () => {
         const BalanceCheck = roundNumber(state.balance);

@@ -123,7 +123,6 @@ export default function EditQoutations() {
     const deleteRecord = async (id: any) => {
         try {
             const res = await Models.qoutation.deleteItem(id);
-            console.log('✌️res --->', res);
             quotationItems();
             getData();
         } catch (error) {

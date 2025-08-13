@@ -250,7 +250,6 @@ const InvoiceReport = () => {
 
     const onFinishFailed1 = (errorInfo: any) => {};
 
-    console.log('state.employeeList', state.employeeList);
 
     return (
         <>

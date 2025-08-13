@@ -206,7 +206,6 @@ const ExpenseFileReport = () => {
                 item.file_url,
             ];
         });
-        console.log('✌️tableData --->', tableData);
 
         doc.autoTable({
             head: [headers],
