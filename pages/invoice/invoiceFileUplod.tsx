@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Space, Table, Modal, DatePicker, Button, Drawer, Form, Input, message, Upload, Select, Spin } from 'antd';
-import { EditOutlined, EyeOutlined, InboxOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, EyeOutlined, InboxOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import type { UploadProps } from 'antd';
 import router from 'next/router';
@@ -173,6 +173,27 @@ const InvoiceFileUpload = () => {
         removeFile();
     };
 
+    const handleDelete = (record: any) => {
+        // Implement your delete logic here
+
+        Modal.confirm({
+            title: 'Are you sure, you want to delete this invoice record?',
+            okText: 'Yes',
+            okType: 'danger',
+            onOk: () => {
+                deleteInvoice(record);
+            },
+        });
+    };
+
+    const deleteInvoice = async (record: any) => {
+        try {
+            const res: any = await Models.invoiceFile.delete(record.id);
+        } catch (error) {
+            console.log('✌️error --->', error);
+        }
+    };
+
     const columns = [
         {
             title: 'Id',
@@ -225,6 +246,9 @@ const InvoiceFileUpload = () => {
                     ) : (
                         <EditOutlined style={{ cursor: 'pointer', display: 'none' }} onClick={() => showDrawer(record)} className="edit-icon" rev={undefined} />
                     )}
+                    {/* <DeleteOutlined
+            style={{ color: "red", cursor: "pointer" }}
+            onClick={() => handleDelete(record)} className='delete-icon' rev={undefined} />  */}
 
                     {/* <EditOutlined
             style={{ cursor: "pointer" }}
@@ -254,13 +278,13 @@ const InvoiceFileUpload = () => {
 
     // form submit
     const onFinish = (values: any) => {
-
         const Token = localStorage.getItem('token');
 
         // Append the file from the values object
         const formData = new FormData();
-        formData.append('file', fileInputData.file);
-
+        if (fileInputData?.file) {
+            formData.append('file', fileInputData.file);
+        }
         if (values.invoice !== undefined) {
             formData.append('invoice', values.invoice);
         }
@@ -268,7 +292,6 @@ const InvoiceFileUpload = () => {
         if (values.expense !== undefined) {
             formData.append('expense', values.expense);
         }
-
 
         if (editRecord) {
             axios
@@ -372,7 +395,6 @@ const InvoiceFileUpload = () => {
         return data;
     };
 
-
     const removeFile = () => {
         setFileShow('');
         setFileInputData(null);
@@ -463,7 +485,6 @@ const InvoiceFileUpload = () => {
                 category_name: values.category ? values.category : '',
             };
 
-
             const res: any = await Models.invoiceFile.filter(body, page);
             setState({
                 invoiceFileList: res?.results,
@@ -497,7 +518,6 @@ const InvoiceFileUpload = () => {
 
     const onFinishFailed2 = (errorInfo: any) => {};
 
-
     return (
         <>
             <div className="panel">
@@ -511,7 +531,6 @@ const InvoiceFileUpload = () => {
                             <Form.Item label="Category" name="category" style={{ width: '250px' }}>
                                 <Select showSearch filterOption={(input: any, option: any) => option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0}>
                                     {formFields?.categories?.map((value: any) => {
-
                                         return (
                                             <Select.Option key={value.id} value={value.id}>
                                                 {value.name}
@@ -593,7 +612,6 @@ const InvoiceFileUpload = () => {
                 {state.invoiceFileList?.length > 0 && (
                     <div>
                         <div
-                            
                             style={{
                                 display: 'flex',
                                 justifyContent: 'center',
