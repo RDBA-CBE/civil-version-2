@@ -161,7 +161,7 @@ export default function Edits() {
             if (res?.invoice_taxes?.length > 0) {
                 const filter = res?.invoice_taxes?.filter((item:any) => item.enabled == true);
                 setState({ checkedItems: filter, taxes: res?.invoice_taxes });
-                const totalPercentage = roundNumber(res?.after_tax_amount )- roundNumber(res?.before_tax_amount);
+                const totalPercentage = roundNumber(res?.after_tax_amount) - roundNumber(res?.before_tax_amount);
                 const taxData = formatTaxDisplay(filter, totalPercentage);
                 setState({ taxData });
             } else {
@@ -268,8 +268,7 @@ export default function Edits() {
 
     const invoiceUpdate = async () => {
         try {
-            const body: any = {
-            };
+            const body: any = {};
 
             await Models.invoice.editInvoice(id, body);
 
@@ -401,7 +400,6 @@ export default function Edits() {
         });
     };
 
-
     const PaymentModal = () => {
         const BalanceCheck = roundNumber(state.balance);
         if (BalanceCheck <= 0) {
@@ -419,32 +417,25 @@ export default function Edits() {
     const handleChange = async (clickedTaxName: string) => {
         try {
             const isIGST = clickedTaxName === 'IGST';
-            const checked = state.taxes.map((tax:any) => ({
+            const checked = state.taxes.map((tax: any) => ({
                 ...tax,
-                enabled: isIGST
-                    ? tax.tax_name === 'IGST'
-                    : ['CGST', 'SGST'].includes(tax.tax_name),
+                enabled: isIGST ? tax.tax_name === 'IGST' : ['CGST', 'SGST'].includes(tax.tax_name),
             }));
-    
             setState({ taxes: checked });
-    
             await Promise.all(
-                checked.map((tax: any) => 
+                checked.map((tax: any) =>
                     Models.invoice.updateInvoiceTax(tax?.id, {
-                        enabled: tax.enabled
+                        enabled: tax.enabled,
                     })
                 )
             );
-    
             await invoiceUpdate();
-            await getInvoice()
-            
+            await getInvoice();
         } catch (error) {
             console.error('Error in handleChange:', error);
             setState({ taxes: state.taxes });
         }
     };
-
 
     const inputUpdate = (e: any) => {
         if (e.target.value == 'Yes') {
@@ -797,9 +788,7 @@ export default function Edits() {
         e.currentTarget.value = e.currentTarget.value.replace(/\D/g, ''); // Remove non-numeric characters
     };
 
-    return !state.isAdmin ? (
-        <InvoiceData data={state.details} taxData={state.taxData} testList={state.testList} paymentList={state.paymentList} checkedItems={state.checkedItems} invoiceId={id} />
-    ) : (
+    return (
         <Spin size="large" spinning={state.loading} delay={500}>
             <div className="flex flex-col gap-2.5 xl:flex-row">
                 {contextHolder}
@@ -983,14 +972,13 @@ export default function Edits() {
                                                     <td>
                                                         <Space>
                                                             <EditOutlined rev={undefined} className="edit-icon" onClick={() => showPaymentDrawer(item)} />
-                                                            {localStorage.getItem('admin') === 'true' && (
-                                                                <DeleteOutlined
-                                                                    rev={undefined}
-                                                                    style={{ color: 'red', cursor: 'pointer' }}
-                                                                    className="delete-icon"
-                                                                    onClick={() => PaymentDelete(item?.id)}
-                                                                />
-                                                            )}
+
+                                                            <DeleteOutlined
+                                                                rev={undefined}
+                                                                style={{ color: 'red', cursor: 'pointer' }}
+                                                                className="delete-icon"
+                                                                onClick={() => PaymentDelete(item?.id)}
+                                                            />
                                                         </Space>
                                                     </td>
                                                 </tr>
