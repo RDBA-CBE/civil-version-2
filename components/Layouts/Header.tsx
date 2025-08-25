@@ -156,6 +156,8 @@ const Header = () => {
             localStorage.clear();
             router.push('/');
         } catch (error) {
+            localStorage.clear();
+            router.push('/');
             console.log('✌️error --->', error);
         }
     };
@@ -236,7 +238,9 @@ const Header = () => {
                                     />
                                 </svg>
                                 <span className="px-1">
-                                    <Link href="/dashboard" prefetch>{t('Dashboard')} </Link>
+                                    <Link href="/dashboard" prefetch>
+                                        {t('Dashboard')}{' '}
+                                    </Link>
                                 </span>
                             </div>
                         </button>
