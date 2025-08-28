@@ -158,6 +158,7 @@ export default function InvoiceReports() {
                 body.secondary_authorised_signature = false;
                 body.secondary_signature = state.employeeRight?.value;
             }
+            body.report_template = state.editor;
 
             const res: any = await Models.invoice.updateTest(id, body);
             setState({ btnLoading: false });
