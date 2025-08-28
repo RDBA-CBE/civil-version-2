@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useRouter } from 'next/router';
 import { Space, Form, Button, message, Modal, Select } from 'antd';
 import 'react-quill/dist/quill.snow.css';
-import { baseUrl, Dropdown, ObjIsEmpty, useSetState } from '@/utils/function.util';
+import { baseUrl, Dropdown, ObjIsEmpty, Success, useSetState } from '@/utils/function.util';
 import CustomSelect from '@/components/Select';
 import Models from '@/imports/models.import';
 
@@ -163,6 +163,7 @@ export default function InvoiceReports() {
             const res: any = await Models.invoice.updateTest(id, body);
             setState({ btnLoading: false });
             await getTestReport();
+            Success('Test updated successfully');
         } catch (error: any) {
             setState({ btnLoading: false });
 
@@ -192,8 +193,10 @@ export default function InvoiceReports() {
                     body.secondary_signature = value?.value;
                 }
             }
+            body.report_template = state.editor;
 
             const res: any = await Models.invoice.updateTest(id, body);
+            await getTestReport();
         } catch (error: any) {
             console.log('✌️error --->', error);
         }
@@ -236,6 +239,7 @@ export default function InvoiceReports() {
             const body = {
                 without_primary_signature,
                 without_secondary_signature,
+                report_template: state.editor,
             };
 
             const res: any = await Models.invoice.updateTest(id, body);
@@ -276,6 +280,7 @@ export default function InvoiceReports() {
             const body = {
                 without_primary_signature: false,
                 without_secondary_signature: false,
+                report_template: state.editor,
             };
 
             const res: any = await Models.invoice.updateTest(id, body);
