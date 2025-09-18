@@ -159,7 +159,7 @@ export default function Edits() {
                 discount: res?.invoice_discounts?.length > 0 ? roundNumber(res?.invoice_discounts[0]?.discount) || 0 : 0,
             });
             if (res?.invoice_taxes?.length > 0) {
-                const filter = res?.invoice_taxes?.filter((item:any) => item.enabled == true);
+                const filter = res?.invoice_taxes?.filter((item: any) => item.enabled == true);
                 setState({ checkedItems: filter, taxes: res?.invoice_taxes });
                 const totalPercentage = roundNumber(res?.after_tax_amount) - roundNumber(res?.before_tax_amount);
                 const taxData = formatTaxDisplay(filter, totalPercentage);
@@ -242,6 +242,7 @@ export default function Edits() {
                 date: state.date,
                 completed: state.completed,
                 place_of_testing: state.place_of_testing,
+                project_name: state.project_name,
             };
 
             const advance = roundNumber(state.advance);
@@ -847,7 +848,6 @@ export default function Edits() {
                                         value={state?.project_name}
                                         onChange={inputChange}
                                         placeholder="Enter Email"
-                                        disabled
                                     />
                                 </div>
                             </div>
