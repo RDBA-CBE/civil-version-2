@@ -848,6 +848,7 @@ export default function Edits() {
                                         value={state?.project_name}
                                         onChange={inputChange}
                                         placeholder="Enter Email"
+                                        disabled={!state.isAdmin}
                                     />
                                 </div>
                             </div>
