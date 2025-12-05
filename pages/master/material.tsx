@@ -309,7 +309,7 @@ const Material = () => {
                         <h1 className="text-lg font-semibold dark:text-white-light">Manage Material</h1>
                     </div>
                     <div>
-                        <Search placeholder="Input search text" value={state.search} onChange={(e) => setState({ search: e.target.value })} enterButton className="search-bar" />
+                        <Search placeholder="Input search text" value={state.search} onChange={(e:any) => setState({ search: e.target.value })} enterButton className="search-bar" />
                         <button type="button" onClick={() => showDrawer(null)} className="create-button">
                             + Create Material
                         </button>

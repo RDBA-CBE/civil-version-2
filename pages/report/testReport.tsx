@@ -390,7 +390,7 @@ const TestReport = () => {
                                     style={{
                                         height: '38px',
                                     }}
-                                    onChange={(e) => {
+                                    onChange={(e:any) => {
                                         form.setFieldsValue({ invoice_no: e.target.value });
                                     }}
                                 />

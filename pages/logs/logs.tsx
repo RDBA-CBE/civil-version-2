@@ -115,12 +115,12 @@ const Logs = () => {
                         <h1 className="text-lg font-semibold dark:text-white-light">Logs</h1>
                     </div>
                     <div className="flex gap-4">
-                        <Search placeholder="Search Name" value={state.search} onChange={(e) => setState({ search: e.target.value })} enterButton className="search-bar" />
-                        <Search placeholder="Search IP Address" value={state.login_ip} onChange={(e) => setState({ login_ip: e.target.value })} enterButton className="search-bar" />
+                        <Search placeholder="Search Name" value={state.search} onChange={(e:any) => setState({ search: e.target.value })} enterButton className="search-bar" />
+                        <Search placeholder="Search IP Address" value={state.login_ip} onChange={(e:any) => setState({ login_ip: e.target.value })} enterButton className="search-bar" />
                         <DatePicker
                             style={{ width: 200 }}
                             placeholder="Select Date"
-                            onChange={(date, dateString) => setState({ login_at: dateString })}
+                            onChange={(date:any, dateString:any) => setState({ login_at: dateString })}
                             className="search-bar"
                             value={state.login_at ? moment(state.login_at, 'YYYY-MM-DD') : null}
                         />

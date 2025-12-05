@@ -76,7 +76,7 @@ const ChangePassword = () => {
                                     <Input.Password
                                         placeholder="Enter Old Password"
                                         className="form-input ps-10 placeholder:text-white-dark"
-                                        iconRender={(visible) => (
+                                        iconRender={(visible:any) => (
                                             <span onClick={togglePasswordVisibility} style={{ cursor: 'pointer' }}>
                                                 <IconLockDots fill={true} />
                                             </span>
@@ -103,7 +103,7 @@ const ChangePassword = () => {
                                     <Input.Password
                                         placeholder="Enter New Password"
                                         className="form-input ps-10 placeholder:text-white-dark"
-                                        iconRender={(visible) => (
+                                        iconRender={(visible:any) => (
                                             <span onClick={togglePasswordVisibility2} style={{ cursor: 'pointer' }}>
                                                 <IconLockDots fill={true} />
                                             </span>
@@ -131,7 +131,7 @@ const ChangePassword = () => {
                                     <Input.Password
                                         placeholder="Confirm New Password"
                                         className="form-input ps-10 placeholder:text-white-dark"
-                                        iconRender={(visible) => (
+                                        iconRender={(visible:any) => (
                                             <span onClick={togglePasswordVisibility3} style={{ cursor: 'pointer' }}>
                                                 <IconLockDots fill={true} />
                                             </span>

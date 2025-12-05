@@ -936,11 +936,11 @@ const Software_Logs = () => {
                             )}
 
                             <Form.Item label="From Date" name="from_date" style={{ width: '250px' }}>
-                                <DatePicker style={{ width: '100%' }} value={state.from_date} onChange={(e) => setState({ from_date: e })} />
+                                <DatePicker style={{ width: '100%' }} value={state.from_date} onChange={(e:any) => setState({ from_date: e })} />
                             </Form.Item>
 
                             <Form.Item label="To Date" name="to_date" style={{ width: '250px' }}>
-                                <DatePicker style={{ width: '100%' }} value={state.to_date} onChange={(e) => setState({ to_date: e })} />
+                                <DatePicker style={{ width: '100%' }} value={state.to_date} onChange={(e:any) => setState({ to_date: e })} />
                             </Form.Item>
 
                             <div style={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: '10px' }}>

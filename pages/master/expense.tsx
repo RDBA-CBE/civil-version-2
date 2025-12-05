@@ -255,7 +255,7 @@ const Expense = () => {
                         <h1 className="text-lg font-semibold dark:text-white-light">Manage Expense Category</h1>
                     </div>
                     <div>
-                        <Search placeholder="input search text" value={state.search} onChange={(e) => setState({ search: e.target.value })} enterButton className="search-bar" />
+                        <Search placeholder="input search text" value={state.search} onChange={(e:any) => setState({ search: e.target.value })} enterButton className="search-bar" />
                         <button type="button" onClick={() => showDrawer(null)} className="create-button">
                             + Create Expense Category
                         </button>

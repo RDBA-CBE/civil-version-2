@@ -1325,11 +1325,11 @@ const Edit = () => {
                         </Form.Item>
 
                         <Form.Item label="Quantity" name="quantity" required={false} rules={[{ required: true, message: 'Please input your Quantity!' }]}>
-                            <Input onChange={(e) => handleQuantityChange(e.target.value)} />
+                            <Input onChange={(e:any) => handleQuantityChange(e.target.value)} />
                         </Form.Item>
 
                         <Form.Item label="Price Per Sample" name="price_per_sample" required={false} rules={[{ required: true, message: 'Please input your Tax Status!' }]}>
-                            <Input onChange={(e) => handlePricePerSampleChange(e.target.value)} />
+                            <Input onChange={(e:any) => handlePricePerSampleChange(e.target.value)} />
                         </Form.Item>
 
                         <Form.Item
