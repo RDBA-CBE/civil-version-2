@@ -37,7 +37,7 @@
     "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
     "i18next": "^24.2.3",
-    "jspdf": "^3.0.4",
+    "jspdf": "^4.0.0",
     "jspdf-autotable": "^3.8.4",
     "katex": "^0.16.9",
     "mantine-datatable": "^6.0.8",
