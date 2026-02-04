@@ -1,5 +1,4 @@
 import instance from '@/utils/axios.util';
-
 const auth = {
     login: (data: any) => {
         let promise = new Promise((resolve, reject) => {
